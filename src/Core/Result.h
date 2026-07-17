@@ -32,6 +32,9 @@ enum class ResultCode : uint16_t
     // Communication
     CommunicationError,
     ChecksumError,
+    CrcError,
+    InvalidHeader,
+    InvalidLength,
 
     // Hardware
     HardwareError,
