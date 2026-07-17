@@ -134,4 +134,45 @@ Result Flush() noexcept
     return Result::Ok();
 }
 
+Result Write(const std::uint8_t* data,
+             std::size_t length) noexcept
+{
+    if (!initialized)
+    {
+        return Result(ResultCode::NotInitialized);
+    }
+
+    if (data == nullptr || length == 0U)
+    {
+        return Result(ResultCode::InvalidArgument);
+    }
+
+    Serial.write(data, length);
+    return Result::Ok();
+}
+
+Result Read(std::uint8_t* data,
+            std::size_t bufferSize,
+            std::size_t& bytesReceived) noexcept
+{
+    if (!initialized)
+    {
+        return Result(ResultCode::NotInitialized);
+    }
+
+    if (data == nullptr || bufferSize == 0U)
+    {
+        return Result(ResultCode::InvalidArgument);
+    }
+
+    bytesReceived = 0U;
+
+    while ((Serial.available() > 0) && (bytesReceived < bufferSize))
+    {
+        data[bytesReceived++] = static_cast<std::uint8_t>(Serial.read());
+    }
+
+    return Result::Ok();
+}
+
 } // namespace NAS::Platform::USB

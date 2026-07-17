@@ -12,6 +12,7 @@
 
 #include "../Core/Result.h"
 #include "../Objects/Led.h"
+#include "../Config/HardwareConfig.h"
 
 namespace NAS::Services
 {
@@ -20,7 +21,7 @@ class LedService
 {
 public:
 
-    static constexpr std::uint16_t LedCount = 13U;
+    static constexpr std::uint16_t LedCount = NAS::Config::Hardware::LedCount;
 
     [[nodiscard]]
     static NAS::Core::Result Initialize() noexcept;

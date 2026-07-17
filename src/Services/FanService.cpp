@@ -8,6 +8,8 @@
 
 #include "FanService.h"
 
+#include "../Config/HardwareConfig.h"
+
 using namespace NAS::Core;
 
 namespace NAS::Services
@@ -27,14 +29,14 @@ Result FanService::Initialize() noexcept
     fans_[0].Initialize(
         0U,
         25U,
-        25000U,
-        8U);
+        NAS::Config::Hardware::FanPwmFrequency,
+        NAS::Config::Hardware::FanPwmResolution);
 
     fans_[1].Initialize(
         1U,
         33U,
-        25000U,
-        8U);
+        NAS::Config::Hardware::FanPwmFrequency,
+        NAS::Config::Hardware::FanPwmResolution);
 
     initialized_ = true;
 

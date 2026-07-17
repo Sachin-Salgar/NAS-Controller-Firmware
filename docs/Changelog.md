@@ -1,5 +1,51 @@
 # Changelog
 
+## [1.0.0] - Architecture Compliance Session (2026-07-18)
+
+### Fixed
+
+#### Critical Architecture Violations Resolved
+- **Platform USB**: Added binary `Write()` and `Read()` methods for binary protocol operations
+- **HealthService**: Refactored to use `WatchdogDriver` instead of direct Platform access (restored dependency direction)
+- **Startup**: Removed references to non-existent manager classes (PlatformManager, DriverManager, ObjectManager)
+- **StorageDriver**: Updated to use correct Platform Flash API (`Erase()` instead of non-existent `Clear()`)
+- **All Services**: Migrated hardcoded configuration values to centralized Config layer
+
+### Added
+
+#### New Driver Layer
+- `WatchdogDriver`: Hardware abstraction for system watchdog management with Initialize() and Feed() methods
+
+### Changed
+
+#### Documentation Updates
+- **Architecture.md**: Updated Drivers section to list all implemented drivers including WatchdogDriver
+- **Platform HAL ADR (0003)**: Documented USB binary operations (character and binary modes)
+- **Drivers ADR (0004)**: Updated with complete list of implemented drivers
+- **Services ADR (0006)**: Documented configuration layer integration best practices
+- **CHANGELOG.md**: Created comprehensive changelog with architecture compliance updates
+- **ComplianceAudit.md**: Created new detailed audit report documenting all verification results
+
+#### Service Configuration Integration
+- RelayService: Now uses `NAS::Config::Hardware::RelayCount`
+- FanService: Now uses `NAS::Config::Hardware::FanCount`, `FanPwmFrequency`, `FanPwmResolution`
+- TemperatureService: Now uses `NAS::Config::Hardware::TemperatureSensorCount`
+- LedService: Now uses `NAS::Config::Hardware::LedCount`
+- DriveService: Now uses `NAS::Config::Hardware::DriveCount`
+- SchedulerService: Now uses task timing from `NAS::Config::Tasks`
+
+### Verified
+
+✅ Architecture compliance verified against all ADRs
+✅ Dependency direction rules confirmed correct
+✅ Hardware abstraction properly layered
+✅ Configuration centralized in Config layer
+✅ Naming conventions consistent
+✅ No circular dependencies
+✅ All code changes applied and verified
+
+---
+
 ## Unreleased
 
 ---

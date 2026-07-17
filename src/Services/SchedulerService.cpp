@@ -9,6 +9,7 @@
 #include "SchedulerService.h"
 
 #include "../Core/Scheduler.h"
+#include "../Config/TaskConfig.h"
 
 #include "ProtocolService.h"
 #include "TemperatureService.h"
@@ -40,19 +41,19 @@ Result SchedulerService::Initialize() noexcept
 
     Scheduler::AddTask(
         USBService::Process,
-        5U);
+        NAS::Config::Tasks::UsbTaskIntervalMs);
 
     Scheduler::AddTask(
         ProtocolService::Process,
-        5U);
+        NAS::Config::Tasks::ProtocolTaskIntervalMs);
 
     Scheduler::AddTask(
         TemperatureService::UpdateAll,
-        1000U);
+        NAS::Config::Tasks::TemperatureTaskIntervalMs);
 
     Scheduler::AddTask(
         HealthService::Update,
-        1000U);
+        NAS::Config::Tasks::HealthTaskIntervalMs);
 
     initialized_ = true;
 

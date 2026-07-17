@@ -12,6 +12,7 @@
 
 #include "../Core/Result.h"
 #include "../Objects/TemperatureSensor.h"
+#include "../Config/HardwareConfig.h"
 
 namespace NAS::Services
 {
@@ -20,7 +21,7 @@ class TemperatureService
 {
 public:
 
-    static constexpr std::uint8_t SensorCount = 3U;
+    static constexpr std::uint8_t SensorCount = NAS::Config::Hardware::TemperatureSensorCount;
 
     [[nodiscard]]
     static NAS::Core::Result Initialize() noexcept;
