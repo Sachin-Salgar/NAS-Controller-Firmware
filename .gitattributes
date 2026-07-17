@@ -1,0 +1,31 @@
+# Store all text files with LF endings
+* text=auto eol=lf
+
+# C/C++
+*.c      text
+*.cpp    text
+*.h      text
+*.hpp    text
+
+# Documentation
+*.md     text
+
+# Build files
+*.ini    text
+*.txt    text
+*.yml    text
+*.yaml   text
+
+# Scripts
+*.py     text
+*.sh     text
+*.bat    text eol=crlf
+
+# Binary files
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.ico    binary
+*.zip    binary
+*.pdf    binary
