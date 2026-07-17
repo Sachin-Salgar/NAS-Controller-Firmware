@@ -12,6 +12,7 @@
 
 #include "../Core/Result.h"
 #include "../Objects/Drive.h"
+#include "../Config/HardwareConfig.h"
 
 namespace NAS::Services
 {
@@ -20,7 +21,7 @@ class DriveService
 {
 public:
 
-    static constexpr std::uint8_t DriveCount = 13U;
+    static constexpr std::uint8_t DriveCount = NAS::Config::Hardware::DriveCount;
 
     [[nodiscard]]
     static NAS::Core::Result Initialize() noexcept;

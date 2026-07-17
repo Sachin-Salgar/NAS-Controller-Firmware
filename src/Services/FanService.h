@@ -12,6 +12,7 @@
 
 #include "../Core/Result.h"
 #include "../Objects/Fan.h"
+#include "../Config/HardwareConfig.h"
 
 namespace NAS::Services
 {
@@ -20,7 +21,7 @@ class FanService
 {
 public:
 
-    static constexpr std::uint8_t FanCount = 2U;
+    static constexpr std::uint8_t FanCount = NAS::Config::Hardware::FanCount;
 
     [[nodiscard]]
     static NAS::Core::Result Initialize() noexcept;

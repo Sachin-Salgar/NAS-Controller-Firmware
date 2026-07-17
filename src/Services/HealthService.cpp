@@ -8,7 +8,7 @@
 
 #include "HealthService.h"
 
-#include "../Platform/Watchdog.h"
+#include "../Drivers/WatchdogDriver.h"
 
 #include "SystemService.h"
 #include "TemperatureService.h"
@@ -29,7 +29,7 @@ Result HealthService::Initialize() noexcept
         return Result(ResultCode::AlreadyInitialized);
     }
 
-    auto result = NAS::Platform::Watchdog::Initialize();
+    auto result = NAS::Drivers::WatchdogDriver::Initialize();
 
     if (!result.IsSuccess())
     {
@@ -74,7 +74,7 @@ Result HealthService::Update() noexcept
             NAS::Objects::SystemState::Warning);
     }
 
-    NAS::Platform::Watchdog::Feed();
+    NAS::Drivers::WatchdogDriver::Feed();
 
     return Result::Ok();
 }

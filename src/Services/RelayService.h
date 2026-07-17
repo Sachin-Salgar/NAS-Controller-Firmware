@@ -12,6 +12,7 @@
 
 #include "../Core/Result.h"
 #include "../Objects/Relay.h"
+#include "../Config/HardwareConfig.h"
 
 namespace NAS::Services
 {
@@ -20,7 +21,7 @@ class RelayService
 {
 public:
 
-    static constexpr std::uint8_t RelayCount = 2U;
+    static constexpr std::uint8_t RelayCount = NAS::Config::Hardware::RelayCount;
 
     [[nodiscard]]
     static NAS::Core::Result Initialize() noexcept;
