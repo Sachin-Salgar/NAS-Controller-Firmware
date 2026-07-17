@@ -18,8 +18,6 @@ void setup()
 {
     Serial.begin(115200);
 
-    (void)BuildInfo::Initialize();
-    (void)Version::Initialize();
 
     auto result =
         NAS::System::SystemManager::Initialize();

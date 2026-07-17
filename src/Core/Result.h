@@ -21,14 +21,22 @@ enum class ResultCode : uint16_t
     Timeout,
     Busy,
     Unsupported,
+    NotSupported,
     AccessDenied,
 
     // Memory
     OutOfMemory,
+    NullPointer,
+    BufferTooSmall,
+    BufferFull,
 
     // Communication
     CommunicationError,
     ChecksumError,
+    CrcError,
+    InvalidHeader,
+    InvalidLength,
+    NotFound,
 
     // Hardware
     HardwareError,

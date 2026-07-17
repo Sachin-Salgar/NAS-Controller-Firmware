@@ -190,9 +190,49 @@ Contains
 - Result Types
 - Logger
 - EventBus
+- Scheduler
 - Common Types
 
 No hardware dependencies.
+
+### Result Types
+
+Extended `ResultCode` enumeration to support comprehensive error reporting:
+
+- **Success** - Operation succeeded
+- **Failed** - Generic operation failure
+- **InvalidArgument** - Invalid function argument
+- **InvalidState** - Object in invalid state
+- **NotInitialized** - Component not initialized
+- **AlreadyInitialized** - Component already initialized
+- **Timeout** - Operation timed out
+- **Busy** - Resource busy
+- **Unsupported/NotSupported** - Unsupported operation
+- **AccessDenied** - Permission denied
+- **OutOfMemory** - Memory allocation failed
+- **NullPointer** - Null pointer passed to function
+- **BufferTooSmall** - Output buffer insufficient
+- **BufferFull** - Buffer overflow
+- **CommunicationError** - Communication failure
+- **ChecksumError** - Checksum validation failed
+- **CrcError** - CRC validation failed
+- **InvalidHeader** - Malformed packet header
+- **InvalidLength** - Invalid length specification
+- **NotFound** - Item not found
+- **HardwareError** - Hardware fault
+- **DeviceNotFound** - Device not detected
+- **InvalidConfiguration** - Configuration error
+- **InternalError** - Internal firmware error
+
+### Scheduler
+
+Time-based task scheduler for periodic task execution.
+
+- `Initialize()` - Initialize the scheduler
+- `AddTask(TaskFunction, intervalMs)` - Register periodic task
+- `Execute()` - Process scheduled tasks (non-blocking)
+
+Supports up to 16 concurrent tasks with configurable intervals. Uses `millis()` for timing.
 
 ---
 
