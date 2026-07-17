@@ -452,6 +452,44 @@ Avoid recursive functions.
 
 Avoid hidden side effects.
 
+## Header-Only constexpr Implementations
+
+Classes containing only trivial constexpr member functions may implement those functions entirely within the header file.
+
+An accompanying .cpp file may remain intentionally empty to preserve the project's one-header/one-source-file structure.
+
+This exception is intended only for lightweight value types and utility classes.
+
+Complex logic SHALL NOT be implemented inline.
+
+Inline implementations should improve readability and compile-time evaluation rather than reduce source file count.
+
+## [[nodiscard]] Usage
+
+Functions returning Result SHALL be marked [[nodiscard]].
+
+Functions returning status or error information SHOULD be marked [[nodiscard]].
+
+Ignoring a Result object is considered a programming error unless explicitly documented.
+
+Constructors and void-returning functions SHALL NOT use [[nodiscard]].
+
+## noexcept Usage
+
+Functions that cannot throw SHALL be declared noexcept.
+
+Constructors for lightweight value types SHOULD be noexcept.
+
+Embedded firmware code shall prefer noexcept wherever practical.
+
+## constexpr Usage
+
+constexpr SHALL be used where compile-time evaluation is beneficial.
+
+Small utility classes and value types SHOULD prefer constexpr member functions.
+
+Large algorithms SHALL NOT be forced into constexpr unnecessarily.
+
 ---
 
 # 14. Documentation
