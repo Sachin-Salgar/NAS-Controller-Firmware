@@ -61,12 +61,12 @@ Result RelayDriver::Configure(std::uint8_t relayId,
     relay.configured = true;
 
     Platform::GPIO::Configure(gpioPin,
-                              Platform::GPIOMode::Output);
+                              Platform::GPIO::Mode::Output);
 
     Platform::GPIO::Write(
         gpioPin,
-        activeLow ? Platform::GPIOLevel::High
-                  : Platform::GPIOLevel::Low);
+        activeLow ? Platform::GPIO::Level::High
+                  : Platform::GPIO::Level::Low);
 
     return Result::Ok();
 }
@@ -93,19 +93,19 @@ Result RelayDriver::SetState(std::uint8_t relayId,
 
     relay.state = state;
 
-    Platform::GPIOLevel level;
+    Platform::GPIO::Level level;
 
     if (relay.activeLow)
     {
         level = (state == RelayState::On)
-                    ? Platform::GPIOLevel::Low
-                    : Platform::GPIOLevel::High;
+                    ? Platform::GPIO::Level::Low
+                   : Platform::GPIO::Level::High;
     }
     else
     {
         level = (state == RelayState::On)
-                    ? Platform::GPIOLevel::High
-                    : Platform::GPIOLevel::Low;
+                    ? Platform::GPIO::Level::High
+                    : Platform::GPIO::Level::Low;
     }
 
     return Platform::GPIO::Write(relay.pin, level);
