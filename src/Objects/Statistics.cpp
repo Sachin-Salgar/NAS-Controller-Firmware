@@ -20,7 +20,7 @@ Result Statistics::Initialize() noexcept
         return Result(ResultCode::AlreadyInitialized);
     }
 
-    Reset();
+    (void)Reset();
 
     initialized_ = true;
 
