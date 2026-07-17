@@ -28,6 +28,7 @@ enum class ResultCode : uint16_t
     OutOfMemory,
     NullPointer,
     BufferTooSmall,
+    BufferFull,
 
     // Communication
     CommunicationError,
@@ -35,6 +36,7 @@ enum class ResultCode : uint16_t
     CrcError,
     InvalidHeader,
     InvalidLength,
+    NotFound,
 
     // Hardware
     HardwareError,
