@@ -64,6 +64,18 @@ Services are **not** responsible for:
 - Packet serialization.
 - GPIO operations.
 - Device register manipulation.
+- Configuration value definitions (use Config layer instead).
+
+### Configuration Integration
+
+Services use compile-time configuration from the Config layer:
+
+- Hardware counts and parameters
+- Task intervals and timing
+- Protocol configuration
+- Feature flags
+
+All hardware-specific values are obtained from `NAS::Config::Hardware::*` to ensure centralized configuration management.
 
 ---
 
