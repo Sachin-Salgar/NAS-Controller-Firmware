@@ -226,13 +226,23 @@ Examples
 
 Relay Driver
 
-MOSFET Driver
+PWM Fan Driver
 
-DS18B20 Driver
+Temperature Sensor Driver
 
-WS2812 Driver
+Addressable LED Driver
+
+Drive Detection Driver
+
+Storage Driver
+
+Watchdog Driver
 
 Drivers SHALL NOT implement business logic.
+
+Drivers SHALL use only Platform abstractions for hardware access.
+
+All hardware-specific implementation details are contained within Drivers.
 
 ---
 

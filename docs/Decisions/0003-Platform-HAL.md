@@ -37,19 +37,34 @@ The Platform layer exposes lightweight namespace-based APIs and returns standard
 
 Implemented modules include:
 
-- PlatformManager
-- GPIO
-- Timer
-- PWM
-- USB
-- OneWire
-- ADC
-- I2C
-- SPI
-- UART
-- Flash
-- Restart
-- Watchdog
+- GPIO - Digital input/output pin control
+- Timer - Hardware timer operations
+- PWM - Pulse Width Modulation for variable control
+- USB - USB CDC serial communication (character and binary modes)
+- OneWire - OneWire protocol for temperature sensors
+- ADC - Analog to Digital conversion
+- I2C - I2C communication protocol
+- SPI - Serial Peripheral Interface for addressable LEDs
+- UART - Serial communication
+- Flash - Non-volatile memory operations
+- Restart - System restart functionality
+- Watchdog - Watchdog timer for system supervision
+
+### USB Platform Operations
+
+The USB platform layer provides both character and binary operations:
+
+**Character Operations** (for debugging and text-based communication):
+- `Write(const char* text)` - Send text
+- `WriteLine(const char* text)` - Send text with newline
+- `Read(char& character)` - Receive single character
+- `ReadLine(char* buffer, size_t length)` - Receive line of text
+
+**Binary Operations** (for protocol packet communication):
+- `Write(const uint8_t* data, size_t length)` - Send binary data
+- `Read(uint8_t* data, size_t bufferSize, size_t& bytesReceived)` - Receive binary data
+
+This dual interface supports both debugging and binary protocol operations through the same abstraction layer.
 
 ---
 

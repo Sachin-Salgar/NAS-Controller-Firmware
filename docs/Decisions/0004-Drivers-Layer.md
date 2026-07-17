@@ -21,13 +21,13 @@ The Drivers layer shall contain one driver for each hardware device.
 
 Implemented drivers include:
 
-- DriverManager
-- RelayDriver
-- FanDriver
-- TemperatureDriver
-- LedDriver
-- DriveDriver
-- PersistentStorageDriver
+- RelayDriver - Relay control via GPIO
+- PWMFanDriver - PWM-controlled fan speed control
+- TemperatureDriver - DS18B20 temperature sensor via OneWire
+- AddressableLedDriver - WS2812 addressable LED control via SPI
+- DriveDetectionDriver - Hard drive detection via GPIO
+- StorageDriver - Persistent storage via Flash memory
+- WatchdogDriver - System watchdog management
 
 Drivers expose hardware functionality through clean interfaces while internally using only the Platform HAL.
 
