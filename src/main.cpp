@@ -1,18 +1,48 @@
+/******************************************************************************
+ *
+ * Project : NAS Controller Firmware
+ * Target  : ESP32
+ * File    : main.cpp
+ *
+ ******************************************************************************/
+
 #include <Arduino.h>
 
-// put function declarations here:
-int myFunction(int, int);
+#include "Core/BuildInfo.h"
+#include "Core/Version.h"
+#include "System/SystemManager.h"
 
-void setup() {
-  // put your setup code here, to run once:
-  int result = myFunction(2, 3);
+using namespace NAS::Core;
+
+void setup()
+{
+    Serial.begin(115200);
+
+    (void)BuildInfo::Initialize();
+    (void)Version::Initialize();
+
+    auto result =
+        NAS::System::SystemManager::Initialize();
+
+    if (!result.IsSuccess())
+    {
+        while (true)
+        {
+            delay(1000);
+        }
+    }
 }
 
-void loop() {
-  // put your main code here, to run repeatedly:
-}
+void loop()
+{
+    static bool started = false;
 
-// put function definitions here:
-int myFunction(int x, int y) {
-  return x + y;
+    if (!started)
+    {
+        started = true;
+
+        (void)NAS::System::SystemManager::Run();
+    }
+
+    delay(1);
 }

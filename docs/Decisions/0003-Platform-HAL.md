@@ -1,80 +1,43 @@
-# ADR-0003: Namespace-Based Platform Hardware Abstraction Layer
+# ADR-0003: Platform Hardware Abstraction Layer
 
-Status: Accepted
-
-Date: 2026-07-17
-
-Decision ID: ADR-0003
+- Status: Accepted
+- Date: 2026-07-18
 
 ---
 
-# Context
+## Context
 
-The original Platform implementation used instantiable C++ classes.
+The firmware targets an ESP32 using the Arduino framework today, but future hardware revisions or MCU changes should require minimal modifications.
 
-ESP32 hardware peripherals are globally unique resources and do not require object instances.
+Without a Hardware Abstraction Layer (HAL), hardware-specific code would spread throughout Drivers and Services, creating tight coupling to Arduino and ESP-IDF.
 
-Platform should expose hardware capabilities only.
-
----
-
-# Decision
-
-Platform SHALL expose namespace-based APIs.
-
-Example:
-
-- NAS::Platform::GPIO::Configure(...)
-- NAS::Platform::PWM::SetDutyCycle(...)
-- NAS::Platform::USB::Write(...)
-
-Platform SHALL:
-
-- Abstract ESP32 hardware.
-- Hide Arduino implementation.
-- Hide ESP-IDF implementation.
-- Return Core::Result.
-- Contain no application logic.
-- Contain no protocol logic.
-- Contain no business logic.
-- Contain no service logic.
-
-Platform SHALL NOT:
-
-- Allocate dynamic memory.
-- Use new/delete.
-- Know about relays.
-- Know about fans.
-- Know about LEDs.
-- Know about temperature sensors.
-- Know about storage logic.
-- Know about protocol parsing.
-- Know about System Manager.
+A dedicated Platform layer is required to isolate all hardware implementation details.
 
 ---
 
-# Consequences
+## Decision
 
-## Benefits
+The Platform layer shall be the only layer permitted to access:
 
-- Cleaner architecture.
-- Easier maintenance.
-- Easier migration to future ESP32 hardware.
-- Arduino updates isolated.
-- Drivers remain hardware independent.
-- Services remain platform independent.
+- Arduino Framework APIs
+- ESP-IDF APIs
+- GPIO peripherals
+- Timers
+- PWM
+- USB
+- Flash memory
+- Watchdog
+- ADC
+- UART
+- SPI
+- I2C
+- OneWire
 
-## Trade-offs
+The Platform layer exposes lightweight namespace-based APIs and returns standardized Core::Result objects.
 
-- Slightly more wrapper functions.
-- Platform owns all hardware access.
+Implemented modules include:
 
----
-
-# Scope
-
-This decision applies to:
-
+- PlatformManager
 - GPIO
 - Timer
 - PWM
@@ -88,12 +51,59 @@ This decision applies to:
 - Restart
 - Watchdog
 
-This ADR is frozen for Firmware Version 1.x.
+---
+
+## Consequences
+
+### Advantages
+
+- Hardware is isolated.
+- Drivers remain portable.
+- Arduino dependencies exist in one layer only.
+- ESP-IDF dependencies exist in one layer only.
+- Easier migration to future hardware.
+- Easier unit testing using mock HAL implementations.
+
+### Limitations
+
+Platform is not responsible for:
+
+- Business logic
+- Firmware state
+- Communication protocols
+- Configuration management
 
 ---
 
-# Approval
+## Dependency Rules
 
-Status: Accepted
+Allowed dependencies:
 
-This decision establishes the namespace-based Platform HAL contract for NAS Controller Firmware Version 1.x.
+Platform
+↓
+
+Core
+
+Platform must never depend on:
+
+- Drivers
+- Objects
+- Services
+- Protocol
+- System
+
+Drivers are the only layer permitted to communicate directly with Platform.
+
+---
+
+## Architecture
+
+The Platform layer provides thin wrappers around hardware functionality and contains no business logic.
+
+All hardware interaction flows through this layer before reaching higher firmware components.
+
+---
+
+## Status
+
+Frozen for Firmware Version 1.x.

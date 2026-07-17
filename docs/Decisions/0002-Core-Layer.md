@@ -1,78 +1,87 @@
-# ADR-0002: Core Firmware Foundation
+# ADR-0002: Core Layer
 
-Status: Accepted
-
-Date: 2026-07-17
-
-Decision ID: ADR-0002
+- Status: Accepted
+- Date: 2026-07-18
 
 ---
 
-# Context
+## Context
 
-The firmware required a hardware-independent foundation shared by every layer.
+The firmware requires a foundation that is completely independent of hardware, communication protocols, operating systems, and application logic.
 
-Application logic, hardware abstraction, and services must never duplicate common functionality.
+Every other layer depends on common functionality including:
 
-A stable foundation is required to keep the dependency tree clear and to avoid repeated implementations of common services.
+- Result handling
+- Version information
+- Build information
+- Scheduler
+- Event handling
+- Logging
+
+To maximize portability and testability, this functionality must remain platform independent.
 
 ---
 
-# Decision
+## Decision
 
-The Core layer shall contain:
+The Core layer shall:
+
+- Contain only platform-independent code.
+- Never include Arduino headers.
+- Never include ESP-IDF headers.
+- Never access GPIO, timers, USB, flash, or peripherals.
+- Provide common services used by every firmware layer.
+
+The Core layer consists of:
 
 - Result
 - ResultCode
 - BuildInfo
 - Version
+- Scheduler
+- SchedulerTask
 - Event
 - EventBus
 - Logger
 
-The Core layer SHALL:
+---
 
-- Be hardware independent.
-- Contain no Arduino code.
-- Contain no ESP-IDF code.
-- Contain no protocol implementation.
-- Contain no drivers.
-- Contain no services.
-- Contain no application logic.
+## Consequences
 
-Every higher firmware layer depends on Core.
+### Advantages
 
-Core depends only on standard C++.
+- Platform independent
+- Easily unit tested
+- Reusable across projects
+- Clear dependency hierarchy
+- Stable foundation
+
+### Limitations
+
+Core cannot:
+
+- Read hardware
+- Write hardware
+- Allocate platform resources
+- Access operating system services
 
 ---
 
-# Consequences
+## Dependency Rules
 
-## Benefits
+Allowed dependencies:
 
-- Clean dependency tree.
-- Reusable components.
-- Easier testing.
-- Hardware independence.
-- Stable project foundation.
+Core
+↓
 
-## Trade-offs
+(None)
 
-- Slightly larger abstraction layer.
-- More files.
+Every layer may depend on Core.
+
+Core depends on nothing.
 
 ---
 
-# Scope
+## Status
 
-This decision applies to all firmware versions 1.x.
-
-This decision is frozen.
-
----
-
-# Approval
-
-Status: Accepted
-
-This decision establishes the Core firmware foundation for NAS Controller Firmware Version 1.x.
+Frozen for Firmware Version 1.x.
