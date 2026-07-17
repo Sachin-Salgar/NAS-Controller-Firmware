@@ -21,6 +21,7 @@ enum class ResultCode : uint16_t
     Timeout,
     Busy,
     Unsupported,
+    AccessDenied,
 
     // Memory
     OutOfMemory,

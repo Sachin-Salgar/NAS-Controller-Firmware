@@ -60,10 +60,10 @@ Result RelayDriver::Configure(std::uint8_t relayId,
     relay.state = RelayState::Off;
     relay.configured = true;
 
-    Platform::GPIO::Configure(gpioPin,
-                              Platform::GPIO::Mode::Output);
+    (void)Platform::GPIO::Configure(gpioPin,
+                                    Platform::GPIO::Mode::Output);
 
-    Platform::GPIO::Write(
+    (void)Platform::GPIO::Write(
         gpioPin,
         activeLow ? Platform::GPIO::Level::High
                   : Platform::GPIO::Level::Low);

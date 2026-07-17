@@ -38,7 +38,7 @@ Result AddressableLedDriver::Initialize(std::uint8_t,
     ledCount_ = ledCount;
     brightness_ = 255U;
 
-    Clear();
+    (void)Clear();
 
     initialized_ = true;
 
