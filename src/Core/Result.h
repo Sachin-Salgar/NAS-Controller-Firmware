@@ -21,10 +21,13 @@ enum class ResultCode : uint16_t
     Timeout,
     Busy,
     Unsupported,
+    NotSupported,
     AccessDenied,
 
     // Memory
     OutOfMemory,
+    NullPointer,
+    BufferTooSmall,
 
     // Communication
     CommunicationError,
