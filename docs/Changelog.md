@@ -1,5 +1,44 @@
 # Changelog
 
+## [Unreleased] - Compilation Fixes and Scheduler Implementation
+
+### Added
+
+#### Core Layer - Result Code Enumeration Extension
+- Extended `ResultCode` enum with additional error codes for better error reporting:
+  - `NotSupported`: Used for unsupported command/feature requests
+  - `NullPointer`: Used for null pointer validation at system boundaries
+  - `BufferTooSmall`: Used when output buffer size is insufficient
+  - `CrcError`: Used for CRC validation failures in protocol packets
+  - `InvalidHeader`: Used for malformed/invalid packet headers
+  - `InvalidLength`: Used for invalid payload length validation
+  - `BufferFull`: Used for event buffer overflow conditions
+  - `NotFound`: Used when requested items are not found
+
+#### Core Layer - Task Scheduler
+- Implemented `Scheduler` class for time-based task scheduling
+  - Supports registration of periodic tasks with configurable intervals
+  - Non-blocking interval-based execution model using `millis()` timing
+  - Supports up to 16 concurrent tasks
+  - Properly integrated with `SchedulerService` for service orchestration
+
+### Fixed
+
+#### Build System
+- Resolved all compilation errors in Protocol layer modules
+  - Added missing `ResultCode` enum values used by `CommandDispatcher`, `PacketParser`, `PacketValidator`, and `PacketBuilder`
+  - Fixed `EventService` compilation by adding `BufferFull` and `NotFound` result codes
+- Removed non-existent initialization calls in `main.cpp`
+  - `BuildInfo::Initialize()` and `Version::Initialize()` don't exist (compile-time only)
+
+### Status
+- ✅ Clean compilation achieved (ESP32 Dev Module)
+- ✅ Firmware binary successfully generated (291 KB flash, 24 KB RAM)
+- ✅ All critical compilation errors resolved
+- ✅ Scheduler ready for task scheduling operations
+
+---
+
 ## [1.0.0] - Architecture Compliance Session (2026-07-18)
 
 ### Fixed
