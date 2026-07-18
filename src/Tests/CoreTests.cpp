@@ -31,7 +31,7 @@ static NAS::Core::Result TestLogger() noexcept
     auto result = logger.Initialize();
     if (!result)
     {
-        logger.Critical("[FAIL] Logger initialization failed");
+        (void)logger.Critical("[FAIL] Logger initialization failed");
         return result;
     }
 
@@ -333,7 +333,7 @@ static NAS::Core::Result TestScheduler() noexcept
 LayerResult TestCore() noexcept
 {
     NAS::Core::Logger logger;
-    logger.Initialize();
+    (void)logger.Initialize();
 
     LayerResult layerResult = {NAS::Core::Result::Ok(), nullptr,
         NAS::Core::ResultCode::Success, 0, 0, 0};
