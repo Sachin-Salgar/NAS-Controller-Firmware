@@ -91,7 +91,7 @@ static NAS::Core::Result TestTimer() noexcept
 [[nodiscard]]
 static NAS::Core::Result TestI2c() noexcept
 {
-    auto result = NAS::Platform::I2C::Initialize();
+    auto result = NAS::Platform::I2C::Initialize(21, 22, 100000);
     if (!result)
     {
         return result;
@@ -103,7 +103,7 @@ static NAS::Core::Result TestI2c() noexcept
 [[nodiscard]]
 static NAS::Core::Result TestSpi() noexcept
 {
-    auto result = NAS::Platform::SPI::Initialize();
+    auto result = NAS::Platform::SPI::Initialize(18, 19, 23, 5);
     if (!result)
     {
         return result;
