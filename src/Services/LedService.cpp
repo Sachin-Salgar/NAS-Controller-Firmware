@@ -7,6 +7,8 @@
  ******************************************************************************/
 
 #include "LedService.h"
+
+#include "../Config/LedMap.h"
 #include "../Drivers/LEDDriver.h"
 
 using namespace NAS::Core;
@@ -27,7 +29,8 @@ Result LedService::Initialize() noexcept
 
     for (std::uint8_t i = 0U; i < DriveLedCount; ++i)
     {
-        auto result = driveLeds_[i].Initialize(i);
+        auto ledIndex = NAS::Config::LedMap::GetDriveLedIndex(i);
+        auto result = driveLeds_[i].Initialize(ledIndex);
 
         if (!result)
         {

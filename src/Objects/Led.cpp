@@ -8,6 +8,7 @@
 
 #include "Led.h"
 
+#include "../Config/LedColors.h"
 #include "../Drivers/LEDDriver.h"
 
 using namespace NAS::Core;
@@ -72,37 +73,36 @@ DriveLedState Led::GetState() const noexcept
 
 Led::Color Led::StateToColor(DriveLedState state) noexcept
 {
+    using namespace NAS::Config::LedColors;
+
     switch (state)
     {
         case DriveLedState::Off:
-            return {0U, 0U, 0U};
+            return DriveOff;
 
         case DriveLedState::Idle:
-            // Blue
-            return {0U, 0U, 255U};
+            return DriveIdle;
 
         case DriveLedState::Reading:
-            // Green
-            return {0U, 255U, 0U};
+            return DriveReading;
 
         case DriveLedState::Writing:
-            // Yellow
-            return {255U, 255U, 0U};
+            return DriveWriting;
+
+        case DriveLedState::Standby:
+            return DriveStandby;
 
         case DriveLedState::Error:
-            // Red
-            return {255U, 0U, 0U};
+            return DriveError;
 
         case DriveLedState::Missing:
-            // Purple
-            return {128U, 0U, 128U};
+            return DriveMissing;
 
         case DriveLedState::Rebuilding:
-            // Cyan
-            return {0U, 255U, 255U};
+            return DriveRebuilding;
 
         default:
-            return {0U, 0U, 0U};
+            return DriveOff;
     }
 }
 
