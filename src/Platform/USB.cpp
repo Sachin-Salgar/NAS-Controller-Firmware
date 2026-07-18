@@ -26,6 +26,14 @@ Result Initialize(std::uint32_t baudRate) noexcept
         return Result(ResultCode::AlreadyInitialized);
     }
 
+    bool serialAlreadyInitialized = static_cast<bool>(Serial);
+
+    if (serialAlreadyInitialized)
+    {
+        initialized = true;
+        return Result::Ok();
+    }
+
     Serial.begin(baudRate);
     initialized = true;
     return Result::Ok();

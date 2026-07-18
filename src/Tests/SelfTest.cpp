@@ -15,6 +15,7 @@
 #include "TestResult.h"
 #include "../Core/Logger.h"
 #include "../Core/Result.h"
+#include "../Core/ResultCodeHelper.h"
 #include <Arduino.h>
 
 namespace NAS::Tests
@@ -48,65 +49,22 @@ struct FailureRecord
     NAS::Core::ResultCode code;
 };
 
-static void PrintResultCode(NAS::Core::ResultCode code) noexcept
+static void PrintFailureDetail(const char* layer, const char* component,
+                               NAS::Core::ResultCode code) noexcept
 {
     NAS::Core::Logger logger;
     (void)logger.Initialize();
 
-    const char* codeStr = "UnknownError";
-
-    if (code == NAS::Core::ResultCode::Success)
-        codeStr = "Success";
-    else if (code == NAS::Core::ResultCode::Failed)
-        codeStr = "Failed";
-    else if (code == NAS::Core::ResultCode::InvalidArgument)
-        codeStr = "InvalidArgument";
-    else if (code == NAS::Core::ResultCode::InvalidState)
-        codeStr = "InvalidState";
-    else if (code == NAS::Core::ResultCode::NotInitialized)
-        codeStr = "NotInitialized";
-    else if (code == NAS::Core::ResultCode::AlreadyInitialized)
-        codeStr = "AlreadyInitialized";
-    else if (code == NAS::Core::ResultCode::Timeout)
-        codeStr = "Timeout";
-    else if (code == NAS::Core::ResultCode::Busy)
-        codeStr = "Busy";
-    else if (code == NAS::Core::ResultCode::Unsupported)
-        codeStr = "Unsupported";
-    else if (code == NAS::Core::ResultCode::NotSupported)
-        codeStr = "NotSupported";
-    else if (code == NAS::Core::ResultCode::AccessDenied)
-        codeStr = "AccessDenied";
-    else if (code == NAS::Core::ResultCode::OutOfMemory)
-        codeStr = "OutOfMemory";
-    else if (code == NAS::Core::ResultCode::NullPointer)
-        codeStr = "NullPointer";
-    else if (code == NAS::Core::ResultCode::BufferTooSmall)
-        codeStr = "BufferTooSmall";
-    else if (code == NAS::Core::ResultCode::BufferFull)
-        codeStr = "BufferFull";
-    else if (code == NAS::Core::ResultCode::CommunicationError)
-        codeStr = "CommunicationError";
-    else if (code == NAS::Core::ResultCode::ChecksumError)
-        codeStr = "ChecksumError";
-    else if (code == NAS::Core::ResultCode::CrcError)
-        codeStr = "CrcError";
-    else if (code == NAS::Core::ResultCode::InvalidHeader)
-        codeStr = "InvalidHeader";
-    else if (code == NAS::Core::ResultCode::InvalidLength)
-        codeStr = "InvalidLength";
-    else if (code == NAS::Core::ResultCode::NotFound)
-        codeStr = "NotFound";
-    else if (code == NAS::Core::ResultCode::HardwareError)
-        codeStr = "HardwareError";
-    else if (code == NAS::Core::ResultCode::DeviceNotFound)
-        codeStr = "DeviceNotFound";
-    else if (code == NAS::Core::ResultCode::InvalidConfiguration)
-        codeStr = "InvalidConfiguration";
-    else if (code == NAS::Core::ResultCode::InternalError)
-        codeStr = "InternalError";
-
-    (void)logger.Error(codeStr);
+    Serial.println();
+    Serial.print("  ");
+    Serial.print(layer);
+    Serial.print(" -> ");
+    Serial.println(component);
+    Serial.print("    Result  : ");
+    Serial.println(NAS::Core::ResultCodeToString(code));
+    Serial.print("    Details : ");
+    Serial.println(NAS::Core::ResultCodeDescription(code));
+    Serial.flush();
 }
 
 [[nodiscard]]
@@ -233,43 +191,103 @@ NAS::Core::Result SelfTest::Run() noexcept
     }
 
     (void)logger.Info("");
-    (void)logger.Info("==================================================");
+
+    Serial.println("====================================");
+    Serial.println("BOOT SELF TEST SUMMARY");
+    Serial.println("====================================");
+    Serial.flush();
+
     if (failureCount == 0)
     {
-        (void)logger.Info("BOOT SELF TEST PASSED");
-        (void)logger.Info("==================================================");
-        (void)logger.Info("");
+        Serial.println("Core ............... PASS");
+        Serial.println("Platform ........... PASS");
+        Serial.println("Drivers ............ PASS");
+        Serial.println("Objects ............ PASS");
+        Serial.println("Services ........... PASS");
+        Serial.println("Protocol ........... PASS");
+        Serial.println("System ............. PASS");
+        Serial.println("====================================");
+        Serial.println("Passed Layers : 7");
+        Serial.println("Failed Layers : 0");
+        Serial.println("====================================");
+        Serial.flush();
+        Serial.println();
         Serial.println("<< SelfTest::Run PASSED");
         Serial.flush();
         return NAS::Core::Result::Ok();
     }
 
-    (void)logger.Info("BOOT SELF TEST FAILED");
-    (void)logger.Info("==================================================");
-    (void)logger.Info("");
+    Serial.print("Core ............... ");
+    Serial.println(layerResults[0].result ? "PASS" : "FAIL");
+    Serial.print("Platform ........... ");
+    Serial.println(layerResults[1].result ? "PASS" : "FAIL");
+    if (!layerResults[1].result && layerResults[1].failedComponent)
+    {
+        Serial.print("  ");
+        Serial.print(layerResults[1].failedComponent);
+        Serial.print(" ......... ");
+        Serial.println(NAS::Core::ResultCodeToString(layerResults[1].failureCode));
+    }
+    Serial.print("Drivers ............ ");
+    Serial.println(layerResults[2].result ? "PASS" : "FAIL");
+    if (!layerResults[2].result && layerResults[2].failedComponent)
+    {
+        Serial.print("  ");
+        Serial.print(layerResults[2].failedComponent);
+        Serial.print(" ......... ");
+        Serial.println(NAS::Core::ResultCodeToString(layerResults[2].failureCode));
+    }
+    Serial.print("Objects ............ ");
+    Serial.println(layerResults[3].result ? "PASS" : "FAIL");
+    if (!layerResults[3].result && layerResults[3].failedComponent)
+    {
+        Serial.print("  ");
+        Serial.print(layerResults[3].failedComponent);
+        Serial.print(" ......... ");
+        Serial.println(NAS::Core::ResultCodeToString(layerResults[3].failureCode));
+    }
+    Serial.print("Services ........... ");
+    Serial.println(layerResults[4].result ? "PASS" : "FAIL");
+    if (!layerResults[4].result && layerResults[4].failedComponent)
+    {
+        Serial.print("  ");
+        Serial.print(layerResults[4].failedComponent);
+        Serial.print(" ......... ");
+        Serial.println(NAS::Core::ResultCodeToString(layerResults[4].failureCode));
+    }
+    Serial.print("Protocol ........... ");
+    Serial.println(layerResults[5].result ? "PASS" : "FAIL");
+    if (!layerResults[5].result && layerResults[5].failedComponent)
+    {
+        Serial.print("  ");
+        Serial.print(layerResults[5].failedComponent);
+        Serial.print(" ......... ");
+        Serial.println(NAS::Core::ResultCodeToString(layerResults[5].failureCode));
+    }
+    Serial.print("System ............. ");
+    Serial.println(layerResults[6].result ? "PASS" : "FAIL");
+    if (!layerResults[6].result && layerResults[6].failedComponent)
+    {
+        Serial.print("  ");
+        Serial.print(layerResults[6].failedComponent);
+        Serial.print(" ......... ");
+        Serial.println(NAS::Core::ResultCodeToString(layerResults[6].failureCode));
+    }
+    Serial.println("====================================");
+    Serial.print("Passed Layers : ");
+    Serial.println(7 - failureCount);
+    Serial.print("Failed Layers : ");
+    Serial.println(failureCount);
+    Serial.println("====================================");
+    Serial.flush();
 
     for (int i = 0; i < failureCount; ++i)
     {
-        (void)logger.Info("Failed Test");
-        (void)logger.Info("");
-        (void)logger.Error(failures[i].layer);
-        (void)logger.Error(" -> ");
-        (void)logger.Error(failures[i].component);
-        (void)logger.Info("");
-        (void)logger.Info("Result Code");
-        (void)logger.Info("");
-
-        PrintResultCode(failures[i].code);
-
-        if (i < failureCount - 1)
-        {
-            (void)logger.Info("");
-            (void)logger.Info("---");
-            (void)logger.Info("");
-        }
+        PrintFailureDetail(failures[i].layer, failures[i].component,
+                          failures[i].code);
     }
 
-    (void)logger.Info("");
+    Serial.println();
     Serial.println("<< SelfTest::Run FAILED");
     Serial.flush();
     return NAS::Core::Result(NAS::Core::ResultCode::Failed);
