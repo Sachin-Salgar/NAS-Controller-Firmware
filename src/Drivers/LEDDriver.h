@@ -27,10 +27,6 @@ public:
     static NAS::Core::Result Initialize() noexcept;
 
     [[nodiscard]]
-    static NAS::Core::Result Configure(std::uint8_t gpioPin,
-                                       std::uint16_t ledCount) noexcept;
-
-    [[nodiscard]]
     static NAS::Core::Result SetPixel(
         std::uint16_t index,
         const NAS::Platform::WS2812::Color& color) noexcept;
@@ -47,18 +43,12 @@ public:
         std::uint8_t brightness) noexcept;
 
     [[nodiscard]]
-    static NAS::Core::Result Refresh() noexcept;
+    static NAS::Core::Result Show() noexcept;
 
 private:
 
     static bool initialized_;
 
-    static bool configured_;
-
-    static std::uint8_t gpioPin_;
-
-    static std::uint16_t ledCount_;
-
 };
 
-}
+} // namespace NAS::Drivers

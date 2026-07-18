@@ -17,7 +17,6 @@
 #include "../Objects/Configuration.h"
 #include "../Objects/Drive.h"
 #include "../Objects/Fan.h"
-#include "../Objects/Led.h"
 #include "../Objects/Relay.h"
 #include "../Objects/Statistics.h"
 #include "../Objects/SystemStatus.h"

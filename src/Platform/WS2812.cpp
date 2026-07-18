@@ -1,4 +1,12 @@
-#include "WS2812.H"
+/******************************************************************************
+ *
+ * Project : NAS Controller Firmware
+ * Module  : Platform
+ * File    : WS2812.cpp
+ *
+ ******************************************************************************/
+
+#include "WS2812.h"
 
 #include <Adafruit_NeoPixel.h>
 
@@ -8,32 +16,27 @@ namespace NAS::Platform::WS2812
 namespace
 {
 
+constexpr std::uint8_t kDataPin = 18U;
+constexpr std::uint16_t kLedCount = 60U;
+constexpr std::uint8_t kDefaultBrightness = 102U;
+
 bool initialized = false;
 
-std::uint8_t gpio = 0;
+std::uint8_t currentBrightness = kDefaultBrightness;
 
-std::uint16_t leds = 0;
+Adafruit_NeoPixel strip(
+    kLedCount,
+    kDataPin,
+    NEO_GRB + NEO_KHZ800);
 
-std::uint8_t currentBrightness = 102;
+} // namespace
 
-Adafruit_NeoPixel strip;
-
-}
-
-Core::Result Initialize(
-    std::uint8_t gpioPin,
-    std::uint16_t ledCount) noexcept
+Core::Result Initialize() noexcept
 {
     if (initialized)
     {
         return Core::Result(Core::ResultCode::AlreadyInitialized);
     }
-
-    gpio = gpioPin;
-    leds = ledCount;
-
-    strip.updateLength(ledCount);
-    strip.setPin(gpioPin);
 
     strip.begin();
 
@@ -57,7 +60,7 @@ Core::Result SetPixel(
         return Core::Result(Core::ResultCode::NotInitialized);
     }
 
-    if (index >= leds)
+    if (index >= kLedCount)
     {
         return Core::Result(Core::ResultCode::InvalidArgument);
     }
@@ -80,7 +83,7 @@ Core::Result Fill(
         return Core::Result(Core::ResultCode::NotInitialized);
     }
 
-    for (std::uint16_t i = 0; i < leds; ++i)
+    for (std::uint16_t i = 0; i < kLedCount; ++i)
     {
         strip.setPixelColor(
             i,
@@ -139,7 +142,7 @@ bool IsInitialized() noexcept
 
 std::uint16_t GetLedCount() noexcept
 {
-    return leds;
+    return kLedCount;
 }
 
-}
+} // namespace NAS::Platform::WS2812

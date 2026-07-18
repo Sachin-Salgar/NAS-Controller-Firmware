@@ -6,7 +6,7 @@
  *
  * Description:
  * Driver layer self-tests (RelayDriver, PWMFanDriver, TemperatureDriver,
- * UsbDriver, StorageDriver, AddressableLedDriver, WatchdogDriver).
+ * UsbDriver, StorageDriver, LEDDriver, WatchdogDriver).
  *
  ******************************************************************************/
 
@@ -19,7 +19,7 @@
 #include "../Drivers/TemperatureDriver.h"
 #include "../Drivers/UsbDriver.h"
 #include "../Drivers/StorageDriver.h"
-#include "../Drivers/AddressableLedDriver.h"
+#include "../Drivers/LEDDriver.h"
 #include "../Drivers/WatchdogDriver.h"
 
 namespace NAS::Tests
@@ -92,15 +92,15 @@ static NAS::Core::Result TestStorageDriver() noexcept
 }
 
 [[nodiscard]]
-static NAS::Core::Result TestAddressableLedDriver() noexcept
+static NAS::Core::Result LEDDriver() noexcept
 {
-    auto result = NAS::Drivers::AddressableLedDriver::Initialize(15, 25);
+    auto result = NAS::Drivers::LEDDriver::Initialize(15, 25);
     if (!result)
     {
         return result;
     }
 
-    auto ledCount = NAS::Drivers::AddressableLedDriver::LedCount();
+    auto ledCount = NAS::Drivers::LEDDriver::LedCount();
     if (ledCount != 25)
     {
         return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
@@ -132,18 +132,18 @@ LayerResult TestDrivers() noexcept
 
     TestFormatter::PrintHeader("DRIVERS");
 
-    auto result = TestAddressableLedDriver();
+    auto result = LEDDriver();
     if (!result)
     {
-        TestFormatter::PrintFail("AddressableLedDriver");
+        TestFormatter::PrintFail("LEDDriver");
         if (!layerResult.result)
         {
-            layerResult.failedComponent = "AddressableLedDriver";
+            layerResult.failedComponent = "LEDDriver";
             layerResult.failureCode = result.Code();
         }
         layerResult.failCount++;
     } else {
-        TestFormatter::PrintPass("AddressableLedDriver");
+        TestFormatter::PrintPass("LEDDriver");
         layerResult.passCount++;
     }
 

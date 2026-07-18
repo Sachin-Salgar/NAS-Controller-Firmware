@@ -7,24 +7,32 @@
  * File    : Led.h
  *
  * Description:
- * Addressable LED Object.
+ * Logical Drive LED Object.
  *
  ******************************************************************************/
 
 #include <cstdint>
 
 #include "../Core/Result.h"
-#include "../Drivers/AddressableLedDriver.h"
 
 namespace NAS::Objects
 {
 
-enum class LedMode : std::uint8_t
+enum class DriveLedState : std::uint8_t
 {
     Off = 0,
-    Solid,
-    Blink,
-    Pulse
+
+    Idle,
+
+    Reading,
+
+    Writing,
+
+    Error,
+
+    Missing,
+
+    Rebuilding
 };
 
 class Led
@@ -34,41 +42,43 @@ public:
     Led() = default;
 
     [[nodiscard]]
-    NAS::Core::Result Initialize(std::uint16_t index) noexcept;
+    NAS::Core::Result Initialize(
+        std::uint16_t ledIndex) noexcept;
 
     [[nodiscard]]
-    NAS::Core::Result SetColor(std::uint8_t red,
-                               std::uint8_t green,
-                               std::uint8_t blue) noexcept;
+    NAS::Core::Result SetState(
+        DriveLedState state) noexcept;
 
     [[nodiscard]]
-    NAS::Core::Result SetMode(LedMode mode) noexcept;
-
-    [[nodiscard]]
-    NAS::Core::Result SetBrightness(std::uint8_t brightness) noexcept;
-
-    [[nodiscard]]
-    NAS::Core::Result TurnOff() noexcept;
+    NAS::Core::Result Refresh() noexcept;
 
     [[nodiscard]]
     std::uint16_t GetIndex() const noexcept;
 
     [[nodiscard]]
-    LedMode GetMode() const noexcept;
+    DriveLedState GetState() const noexcept;
 
 private:
 
-    std::uint16_t index_{0U};
+    struct Color
+    {
+        std::uint8_t red;
+        std::uint8_t green;
+        std::uint8_t blue;
+    };
 
-    std::uint8_t red_{0U};
-    std::uint8_t green_{0U};
-    std::uint8_t blue_{0U};
+    [[nodiscard]]
+    static Color StateToColor(
+        DriveLedState state) noexcept;
 
-    std::uint8_t brightness_{255U};
-
-    LedMode mode_{LedMode::Off};
+private:
 
     bool initialized_{false};
+
+    std::uint16_t ledIndex_{0U};
+
+    DriveLedState state_{DriveLedState::Off};
+
 };
 
 } // namespace NAS::Objects

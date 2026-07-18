@@ -8,82 +8,102 @@
 
 #include "Led.h"
 
+#include "../Drivers/LEDDriver.h"
+
 using namespace NAS::Core;
 
 namespace NAS::Objects
 {
 
-Result Led::Initialize(std::uint16_t index) noexcept
+Result Led::Initialize(std::uint16_t ledIndex) noexcept
 {
     if (initialized_)
     {
         return Result(ResultCode::AlreadyInitialized);
     }
 
-    index_ = index;
+    ledIndex_ = ledIndex;
+    state_ = DriveLedState::Off;
+
     initialized_ = true;
 
     return Result::Ok();
 }
 
-Result Led::SetColor(std::uint8_t red,
-                     std::uint8_t green,
-                     std::uint8_t blue) noexcept
+Result Led::SetState(DriveLedState state) noexcept
 {
     if (!initialized_)
     {
         return Result(ResultCode::NotInitialized);
     }
 
-    red_ = red;
-    green_ = green;
-    blue_ = blue;
+    state_ = state;
 
-    return NAS::Drivers::AddressableLedDriver::SetColor(
-        index_,
-        {red_, green_, blue_});
+    const Color color = StateToColor(state_);
+
+    return NAS::Drivers::LEDDriver::SetPixel(
+        ledIndex_,
+        {
+            color.red,
+            color.green,
+            color.blue
+        });
 }
 
-Result Led::SetMode(LedMode mode) noexcept
+Result Led::Refresh() noexcept
 {
     if (!initialized_)
     {
         return Result(ResultCode::NotInitialized);
     }
 
-    mode_ = mode;
-
-    return Result::Ok();
-}
-
-Result Led::SetBrightness(std::uint8_t brightness) noexcept
-{
-    if (!initialized_)
-    {
-        return Result(ResultCode::NotInitialized);
-    }
-
-    brightness_ = brightness;
-
-    return NAS::Drivers::AddressableLedDriver::SetBrightness(
-        brightness_);
-}
-
-Result Led::TurnOff() noexcept
-{
-    mode_ = LedMode::Off;
-
-    return SetColor(0U, 0U, 0U);
+    return NAS::Drivers::LEDDriver::Show();
 }
 
 std::uint16_t Led::GetIndex() const noexcept
 {
-    return index_;
+    return ledIndex_;
 }
 
-LedMode Led::GetMode() const noexcept
+DriveLedState Led::GetState() const noexcept
 {
-    return mode_;
+    return state_;
+}
+
+Led::Color Led::StateToColor(DriveLedState state) noexcept
+{
+    switch (state)
+    {
+        case DriveLedState::Off:
+            return {0U, 0U, 0U};
+
+        case DriveLedState::Idle:
+            // Blue
+            return {0U, 0U, 255U};
+
+        case DriveLedState::Reading:
+            // Green
+            return {0U, 255U, 0U};
+
+        case DriveLedState::Writing:
+            // Yellow
+            return {255U, 255U, 0U};
+
+        case DriveLedState::Error:
+            // Red
+            return {255U, 0U, 0U};
+
+        case DriveLedState::Missing:
+            // Purple
+            return {128U, 0U, 128U};
+
+        case DriveLedState::Rebuilding:
+            // Cyan
+            return {0U, 255U, 255U};
+
+        default:
+            return {0U, 0U, 0U};
+    }
 }
 
 } // namespace NAS::Objects

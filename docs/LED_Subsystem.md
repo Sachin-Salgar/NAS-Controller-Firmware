@@ -360,6 +360,26 @@ The following decisions are frozen for Version 1.0.
 |----------|------|-------------|
 | 1.0 | 18 Jul 2026 | Initial frozen specification |
 
+# 18. Platform Freeze
+
+The Platform::WS2812 module owns all hardware configuration.
+
+The following values shall never appear outside the Platform layer:
+
+- GPIO18
+- 60 LEDs
+- GRB color order
+- 800 kHz timing
+- Adafruit NeoPixel implementation
+- ESP32 RMT usage
+
+The Driver layer shall never contain hardware constants.
+
+LEDDriver communicates exclusively through the Platform::WS2812 API.
+
+Status:
+FROZEN
+
 
 # Implementation Freeze
 

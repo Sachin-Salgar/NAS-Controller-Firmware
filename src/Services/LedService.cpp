@@ -7,15 +7,16 @@
  ******************************************************************************/
 
 #include "LedService.h"
+#include "../Drivers/LEDDriver.h"
 
 using namespace NAS::Core;
 
 namespace NAS::Services
 {
 
-NAS::Objects::Led LedService::leds_[LedCount];
-
 bool LedService::initialized_ = false;
+
+NAS::Objects::Led LedService::driveLeds_[DriveLedCount];
 
 Result LedService::Initialize() noexcept
 {
@@ -24,11 +25,11 @@ Result LedService::Initialize() noexcept
         return Result(ResultCode::AlreadyInitialized);
     }
 
-    for (std::uint16_t i = 0U; i < LedCount; ++i)
+    for (std::uint8_t i = 0U; i < DriveLedCount; ++i)
     {
-        auto result = leds_[i].Initialize(i);
+        auto result = driveLeds_[i].Initialize(i);
 
-        if (!result.IsSuccess())
+        if (!result)
         {
             return result;
         }
@@ -39,50 +40,52 @@ Result LedService::Initialize() noexcept
     return Result::Ok();
 }
 
-Result LedService::SetColor(
-    std::uint16_t ledId,
-    std::uint8_t red,
-    std::uint8_t green,
-    std::uint8_t blue) noexcept
+Result LedService::SetDriveState(
+    std::uint8_t driveId,
+    NAS::Objects::DriveLedState state) noexcept
 {
-    if (ledId >= LedCount)
+    if (!initialized_)
+    {
+        return Result(ResultCode::NotInitialized);
+    }
+
+    if (driveId >= DriveLedCount)
     {
         return Result(ResultCode::InvalidArgument);
     }
 
-    return leds_[ledId].SetColor(
-        red,
-        green,
-        blue);
+    return driveLeds_[driveId].SetState(state);
 }
 
-Result LedService::SetMode(
-    std::uint16_t ledId,
-    NAS::Objects::LedMode mode) noexcept
+Result LedService::Refresh() noexcept
 {
-    if (ledId >= LedCount)
+    if (!initialized_)
     {
-        return Result(ResultCode::InvalidArgument);
+        return Result(ResultCode::NotInitialized);
     }
 
-    return leds_[ledId].SetMode(mode);
+    return NAS::Drivers::LEDDriver::Show();
 }
 
-Result LedService::TurnOff(
-    std::uint16_t ledId) noexcept
+Result LedService::ClearAll() noexcept
 {
-    if (ledId >= LedCount)
+    if (!initialized_)
     {
-        return Result(ResultCode::InvalidArgument);
+        return Result(ResultCode::NotInitialized);
     }
 
-    return leds_[ledId].TurnOff();
-}
+    for (std::uint8_t i = 0U; i < DriveLedCount; ++i)
+    {
+        auto result = driveLeds_[i].SetState(
+            NAS::Objects::DriveLedState::Off);
 
-NAS::Objects::Led&
-LedService::GetLed(std::uint16_t ledId) noexcept
-{
-    return leds_[ledId];
+        if (!result)
+        {
+            return result;
+        }
+    }
+
+    return NAS::Drivers::LEDDriver::Show();
 }
 
 } // namespace NAS::Services

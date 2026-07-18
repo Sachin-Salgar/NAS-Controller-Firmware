@@ -138,11 +138,6 @@ static NAS::Core::Result TestLedService() noexcept
         return result;
     }
 
-    if (NAS::Services::LedService::LedCount == 0)
-    {
-        return NAS::Core::Result::Ok();
-    }
-
     return NAS::Core::Result::Ok();
 }
 

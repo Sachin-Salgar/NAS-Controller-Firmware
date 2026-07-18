@@ -1,5 +1,16 @@
 #pragma once
 
+/******************************************************************************
+ *
+ * Project : NAS Controller Firmware
+ * Module  : Platform
+ * File    : WS2812.h
+ *
+ * Description:
+ * Platform abstraction for WS2812 LED strip.
+ *
+ ******************************************************************************/
+
 #include <cstdint>
 
 #include "../Core/Result.h"
@@ -15,28 +26,26 @@ struct Color
 };
 
 [[nodiscard]]
-Core::Result Initialize(
-    std::uint8_t gpioPin,
-    std::uint16_t ledCount) noexcept;
+NAS::Core::Result Initialize() noexcept;
 
 [[nodiscard]]
-Core::Result SetPixel(
+NAS::Core::Result SetPixel(
     std::uint16_t index,
     const Color& color) noexcept;
 
 [[nodiscard]]
-Core::Result Fill(
+NAS::Core::Result Fill(
     const Color& color) noexcept;
 
 [[nodiscard]]
-Core::Result Clear() noexcept;
+NAS::Core::Result Clear() noexcept;
 
 [[nodiscard]]
-Core::Result SetBrightness(
+NAS::Core::Result SetBrightness(
     std::uint8_t brightness) noexcept;
 
 [[nodiscard]]
-Core::Result Show() noexcept;
+NAS::Core::Result Show() noexcept;
 
 [[nodiscard]]
 bool IsInitialized() noexcept;
@@ -44,4 +53,4 @@ bool IsInitialized() noexcept;
 [[nodiscard]]
 std::uint16_t GetLedCount() noexcept;
 
-}
+} // namespace NAS::Platform::WS2812
