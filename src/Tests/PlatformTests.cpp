@@ -14,6 +14,7 @@
 #include "TestFormatter.h"
 #include "../Core/Logger.h"
 #include "../Core/Result.h"
+#include "../Core/ResultCodeHelper.h"
 #include <Arduino.h>
 #include "../Platform/GPIO.h"
 #include "../Platform/Flash.h"
@@ -158,7 +159,10 @@ static NAS::Core::Result TestUsb() noexcept
     auto result = NAS::Platform::USB::Initialize();
     if (!result)
     {
-        Serial.println("  << TestUsb FAIL");
+        Serial.print("  << TestUsb FAIL - Result: ");
+        Serial.print(NAS::Core::ResultCodeToString(result.Code()));
+        Serial.print(", Description: ");
+        Serial.println(NAS::Core::ResultCodeDescription(result.Code()));
         Serial.flush();
         return result;
     }
@@ -239,6 +243,10 @@ LayerResult TestPlatform() noexcept
     if (!result)
     {
         TestFormatter::PrintFail("GPIO");
+        Serial.print("    Result: ");
+        Serial.print(NAS::Core::ResultCodeToString(result.Code()));
+        Serial.println();
+        Serial.flush();
         if (!layerResult.result)
         {
             layerResult.failedComponent = "GPIO";
@@ -254,6 +262,10 @@ LayerResult TestPlatform() noexcept
     if (!result)
     {
         TestFormatter::PrintFail("Flash");
+        Serial.print("    Result: ");
+        Serial.print(NAS::Core::ResultCodeToString(result.Code()));
+        Serial.println();
+        Serial.flush();
         if (!layerResult.result)
         {
             layerResult.failedComponent = "Flash";
@@ -269,6 +281,10 @@ LayerResult TestPlatform() noexcept
     if (!result)
     {
         TestFormatter::PrintFail("USB");
+        Serial.print("    Result: ");
+        Serial.print(NAS::Core::ResultCodeToString(result.Code()));
+        Serial.println();
+        Serial.flush();
         if (!layerResult.result)
         {
             layerResult.failedComponent = "USB";
@@ -284,6 +300,10 @@ LayerResult TestPlatform() noexcept
     if (!result)
     {
         TestFormatter::PrintFail("PWM");
+        Serial.print("    Result: ");
+        Serial.print(NAS::Core::ResultCodeToString(result.Code()));
+        Serial.println();
+        Serial.flush();
         if (!layerResult.result)
         {
             layerResult.failedComponent = "PWM";
@@ -299,6 +319,10 @@ LayerResult TestPlatform() noexcept
     if (!result)
     {
         TestFormatter::PrintFail("UART");
+        Serial.print("    Result: ");
+        Serial.print(NAS::Core::ResultCodeToString(result.Code()));
+        Serial.println();
+        Serial.flush();
         if (!layerResult.result)
         {
             layerResult.failedComponent = "UART";
@@ -314,6 +338,10 @@ LayerResult TestPlatform() noexcept
     if (!result)
     {
         TestFormatter::PrintFail("I2C");
+        Serial.print("    Result: ");
+        Serial.print(NAS::Core::ResultCodeToString(result.Code()));
+        Serial.println();
+        Serial.flush();
         if (!layerResult.result)
         {
             layerResult.failedComponent = "I2C";
@@ -329,6 +357,10 @@ LayerResult TestPlatform() noexcept
     if (!result)
     {
         TestFormatter::PrintFail("SPI");
+        Serial.print("    Result: ");
+        Serial.print(NAS::Core::ResultCodeToString(result.Code()));
+        Serial.println();
+        Serial.flush();
         if (!layerResult.result)
         {
             layerResult.failedComponent = "SPI";
@@ -344,6 +376,10 @@ LayerResult TestPlatform() noexcept
     if (!result)
     {
         TestFormatter::PrintFail("ADC");
+        Serial.print("    Result: ");
+        Serial.print(NAS::Core::ResultCodeToString(result.Code()));
+        Serial.println();
+        Serial.flush();
         if (!layerResult.result)
         {
             layerResult.failedComponent = "ADC";
@@ -359,6 +395,10 @@ LayerResult TestPlatform() noexcept
     if (!result)
     {
         TestFormatter::PrintFail("Timer");
+        Serial.print("    Result: ");
+        Serial.print(NAS::Core::ResultCodeToString(result.Code()));
+        Serial.println();
+        Serial.flush();
         if (!layerResult.result)
         {
             layerResult.failedComponent = "Timer";
@@ -374,6 +414,10 @@ LayerResult TestPlatform() noexcept
     if (!result)
     {
         TestFormatter::PrintFail("OneWire");
+        Serial.print("    Result: ");
+        Serial.print(NAS::Core::ResultCodeToString(result.Code()));
+        Serial.println();
+        Serial.flush();
         if (!layerResult.result)
         {
             layerResult.failedComponent = "OneWire";
