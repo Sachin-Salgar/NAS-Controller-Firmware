@@ -54,40 +54,69 @@ static NAS::Core::Result TestSystemManager() noexcept
     return NAS::Core::Result::Ok();
 }
 
+struct LayerResult
+{
+    NAS::Core::Result result;
+    const char* failedComponent;
+    int passCount;
+    int failCount;
+    int skippedCount;
+};
+
 [[nodiscard]]
-NAS::Core::Result TestSystem() noexcept
+LayerResult TestSystem() noexcept
 {
     NAS::Core::Logger logger;
     logger.Initialize();
 
-    logger.Info("[TEST] System");
+    LayerResult layerResult = {NAS::Core::Result::Ok(), nullptr, 0, 0, 0};
+
+    logger.Info("--------------------------------------------------");
+    logger.Info("SYSTEM");
+    logger.Info("--------------------------------------------------");
+    logger.Info("");
 
     auto result = TestStartup();
     if (!result)
     {
-        logger.Error("Startup FAIL");
-        return result;
+        logger.Error("Startup....................FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "Startup";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Info("Startup PASS");
+    logger.Info("Startup....................PASS");
+    layerResult.passCount++;
 
     result = TestApplication();
     if (!result)
     {
-        logger.Error("Application FAIL");
-        return result;
+        logger.Error("Application................FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "Application";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Info("Application PASS");
+    logger.Info("Application................PASS");
+    layerResult.passCount++;
 
     result = TestSystemManager();
     if (!result)
     {
-        logger.Error("SystemManager FAIL");
-        return result;
+        logger.Error("SystemManager..............FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "SystemManager";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Info("SystemManager PASS");
+    logger.Info("SystemManager..............PASS");
+    layerResult.passCount++;
 
-    logger.Info("[PASS] System");
-    return NAS::Core::Result::Ok();
+    logger.Info("");
+    logger.Info("PASS 3");
+    logger.Info("");
+
+    return layerResult;
 }
 
 } // namespace NAS::Tests

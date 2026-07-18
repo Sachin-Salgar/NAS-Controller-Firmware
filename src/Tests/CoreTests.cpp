@@ -327,72 +327,117 @@ static NAS::Core::Result TestScheduler() noexcept
     return NAS::Core::Result::Ok();
 }
 
+struct LayerResult
+{
+    NAS::Core::Result result;
+    const char* failedComponent;
+    int passCount;
+    int failCount;
+    int skippedCount;
+};
+
 [[nodiscard]]
-NAS::Core::Result TestCore() noexcept
+LayerResult TestCore() noexcept
 {
     NAS::Core::Logger logger;
     logger.Initialize();
 
-    logger.Info("[TEST] Core");
+    LayerResult layerResult = {NAS::Core::Result::Ok(), nullptr, 0, 0, 0};
+
+    logger.Info("--------------------------------------------------");
+    logger.Info("CORE");
+    logger.Info("--------------------------------------------------");
+    logger.Info("");
 
     auto result = TestLogger();
     if (!result)
     {
-        logger.Error("Logger FAIL");
-        return result;
+        logger.Error("Logger.......................FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "Logger";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Info("Logger PASS");
+    logger.Info("Logger.......................PASS");
+    layerResult.passCount++;
 
     result = TestResult();
     if (!result)
     {
-        logger.Error("Result FAIL");
-        return result;
+        logger.Error("Result.......................FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "Result";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Info("Result PASS");
+    logger.Info("Result.......................PASS");
+    layerResult.passCount++;
 
     result = TestVersion();
     if (!result)
     {
-        logger.Error("Version FAIL");
-        return result;
+        logger.Error("Version......................FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "Version";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Info("Version PASS");
+    logger.Info("Version......................PASS");
+    layerResult.passCount++;
 
     result = TestBuildInfo();
     if (!result)
     {
-        logger.Error("BuildInfo FAIL");
-        return result;
+        logger.Error("BuildInfo....................FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "BuildInfo";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Info("BuildInfo PASS");
+    logger.Info("BuildInfo....................PASS");
+    layerResult.passCount++;
 
     result = TestEvent();
     if (!result)
     {
-        logger.Error("Event FAIL");
-        return result;
+        logger.Error("Event.......................FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "Event";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Info("Event PASS");
+    logger.Info("Event.......................PASS");
+    layerResult.passCount++;
 
     result = TestEventBus();
     if (!result)
     {
-        logger.Error("EventBus FAIL");
-        return result;
+        logger.Error("EventBus.....................FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "EventBus";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Info("EventBus PASS");
+    logger.Info("EventBus.....................PASS");
+    layerResult.passCount++;
 
     result = TestScheduler();
     if (!result)
     {
-        logger.Error("Scheduler FAIL");
-        return result;
+        logger.Error("Scheduler....................FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "Scheduler";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Info("Scheduler PASS");
+    logger.Info("Scheduler....................PASS");
+    layerResult.passCount++;
 
-    logger.Info("[PASS] Core");
-    return NAS::Core::Result::Ok();
+    logger.Info("");
+    logger.Info("PASS 7");
+    logger.Info("");
+
+    return layerResult;
 }
 
 } // namespace NAS::Tests

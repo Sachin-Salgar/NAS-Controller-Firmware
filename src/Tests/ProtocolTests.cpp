@@ -272,72 +272,117 @@ static NAS::Core::Result TestCommandDispatcher() noexcept
     return NAS::Core::Result::Ok();
 }
 
+struct LayerResult
+{
+    NAS::Core::Result result;
+    const char* failedComponent;
+    int passCount;
+    int failCount;
+    int skippedCount;
+};
+
 [[nodiscard]]
-NAS::Core::Result TestProtocol() noexcept
+LayerResult TestProtocol() noexcept
 {
     NAS::Core::Logger logger;
     logger.Initialize();
 
-    logger.Info("[TEST] Protocol");
+    LayerResult layerResult = {NAS::Core::Result::Ok(), nullptr, 0, 0, 0};
 
-    auto result = TestCommands();
+    logger.Info("--------------------------------------------------");
+    logger.Info("PROTOCOL");
+    logger.Info("--------------------------------------------------");
+    logger.Info("");
+
+    auto result = TestCrc16();
     if (!result)
     {
-        logger.Error("Commands FAIL");
-        return result;
+        logger.Error("CRC16......................FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "CRC16";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Info("Commands PASS");
-
-    result = TestCrc16();
-    if (!result)
-    {
-        logger.Error("CRC16 FAIL");
-        return result;
-    }
-    logger.Info("CRC16 PASS");
+    logger.Info("CRC16......................PASS");
+    layerResult.passCount++;
 
     result = TestPacketBuilder();
     if (!result)
     {
-        logger.Error("PacketBuilder FAIL");
-        return result;
+        logger.Error("PacketBuilder..............FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "PacketBuilder";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Info("PacketBuilder PASS");
+    logger.Info("PacketBuilder..............PASS");
+    layerResult.passCount++;
 
     result = TestPacketParser();
     if (!result)
     {
-        logger.Error("PacketParser FAIL");
-        return result;
+        logger.Error("PacketParser...............FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "PacketParser";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Info("PacketParser PASS");
+    logger.Info("PacketParser...............PASS");
+    layerResult.passCount++;
 
     result = TestPacketValidator();
     if (!result)
     {
-        logger.Error("PacketValidator FAIL");
-        return result;
+        logger.Error("PacketValidator............FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "PacketValidator";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Info("PacketValidator PASS");
+    logger.Info("PacketValidator............PASS");
+    layerResult.passCount++;
 
     result = TestResponseBuilder();
     if (!result)
     {
-        logger.Error("ResponseBuilder FAIL");
-        return result;
+        logger.Error("ResponseBuilder............FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "ResponseBuilder";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Info("ResponseBuilder PASS");
+    logger.Info("ResponseBuilder............PASS");
+    layerResult.passCount++;
 
     result = TestCommandDispatcher();
     if (!result)
     {
-        logger.Error("CommandDispatcher FAIL");
-        return result;
+        logger.Error("CommandDispatcher..........FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "CommandDispatcher";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Info("CommandDispatcher PASS");
+    logger.Info("CommandDispatcher..........PASS");
+    layerResult.passCount++;
 
-    logger.Info("[PASS] Protocol");
-    return NAS::Core::Result::Ok();
+    result = TestCommands();
+    if (!result)
+    {
+        logger.Error("Commands...................FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "Commands";
+        layerResult.failCount = 1;
+        return layerResult;
+    }
+    logger.Info("Commands...................PASS");
+    layerResult.passCount++;
+
+    logger.Info("");
+    logger.Info("PASS 7");
+    logger.Info("");
+
+    return layerResult;
 }
 
 } // namespace NAS::Tests

@@ -7,7 +7,8 @@
  * File    : SelfTest.h
  *
  * Description:
- * Production-quality firmware self-test framework that validates every layer.
+ * Production-quality diagnostic framework that validates every layer with
+ * detailed per-test output, category summaries, and failure diagnostics.
  *
  ******************************************************************************/
 

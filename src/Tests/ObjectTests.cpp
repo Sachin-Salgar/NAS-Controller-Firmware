@@ -376,80 +376,130 @@ static NAS::Core::Result TestTemperatureSensor() noexcept
     return NAS::Core::Result::Ok();
 }
 
+struct LayerResult
+{
+    NAS::Core::Result result;
+    const char* failedComponent;
+    int passCount;
+    int failCount;
+    int skippedCount;
+};
+
 [[nodiscard]]
-NAS::Core::Result TestObjects() noexcept
+LayerResult TestObjects() noexcept
 {
     NAS::Core::Logger logger;
     logger.Initialize();
 
-    logger.Info("[TEST] Objects");
+    LayerResult layerResult = {NAS::Core::Result::Ok(), nullptr, 0, 0, 0};
+
+    logger.Info("--------------------------------------------------");
+    logger.Info("OBJECTS");
+    logger.Info("--------------------------------------------------");
+    logger.Info("");
 
     auto result = TestConfiguration();
     if (!result)
     {
-        logger.Error("Configuration FAIL");
-        return result;
+        logger.Error("Configuration..............FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "Configuration";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Info("Configuration PASS");
+    logger.Info("Configuration..............PASS");
+    layerResult.passCount++;
 
     result = TestDrive();
     if (!result)
     {
-        logger.Error("Drive FAIL");
-        return result;
+        logger.Error("Drive......................FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "Drive";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Info("Drive PASS");
+    logger.Info("Drive......................PASS");
+    layerResult.passCount++;
 
     result = TestFan();
     if (!result)
     {
-        logger.Error("Fan FAIL");
-        return result;
+        logger.Error("Fan........................FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "Fan";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Info("Fan PASS");
+    logger.Info("Fan........................PASS");
+    layerResult.passCount++;
 
     result = TestLed();
     if (!result)
     {
-        logger.Error("Led FAIL");
-        return result;
+        logger.Error("Led........................FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "Led";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Info("Led PASS");
+    logger.Info("Led........................PASS");
+    layerResult.passCount++;
 
     result = TestRelay();
     if (!result)
     {
-        logger.Error("Relay FAIL");
-        return result;
+        logger.Error("Relay......................FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "Relay";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Warning("[SKIPPED] Relay hardware not connected");
+    logger.Warning("Relay......................SKIPPED");
+    layerResult.skippedCount++;
 
     result = TestStatistics();
     if (!result)
     {
-        logger.Error("Statistics FAIL");
-        return result;
+        logger.Error("Statistics.................FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "Statistics";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Info("Statistics PASS");
+    logger.Info("Statistics.................PASS");
+    layerResult.passCount++;
 
     result = TestSystemStatus();
     if (!result)
     {
-        logger.Error("SystemStatus FAIL");
-        return result;
+        logger.Error("SystemStatus...............FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "SystemStatus";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Info("SystemStatus PASS");
+    logger.Info("SystemStatus...............PASS");
+    layerResult.passCount++;
 
     result = TestTemperatureSensor();
     if (!result)
     {
-        logger.Error("TemperatureSensor FAIL");
-        return result;
+        logger.Error("TemperatureSensor..........FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "TemperatureSensor";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Warning("[SKIPPED] DS18B20 sensors not connected");
+    logger.Warning("TemperatureSensor..........SKIPPED");
+    layerResult.skippedCount++;
 
-    logger.Info("[PASS] Objects");
-    return NAS::Core::Result::Ok();
+    logger.Info("");
+    logger.Info("PASS 6");
+    logger.Info("SKIPPED 2");
+    logger.Info("");
+
+    return layerResult;
 }
 
 } // namespace NAS::Tests

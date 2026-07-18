@@ -225,88 +225,142 @@ static NAS::Core::Result TestServiceManager() noexcept
     return NAS::Core::Result::Ok();
 }
 
+struct LayerResult
+{
+    NAS::Core::Result result;
+    const char* failedComponent;
+    int passCount;
+    int failCount;
+    int skippedCount;
+};
+
 [[nodiscard]]
-NAS::Core::Result TestServices() noexcept
+LayerResult TestServices() noexcept
 {
     NAS::Core::Logger logger;
     logger.Initialize();
 
-    logger.Info("[TEST] Services");
+    LayerResult layerResult = {NAS::Core::Result::Ok(), nullptr, 0, 0, 0};
+
+    logger.Info("--------------------------------------------------");
+    logger.Info("SERVICES");
+    logger.Info("--------------------------------------------------");
+    logger.Info("");
 
     auto result = TestConfigurationService();
     if (!result)
     {
-        logger.Error("ConfigurationService FAIL");
-        return result;
+        logger.Error("ConfigurationService.......FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "ConfigurationService";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Info("ConfigurationService PASS");
+    logger.Info("ConfigurationService.......PASS");
+    layerResult.passCount++;
 
     result = TestDriveService();
     if (!result)
     {
-        logger.Error("DriveService FAIL");
-        return result;
+        logger.Error("DriveService...............FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "DriveService";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Info("DriveService PASS");
+    logger.Info("DriveService...............PASS");
+    layerResult.passCount++;
 
     result = TestFanService();
     if (!result)
     {
-        logger.Error("FanService FAIL");
-        return result;
+        logger.Error("FanService.................FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "FanService";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Info("FanService PASS");
+    logger.Info("FanService.................PASS");
+    layerResult.passCount++;
 
     result = TestLedService();
     if (!result)
     {
-        logger.Error("LedService FAIL");
-        return result;
+        logger.Error("LedService.................FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "LedService";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Info("LedService PASS");
+    logger.Info("LedService.................PASS");
+    layerResult.passCount++;
 
     result = TestRelayService();
     if (!result)
     {
-        logger.Error("RelayService FAIL");
-        return result;
+        logger.Error("RelayService...............FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "RelayService";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Warning("[SKIPPED] Relay hardware not connected");
+    logger.Warning("RelayService...............SKIPPED");
+    layerResult.skippedCount++;
 
     result = TestStatisticsService();
     if (!result)
     {
-        logger.Error("StatisticsService FAIL");
-        return result;
+        logger.Error("StatisticsService..........FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "StatisticsService";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Info("StatisticsService PASS");
+    logger.Info("StatisticsService..........PASS");
+    layerResult.passCount++;
 
     result = TestSystemService();
     if (!result)
     {
-        logger.Error("SystemService FAIL");
-        return result;
+        logger.Error("SystemService..............FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "SystemService";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Info("SystemService PASS");
+    logger.Info("SystemService..............PASS");
+    layerResult.passCount++;
 
     result = TestTemperatureService();
     if (!result)
     {
-        logger.Error("TemperatureService FAIL");
-        return result;
+        logger.Error("TemperatureService.........FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "TemperatureService";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Warning("[SKIPPED] DS18B20 sensors not connected");
+    logger.Warning("TemperatureService.........SKIPPED");
+    layerResult.skippedCount++;
 
     result = TestServiceManager();
     if (!result)
     {
-        logger.Error("ServiceManager FAIL");
-        return result;
+        logger.Error("ServiceManager.............FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "ServiceManager";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Info("ServiceManager PASS");
+    logger.Info("ServiceManager.............PASS");
+    layerResult.passCount++;
 
-    logger.Info("[PASS] Services");
-    return NAS::Core::Result::Ok();
+    logger.Info("");
+    logger.Info("PASS 7");
+    logger.Info("SKIPPED 2");
+    logger.Info("");
+
+    return layerResult;
 }
 
 } // namespace NAS::Tests

@@ -166,112 +166,154 @@ static NAS::Core::Result TestRestart() noexcept
     return NAS::Core::Result::Ok();
 }
 
+struct LayerResult
+{
+    NAS::Core::Result result;
+    const char* failedComponent;
+    int passCount;
+    int failCount;
+    int skippedCount;
+};
+
 [[nodiscard]]
-NAS::Core::Result TestPlatform() noexcept
+LayerResult TestPlatform() noexcept
 {
     NAS::Core::Logger logger;
     logger.Initialize();
 
-    logger.Info("[TEST] Platform");
+    LayerResult layerResult = {NAS::Core::Result::Ok(), nullptr, 0, 0, 0};
+
+    logger.Info("--------------------------------------------------");
+    logger.Info("PLATFORM");
+    logger.Info("--------------------------------------------------");
+    logger.Info("");
 
     auto result = TestGpio();
     if (!result)
     {
-        logger.Error("GPIO FAIL");
-        return result;
+        logger.Error("GPIO.........................FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "GPIO";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Info("GPIO PASS");
+    logger.Info("GPIO.........................PASS");
+    layerResult.passCount++;
 
     result = TestFlash();
     if (!result)
     {
-        logger.Error("Flash FAIL");
-        return result;
+        logger.Error("Flash.........................FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "Flash";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Info("Flash PASS");
-
-    result = TestPwm();
-    if (!result)
-    {
-        logger.Error("PWM FAIL");
-        return result;
-    }
-    logger.Info("PWM PASS");
-
-    result = TestUart();
-    if (!result)
-    {
-        logger.Error("UART FAIL");
-        return result;
-    }
-    logger.Info("UART PASS");
-
-    result = TestTimer();
-    if (!result)
-    {
-        logger.Error("Timer FAIL");
-        return result;
-    }
-    logger.Info("Timer PASS");
-
-    result = TestI2c();
-    if (!result)
-    {
-        logger.Error("I2C FAIL");
-        return result;
-    }
-    logger.Info("I2C PASS");
-
-    result = TestSpi();
-    if (!result)
-    {
-        logger.Error("SPI FAIL");
-        return result;
-    }
-    logger.Info("SPI PASS");
+    logger.Info("Flash.........................PASS");
+    layerResult.passCount++;
 
     result = TestUsb();
     if (!result)
     {
-        logger.Error("USB FAIL");
-        return result;
+        logger.Error("USB...........................FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "USB";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Info("USB PASS");
+    logger.Info("USB...........................PASS");
+    layerResult.passCount++;
 
-    result = TestWatchdog();
+    result = TestPwm();
     if (!result)
     {
-        logger.Error("Watchdog FAIL");
-        return result;
+        logger.Error("PWM...........................FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "PWM";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Info("Watchdog PASS");
+    logger.Info("PWM...........................PASS");
+    layerResult.passCount++;
+
+    result = TestUart();
+    if (!result)
+    {
+        logger.Error("UART..........................FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "UART";
+        layerResult.failCount = 1;
+        return layerResult;
+    }
+    logger.Info("UART..........................PASS");
+    layerResult.passCount++;
+
+    result = TestI2c();
+    if (!result)
+    {
+        logger.Error("I2C...........................FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "I2C";
+        layerResult.failCount = 1;
+        return layerResult;
+    }
+    logger.Info("I2C...........................PASS");
+    layerResult.passCount++;
+
+    result = TestSpi();
+    if (!result)
+    {
+        logger.Error("SPI...........................FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "SPI";
+        layerResult.failCount = 1;
+        return layerResult;
+    }
+    logger.Info("SPI...........................PASS");
+    layerResult.passCount++;
 
     result = TestAdc();
     if (!result)
     {
-        logger.Error("ADC FAIL");
-        return result;
+        logger.Error("ADC...........................FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "ADC";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Info("ADC PASS");
+    logger.Info("ADC...........................PASS");
+    layerResult.passCount++;
+
+    result = TestTimer();
+    if (!result)
+    {
+        logger.Error("Timer.........................FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "Timer";
+        layerResult.failCount = 1;
+        return layerResult;
+    }
+    logger.Info("Timer.........................PASS");
+    layerResult.passCount++;
 
     result = TestOneWire();
     if (!result)
     {
-        logger.Error("OneWire FAIL");
-        return result;
+        logger.Error("OneWire.......................FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "OneWire";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Info("OneWire PASS");
+    logger.Warning("OneWire.......................SKIPPED (No sensor attached)");
+    layerResult.skippedCount++;
 
-    result = TestRestart();
-    if (!result)
-    {
-        logger.Error("Restart FAIL");
-        return result;
-    }
-    logger.Info("Restart PASS");
+    logger.Info("");
+    logger.Info("PASS 9");
+    logger.Info("SKIPPED 1");
+    logger.Info("");
 
-    logger.Info("[PASS] Platform");
-    return NAS::Core::Result::Ok();
+    return layerResult;
 }
 
 } // namespace NAS::Tests

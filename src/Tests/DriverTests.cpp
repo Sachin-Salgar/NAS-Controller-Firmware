@@ -119,72 +119,118 @@ static NAS::Core::Result TestWatchdogDriver() noexcept
     return NAS::Core::Result::Ok();
 }
 
+struct LayerResult
+{
+    NAS::Core::Result result;
+    const char* failedComponent;
+    int passCount;
+    int failCount;
+    int skippedCount;
+};
+
 [[nodiscard]]
-NAS::Core::Result TestDrivers() noexcept
+LayerResult TestDrivers() noexcept
 {
     NAS::Core::Logger logger;
     logger.Initialize();
 
-    logger.Info("[TEST] Drivers");
+    LayerResult layerResult = {NAS::Core::Result::Ok(), nullptr, 0, 0, 0};
 
-    auto result = TestRelayDriver();
+    logger.Info("--------------------------------------------------");
+    logger.Info("DRIVERS");
+    logger.Info("--------------------------------------------------");
+    logger.Info("");
+
+    auto result = TestAddressableLedDriver();
     if (!result)
     {
-        logger.Error("RelayDriver FAIL");
-        return result;
+        logger.Error("AddressableLedDriver.......FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "AddressableLedDriver";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Warning("[SKIPPED] Relay hardware not connected");
+    logger.Info("AddressableLedDriver.......PASS");
+    layerResult.passCount++;
 
     result = TestPwmFanDriver();
     if (!result)
     {
-        logger.Error("PWMFanDriver FAIL");
-        return result;
+        logger.Error("PWMFanDriver...............FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "PWMFanDriver";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Info("PWMFanDriver PASS");
+    logger.Info("PWMFanDriver...............PASS");
+    layerResult.passCount++;
+
+    result = TestRelayDriver();
+    if (!result)
+    {
+        logger.Error("RelayDriver................FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "RelayDriver";
+        layerResult.failCount = 1;
+        return layerResult;
+    }
+    logger.Warning("RelayDriver................SKIPPED (Relay not installed)");
+    layerResult.skippedCount++;
 
     result = TestTemperatureDriver();
     if (!result)
     {
-        logger.Error("TemperatureDriver FAIL");
-        return result;
+        logger.Error("TemperatureDriver..........FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "TemperatureDriver";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Warning("[SKIPPED] DS18B20 sensors not connected");
-
-    result = TestUsbDriver();
-    if (!result)
-    {
-        logger.Error("UsbDriver FAIL");
-        return result;
-    }
-    logger.Info("UsbDriver PASS");
+    logger.Warning("TemperatureDriver..........SKIPPED (DS18B20 unavailable)");
+    layerResult.skippedCount++;
 
     result = TestStorageDriver();
     if (!result)
     {
-        logger.Error("StorageDriver FAIL");
-        return result;
+        logger.Error("StorageDriver..............FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "StorageDriver";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Info("StorageDriver PASS");
+    logger.Info("StorageDriver..............PASS");
+    layerResult.passCount++;
 
-    result = TestAddressableLedDriver();
+    result = TestUsbDriver();
     if (!result)
     {
-        logger.Error("AddressableLedDriver FAIL");
-        return result;
+        logger.Error("UsbDriver..................FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "UsbDriver";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Info("AddressableLedDriver PASS");
+    logger.Info("UsbDriver..................PASS");
+    layerResult.passCount++;
 
     result = TestWatchdogDriver();
     if (!result)
     {
-        logger.Error("WatchdogDriver FAIL");
-        return result;
+        logger.Error("WatchdogDriver.............FAIL");
+        layerResult.result = result;
+        layerResult.failedComponent = "WatchdogDriver";
+        layerResult.failCount = 1;
+        return layerResult;
     }
-    logger.Info("WatchdogDriver PASS");
+    logger.Info("WatchdogDriver.............PASS");
+    layerResult.passCount++;
 
-    logger.Info("[PASS] Drivers");
-    return NAS::Core::Result::Ok();
+    logger.Info("");
+    logger.Info("PASS 5");
+    logger.Info("SKIPPED 2");
+    logger.Info("");
+
+    return layerResult;
 }
 
 } // namespace NAS::Tests
