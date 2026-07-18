@@ -19,7 +19,7 @@ inline constexpr std::uint8_t FanCount = 5U;
 
 inline constexpr std::uint8_t TemperatureSensorCount = 5U;
 
-inline constexpr std::uint8_t LedCount = 20U;
+inline constexpr std::uint8_t LedCount = 60U;
 
 inline constexpr std::uint8_t DriveCount = 10U;
 
