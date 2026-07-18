@@ -10,6 +10,8 @@
  *
  ******************************************************************************/
 
+#include "TestResult.h"
+#include "TestFormatter.h"
 #include "../Core/Logger.h"
 #include "../Core/Result.h"
 #include "../Protocol/PacketParser.h"
@@ -26,7 +28,6 @@ namespace NAS::Tests
 [[nodiscard]]
 static NAS::Core::Result TestCommands() noexcept
 {
-    // Verify that all command identifiers are valid
     if (!NAS::Protocol::Commands::IsValid(NAS::Protocol::Commands::Ping))
     {
         return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
@@ -62,7 +63,6 @@ static NAS::Core::Result TestCommands() noexcept
         return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
     }
 
-    // Verify invalid command is rejected
     if (NAS::Protocol::Commands::IsValid(0xFFFFU))
     {
         return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
@@ -78,13 +78,11 @@ static NAS::Core::Result TestCrc16() noexcept
     std::uint16_t crc = NAS::Utilities::CRC16::Calculate(testData, 5);
     (void)crc;
 
-    // Verify that CRC calculation returns a value
     if (crc == 0xFFFFU && crc == 0x0000U)
     {
         return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
     }
 
-    // Verify that CRC calculation is deterministic
     std::uint16_t crc2 = NAS::Utilities::CRC16::Calculate(testData, 5);
     if (crc != crc2)
     {
@@ -116,13 +114,11 @@ static NAS::Core::Result TestPacketBuilder() noexcept
         return result;
     }
 
-    // Verify packet length is reasonable
     if (packetLength < NAS::Protocol::PacketBuilder::HeaderSize)
     {
         return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
     }
 
-    // Verify packet has CRC
     std::size_t minExpectedLength =
         NAS::Protocol::PacketBuilder::HeaderSize +
         2U +
@@ -139,7 +135,6 @@ static NAS::Core::Result TestPacketBuilder() noexcept
 [[nodiscard]]
 static NAS::Core::Result TestPacketParser() noexcept
 {
-    // Build a valid packet first
     std::uint8_t buffer[256] = { 0 };
     std::size_t packetLength = 0;
 
@@ -159,7 +154,6 @@ static NAS::Core::Result TestPacketParser() noexcept
         return buildResult;
     }
 
-    // Parse the packet
     NAS::Protocol::PacketParser parser;
     auto parseResult = parser.Parse(buffer, packetLength);
     if (!parseResult)
@@ -167,7 +161,6 @@ static NAS::Core::Result TestPacketParser() noexcept
         return parseResult;
     }
 
-    // Verify parsed values
     if (parser.GetCommand() != NAS::Protocol::Commands::Ping)
     {
         return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
@@ -273,71 +266,132 @@ static NAS::Core::Result TestCommandDispatcher() noexcept
 }
 
 [[nodiscard]]
-NAS::Core::Result TestProtocol() noexcept
+LayerResult TestProtocol() noexcept
 {
     NAS::Core::Logger logger;
-    logger.Initialize();
+    (void)logger.Initialize();
 
-    logger.Info("[TEST] Protocol");
+    LayerResult layerResult = {NAS::Core::Result::Ok(), nullptr,
+        NAS::Core::ResultCode::Success, 0, 0, 0};
 
-    auto result = TestCommands();
+    TestFormatter::PrintHeader("PROTOCOL");
+
+    auto result = TestCrc16();
     if (!result)
     {
-        logger.Error("Commands FAIL");
-        return result;
+        TestFormatter::PrintFail("CRC16");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "CRC16";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("CRC16");
+        layerResult.passCount++;
     }
-    logger.Info("Commands PASS");
-
-    result = TestCrc16();
-    if (!result)
-    {
-        logger.Error("CRC16 FAIL");
-        return result;
-    }
-    logger.Info("CRC16 PASS");
 
     result = TestPacketBuilder();
     if (!result)
     {
-        logger.Error("PacketBuilder FAIL");
-        return result;
+        TestFormatter::PrintFail("PacketBuilder");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "PacketBuilder";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("PacketBuilder");
+        layerResult.passCount++;
     }
-    logger.Info("PacketBuilder PASS");
 
     result = TestPacketParser();
     if (!result)
     {
-        logger.Error("PacketParser FAIL");
-        return result;
+        TestFormatter::PrintFail("PacketParser");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "PacketParser";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("PacketParser");
+        layerResult.passCount++;
     }
-    logger.Info("PacketParser PASS");
 
     result = TestPacketValidator();
     if (!result)
     {
-        logger.Error("PacketValidator FAIL");
-        return result;
+        TestFormatter::PrintFail("PacketValidator");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "PacketValidator";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("PacketValidator");
+        layerResult.passCount++;
     }
-    logger.Info("PacketValidator PASS");
 
     result = TestResponseBuilder();
     if (!result)
     {
-        logger.Error("ResponseBuilder FAIL");
-        return result;
+        TestFormatter::PrintFail("ResponseBuilder");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "ResponseBuilder";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("ResponseBuilder");
+        layerResult.passCount++;
     }
-    logger.Info("ResponseBuilder PASS");
 
     result = TestCommandDispatcher();
     if (!result)
     {
-        logger.Error("CommandDispatcher FAIL");
-        return result;
+        TestFormatter::PrintFail("CommandDispatcher");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "CommandDispatcher";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("CommandDispatcher");
+        layerResult.passCount++;
     }
-    logger.Info("CommandDispatcher PASS");
 
-    logger.Info("[PASS] Protocol");
-    return NAS::Core::Result::Ok();
+    result = TestCommands();
+    if (!result)
+    {
+        TestFormatter::PrintFail("Commands");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "Commands";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("Commands");
+        layerResult.passCount++;
+    }
+
+    TestFormatter::PrintFooter(layerResult.passCount, layerResult.failCount,
+        layerResult.skippedCount);
+
+    if (layerResult.failCount == 0)
+    {
+        layerResult.result = NAS::Core::Result::Ok();
+    } else {
+        layerResult.result = NAS::Core::Result(NAS::Core::ResultCode::Failed);
+    }
+
+    return layerResult;
 }
 
 } // namespace NAS::Tests

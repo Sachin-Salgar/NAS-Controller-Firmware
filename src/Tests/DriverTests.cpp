@@ -10,6 +10,8 @@
  *
  ******************************************************************************/
 
+#include "TestResult.h"
+#include "TestFormatter.h"
 #include "../Core/Logger.h"
 #include "../Core/Result.h"
 #include "../Drivers/RelayDriver.h"
@@ -120,71 +122,132 @@ static NAS::Core::Result TestWatchdogDriver() noexcept
 }
 
 [[nodiscard]]
-NAS::Core::Result TestDrivers() noexcept
+LayerResult TestDrivers() noexcept
 {
     NAS::Core::Logger logger;
-    logger.Initialize();
+    (void)logger.Initialize();
 
-    logger.Info("[TEST] Drivers");
+    LayerResult layerResult = {NAS::Core::Result::Ok(), nullptr,
+        NAS::Core::ResultCode::Success, 0, 0, 0};
 
-    auto result = TestRelayDriver();
+    TestFormatter::PrintHeader("DRIVERS");
+
+    auto result = TestAddressableLedDriver();
     if (!result)
     {
-        logger.Error("RelayDriver FAIL");
-        return result;
+        TestFormatter::PrintFail("AddressableLedDriver");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "AddressableLedDriver";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("AddressableLedDriver");
+        layerResult.passCount++;
     }
-    logger.Warning("[SKIPPED] Relay hardware not connected");
 
     result = TestPwmFanDriver();
     if (!result)
     {
-        logger.Error("PWMFanDriver FAIL");
-        return result;
+        TestFormatter::PrintFail("PWMFanDriver");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "PWMFanDriver";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("PWMFanDriver");
+        layerResult.passCount++;
     }
-    logger.Info("PWMFanDriver PASS");
+
+    result = TestRelayDriver();
+    if (!result)
+    {
+        TestFormatter::PrintFail("RelayDriver");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "RelayDriver";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintSkipped("RelayDriver", "Relay not installed");
+        layerResult.skippedCount++;
+    }
 
     result = TestTemperatureDriver();
     if (!result)
     {
-        logger.Error("TemperatureDriver FAIL");
-        return result;
+        TestFormatter::PrintFail("TemperatureDriver");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "TemperatureDriver";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintSkipped("TemperatureDriver", "DS18B20 unavailable");
+        layerResult.skippedCount++;
     }
-    logger.Warning("[SKIPPED] DS18B20 sensors not connected");
-
-    result = TestUsbDriver();
-    if (!result)
-    {
-        logger.Error("UsbDriver FAIL");
-        return result;
-    }
-    logger.Info("UsbDriver PASS");
 
     result = TestStorageDriver();
     if (!result)
     {
-        logger.Error("StorageDriver FAIL");
-        return result;
+        TestFormatter::PrintFail("StorageDriver");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "StorageDriver";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("StorageDriver");
+        layerResult.passCount++;
     }
-    logger.Info("StorageDriver PASS");
 
-    result = TestAddressableLedDriver();
+    result = TestUsbDriver();
     if (!result)
     {
-        logger.Error("AddressableLedDriver FAIL");
-        return result;
+        TestFormatter::PrintFail("UsbDriver");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "UsbDriver";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("UsbDriver");
+        layerResult.passCount++;
     }
-    logger.Info("AddressableLedDriver PASS");
 
     result = TestWatchdogDriver();
     if (!result)
     {
-        logger.Error("WatchdogDriver FAIL");
-        return result;
+        TestFormatter::PrintFail("WatchdogDriver");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "WatchdogDriver";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("WatchdogDriver");
+        layerResult.passCount++;
     }
-    logger.Info("WatchdogDriver PASS");
 
-    logger.Info("[PASS] Drivers");
-    return NAS::Core::Result::Ok();
+    TestFormatter::PrintFooter(layerResult.passCount, layerResult.failCount,
+        layerResult.skippedCount);
+
+    if (layerResult.failCount == 0)
+    {
+        layerResult.result = NAS::Core::Result::Ok();
+    } else {
+        layerResult.result = NAS::Core::Result(NAS::Core::ResultCode::Failed);
+    }
+
+    return layerResult;
 }
 
 } // namespace NAS::Tests

@@ -16,22 +16,20 @@ using namespace NAS::Core;
 
 namespace
 {
-
-void Halt(const char* message)
-{
-    Serial.println();
-    Serial.println("================================");
-    Serial.println("FATAL ERROR");
-    Serial.println("================================");
-    Serial.println(message);
-
-    while (true)
+    void Halt(const char* message)
     {
-        delay(1000);
+        Serial.println();
+        Serial.println("================================");
+        Serial.println("FATAL ERROR");
+        Serial.println("================================");
+        Serial.println(message);
+
+        while (true)
+        {
+            delay(1000);
+        }
     }
 }
-
-} // anonymous namespace
 
 void setup()
 {
@@ -40,35 +38,14 @@ void setup()
 
     Serial.println();
     Serial.println("================================");
-    Serial.println(Version::FirmwareName());
+    Serial.println("NAS Controller Firmware");
     Serial.println("================================");
 
     Serial.print("Version : ");
-    Serial.print(Version::Major());
-    Serial.print(".");
-    Serial.print(Version::Minor());
-    Serial.print(".");
-    Serial.println(Version::Patch());
+    Serial.println(Version::GetString());
 
-    Serial.print("Build Date : ");
-    Serial.print(Version::BuildDate());
-    Serial.print(" ");
-    Serial.println(Version::BuildTime());
-
-    Serial.print("Configuration : ");
-    Serial.println(Version::BuildConfiguration());
-
-    Serial.print("Compiler : ");
-    Serial.println(Version::Compiler());
-
-    Serial.print("Platform : ");
-    Serial.println(Version::TargetPlatform());
-
-    Serial.print("Board : ");
-    Serial.println(Version::TargetBoard());
-
-    Serial.print("Git Commit : ");
-    Serial.println(Version::GitCommit());
+    Serial.print("Build   : ");
+    Serial.println(BuildInfo::BuildDateTime());
 
     Serial.println();
 
@@ -82,6 +59,7 @@ void setup()
     }
 
     Serial.println("PASS");
+
     Serial.println();
 
     Serial.println("[2/3] Running Boot Self Test...");
@@ -94,13 +72,14 @@ void setup()
     }
 
     Serial.println("PASS");
+
     Serial.println();
 
     Serial.println("[3/3] Starting Firmware...");
-    Serial.println();
 
+    Serial.println();
     Serial.println("================================");
-    Serial.println("SYSTEM READY");
+    Serial.println("System Ready");
     Serial.println("================================");
 }
 

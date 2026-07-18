@@ -10,6 +10,8 @@
  *
  ******************************************************************************/
 
+#include "TestResult.h"
+#include "TestFormatter.h"
 #include "../Core/Logger.h"
 #include "../Core/Result.h"
 #include "../Objects/Configuration.h"
@@ -377,79 +379,147 @@ static NAS::Core::Result TestTemperatureSensor() noexcept
 }
 
 [[nodiscard]]
-NAS::Core::Result TestObjects() noexcept
+LayerResult TestObjects() noexcept
 {
     NAS::Core::Logger logger;
-    logger.Initialize();
+    (void)logger.Initialize();
 
-    logger.Info("[TEST] Objects");
+    LayerResult layerResult = {NAS::Core::Result::Ok(), nullptr,
+        NAS::Core::ResultCode::Success, 0, 0, 0};
+
+    TestFormatter::PrintHeader("OBJECTS");
 
     auto result = TestConfiguration();
     if (!result)
     {
-        logger.Error("Configuration FAIL");
-        return result;
+        TestFormatter::PrintFail("Configuration");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "Configuration";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("Configuration");
+        layerResult.passCount++;
     }
-    logger.Info("Configuration PASS");
 
     result = TestDrive();
     if (!result)
     {
-        logger.Error("Drive FAIL");
-        return result;
+        TestFormatter::PrintFail("Drive");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "Drive";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("Drive");
+        layerResult.passCount++;
     }
-    logger.Info("Drive PASS");
 
     result = TestFan();
     if (!result)
     {
-        logger.Error("Fan FAIL");
-        return result;
+        TestFormatter::PrintFail("Fan");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "Fan";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("Fan");
+        layerResult.passCount++;
     }
-    logger.Info("Fan PASS");
 
     result = TestLed();
     if (!result)
     {
-        logger.Error("Led FAIL");
-        return result;
+        TestFormatter::PrintFail("Led");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "Led";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("Led");
+        layerResult.passCount++;
     }
-    logger.Info("Led PASS");
 
     result = TestRelay();
     if (!result)
     {
-        logger.Error("Relay FAIL");
-        return result;
+        TestFormatter::PrintFail("Relay");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "Relay";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintSkipped("Relay");
+        layerResult.skippedCount++;
     }
-    logger.Warning("[SKIPPED] Relay hardware not connected");
 
     result = TestStatistics();
     if (!result)
     {
-        logger.Error("Statistics FAIL");
-        return result;
+        TestFormatter::PrintFail("Statistics");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "Statistics";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("Statistics");
+        layerResult.passCount++;
     }
-    logger.Info("Statistics PASS");
 
     result = TestSystemStatus();
     if (!result)
     {
-        logger.Error("SystemStatus FAIL");
-        return result;
+        TestFormatter::PrintFail("SystemStatus");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "SystemStatus";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("SystemStatus");
+        layerResult.passCount++;
     }
-    logger.Info("SystemStatus PASS");
 
     result = TestTemperatureSensor();
     if (!result)
     {
-        logger.Error("TemperatureSensor FAIL");
-        return result;
+        TestFormatter::PrintFail("TemperatureSensor");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "TemperatureSensor";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintSkipped("TemperatureSensor");
+        layerResult.skippedCount++;
     }
-    logger.Warning("[SKIPPED] DS18B20 sensors not connected");
 
-    logger.Info("[PASS] Objects");
-    return NAS::Core::Result::Ok();
+    TestFormatter::PrintFooter(layerResult.passCount, layerResult.failCount,
+        layerResult.skippedCount);
+
+    if (layerResult.failCount == 0)
+    {
+        layerResult.result = NAS::Core::Result::Ok();
+    } else {
+        layerResult.result = NAS::Core::Result(NAS::Core::ResultCode::Failed);
+    }
+
+    return layerResult;
 }
 
 } // namespace NAS::Tests

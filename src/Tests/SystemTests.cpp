@@ -9,6 +9,8 @@
  *
  ******************************************************************************/
 
+#include "TestResult.h"
+#include "TestFormatter.h"
 #include "../Core/Logger.h"
 #include "../Core/Result.h"
 #include "../System/Application.h"
@@ -55,39 +57,72 @@ static NAS::Core::Result TestSystemManager() noexcept
 }
 
 [[nodiscard]]
-NAS::Core::Result TestSystem() noexcept
+LayerResult TestSystem() noexcept
 {
     NAS::Core::Logger logger;
-    logger.Initialize();
+    (void)logger.Initialize();
 
-    logger.Info("[TEST] System");
+    LayerResult layerResult = {NAS::Core::Result::Ok(), nullptr,
+        NAS::Core::ResultCode::Success, 0, 0, 0};
+
+    TestFormatter::PrintHeader("SYSTEM");
 
     auto result = TestStartup();
     if (!result)
     {
-        logger.Error("Startup FAIL");
-        return result;
+        TestFormatter::PrintFail("Startup");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "Startup";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("Startup");
+        layerResult.passCount++;
     }
-    logger.Info("Startup PASS");
 
     result = TestApplication();
     if (!result)
     {
-        logger.Error("Application FAIL");
-        return result;
+        TestFormatter::PrintFail("Application");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "Application";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("Application");
+        layerResult.passCount++;
     }
-    logger.Info("Application PASS");
 
     result = TestSystemManager();
     if (!result)
     {
-        logger.Error("SystemManager FAIL");
-        return result;
+        TestFormatter::PrintFail("SystemManager");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "SystemManager";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("SystemManager");
+        layerResult.passCount++;
     }
-    logger.Info("SystemManager PASS");
 
-    logger.Info("[PASS] System");
-    return NAS::Core::Result::Ok();
+    TestFormatter::PrintFooter(layerResult.passCount, layerResult.failCount,
+        layerResult.skippedCount);
+
+    if (layerResult.failCount == 0)
+    {
+        layerResult.result = NAS::Core::Result::Ok();
+    } else {
+        layerResult.result = NAS::Core::Result(NAS::Core::ResultCode::Failed);
+    }
+
+    return layerResult;
 }
 
 } // namespace NAS::Tests

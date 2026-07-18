@@ -10,6 +10,8 @@
  *
  ******************************************************************************/
 
+#include "TestResult.h"
+#include "TestFormatter.h"
 #include "../Core/Logger.h"
 #include "../Core/Result.h"
 #include "../Core/Version.h"
@@ -29,7 +31,7 @@ static NAS::Core::Result TestLogger() noexcept
     auto result = logger.Initialize();
     if (!result)
     {
-        logger.Critical("[FAIL] Logger initialization failed");
+        (void)logger.Critical("[FAIL] Logger initialization failed");
         return result;
     }
 
@@ -328,71 +330,130 @@ static NAS::Core::Result TestScheduler() noexcept
 }
 
 [[nodiscard]]
-NAS::Core::Result TestCore() noexcept
+LayerResult TestCore() noexcept
 {
     NAS::Core::Logger logger;
-    logger.Initialize();
+    (void)logger.Initialize();
 
-    logger.Info("[TEST] Core");
+    LayerResult layerResult = {NAS::Core::Result::Ok(), nullptr,
+        NAS::Core::ResultCode::Success, 0, 0, 0};
+
+    TestFormatter::PrintHeader("CORE");
 
     auto result = TestLogger();
     if (!result)
     {
-        logger.Error("Logger FAIL");
-        return result;
+        TestFormatter::PrintFail("Logger");
+        layerResult.result = result;
+        layerResult.failedComponent = "Logger";
+        layerResult.failureCode = result.Code();
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("Logger");
+        layerResult.passCount++;
     }
-    logger.Info("Logger PASS");
 
     result = TestResult();
     if (!result)
     {
-        logger.Error("Result FAIL");
-        return result;
+        TestFormatter::PrintFail("Result");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "Result";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("Result");
+        layerResult.passCount++;
     }
-    logger.Info("Result PASS");
 
     result = TestVersion();
     if (!result)
     {
-        logger.Error("Version FAIL");
-        return result;
+        TestFormatter::PrintFail("Version");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "Version";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("Version");
+        layerResult.passCount++;
     }
-    logger.Info("Version PASS");
 
     result = TestBuildInfo();
     if (!result)
     {
-        logger.Error("BuildInfo FAIL");
-        return result;
+        TestFormatter::PrintFail("BuildInfo");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "BuildInfo";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("BuildInfo");
+        layerResult.passCount++;
     }
-    logger.Info("BuildInfo PASS");
 
     result = TestEvent();
     if (!result)
     {
-        logger.Error("Event FAIL");
-        return result;
+        TestFormatter::PrintFail("Event");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "Event";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("Event");
+        layerResult.passCount++;
     }
-    logger.Info("Event PASS");
 
     result = TestEventBus();
     if (!result)
     {
-        logger.Error("EventBus FAIL");
-        return result;
+        TestFormatter::PrintFail("EventBus");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "EventBus";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("EventBus");
+        layerResult.passCount++;
     }
-    logger.Info("EventBus PASS");
 
     result = TestScheduler();
     if (!result)
     {
-        logger.Error("Scheduler FAIL");
-        return result;
+        TestFormatter::PrintFail("Scheduler");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "Scheduler";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("Scheduler");
+        layerResult.passCount++;
     }
-    logger.Info("Scheduler PASS");
 
-    logger.Info("[PASS] Core");
-    return NAS::Core::Result::Ok();
+    TestFormatter::PrintFooter(layerResult.passCount, layerResult.failCount,
+        layerResult.skippedCount);
+
+    if (layerResult.failCount == 0)
+    {
+        layerResult.result = NAS::Core::Result::Ok();
+    } else {
+        layerResult.result = NAS::Core::Result(NAS::Core::ResultCode::Failed);
+    }
+
+    return layerResult;
 }
 
 } // namespace NAS::Tests

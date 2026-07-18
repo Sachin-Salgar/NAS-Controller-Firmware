@@ -4,11 +4,11 @@
  *
  * Project : NAS Controller Firmware
  * Module  : Tests
- * File    : SelfTest.h
+ * File    : TestResult.h
  *
  * Description:
- * Production-quality diagnostic framework that validates every layer with
- * detailed per-test output, category summaries, and failure diagnostics.
+ * Single definition for LayerResult struct used by all test layers.
+ * Eliminates duplication and provides one maintenance point.
  *
  ******************************************************************************/
 
@@ -17,16 +17,14 @@
 namespace NAS::Tests
 {
 
-class SelfTest
+struct LayerResult
 {
-public:
-
-    [[nodiscard]]
-    static NAS::Core::Result Run() noexcept;
-
-private:
-
-    SelfTest() = delete;
+    NAS::Core::Result result;
+    const char* failedComponent;
+    NAS::Core::ResultCode failureCode;
+    int passCount;
+    int failCount;
+    int skippedCount;
 };
 
 } // namespace NAS::Tests
