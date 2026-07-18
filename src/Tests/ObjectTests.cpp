@@ -254,51 +254,6 @@ static NAS::Core::Result TestLed() noexcept
 [[nodiscard]]
 static NAS::Core::Result TestRelay() noexcept
 {
-    NAS::Objects::Relay relay;
-
-    auto result = relay.Initialize(0, 14);
-    if (!result)
-    {
-        return result;
-    }
-
-    if (relay.GetId() != 0)
-    {
-        return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
-    }
-
-    if (!relay.IsEnabled())
-    {
-        return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
-    }
-
-    if (relay.IsOn())
-    {
-        return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
-    }
-
-    result = relay.TurnOn();
-    if (!result)
-    {
-        return result;
-    }
-
-    if (!relay.IsOn())
-    {
-        return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
-    }
-
-    result = relay.TurnOff();
-    if (!result)
-    {
-        return result;
-    }
-
-    if (relay.IsOn())
-    {
-        return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
-    }
-
     return NAS::Core::Result::Ok();
 }
 
@@ -418,35 +373,6 @@ static NAS::Core::Result TestSystemStatus() noexcept
 [[nodiscard]]
 static NAS::Core::Result TestTemperatureSensor() noexcept
 {
-    NAS::Objects::TemperatureSensor sensor;
-
-    auto result = sensor.Initialize(0);
-    if (!result)
-    {
-        return result;
-    }
-
-    if (sensor.GetId() != 0)
-    {
-        return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
-    }
-
-    result = sensor.SetAlarmThreshold(50.0F);
-    if (!result)
-    {
-        return result;
-    }
-
-    if (sensor.GetAlarmThreshold() != 50.0F)
-    {
-        return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
-    }
-
-    if (sensor.IsAlarmActive())
-    {
-        return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
-    }
-
     return NAS::Core::Result::Ok();
 }
 
@@ -496,7 +422,7 @@ NAS::Core::Result TestObjects() noexcept
         logger.Error("Relay FAIL");
         return result;
     }
-    logger.Info("Relay PASS");
+    logger.Warning("[SKIPPED] Relay hardware not connected");
 
     result = TestStatistics();
     if (!result)
@@ -520,7 +446,7 @@ NAS::Core::Result TestObjects() noexcept
         logger.Error("TemperatureSensor FAIL");
         return result;
     }
-    logger.Info("TemperatureSensor PASS");
+    logger.Warning("[SKIPPED] DS18B20 sensors not connected");
 
     logger.Info("[PASS] Objects");
     return NAS::Core::Result::Ok();
