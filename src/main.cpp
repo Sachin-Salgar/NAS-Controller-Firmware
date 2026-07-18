@@ -41,11 +41,35 @@ void setup()
     Serial.println("NAS Controller Firmware");
     Serial.println("================================");
 
-    Serial.print("Version : ");
-    Serial.println(Version::GetString());
+    Serial.print("Firmware      : ");
+    Serial.println(Version::FirmwareName());
 
-    Serial.print("Build   : ");
-    Serial.println(BuildInfo::BuildDateTime());
+    Serial.print("Version       : ");
+    Serial.print(Version::Major());
+    Serial.print(".");
+    Serial.print(Version::Minor());
+    Serial.print(".");
+    Serial.println(Version::Patch());
+
+    Serial.print("Build Date    : ");
+    Serial.print(Version::BuildDate());
+    Serial.print(" ");
+    Serial.println(Version::BuildTime());
+
+    Serial.print("Configuration : ");
+    Serial.println(Version::BuildConfiguration());
+
+    Serial.print("Compiler      : ");
+    Serial.println(Version::Compiler());
+
+    Serial.print("Platform      : ");
+    Serial.println(Version::TargetPlatform());
+
+    Serial.print("Board         : ");
+    Serial.println(Version::TargetBoard());
+
+    Serial.print("Git Commit    : ");
+    Serial.println(Version::GitCommit());
 
     Serial.println();
 
@@ -59,7 +83,6 @@ void setup()
     }
 
     Serial.println("PASS");
-
     Serial.println();
 
     Serial.println("[2/3] Running Boot Self Test...");
@@ -72,7 +95,6 @@ void setup()
     }
 
     Serial.println("PASS");
-
     Serial.println();
 
     Serial.println("[3/3] Starting Firmware...");
