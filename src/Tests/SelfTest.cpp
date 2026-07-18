@@ -15,6 +15,7 @@
 #include "TestResult.h"
 #include "../Core/Logger.h"
 #include "../Core/Result.h"
+#include <Arduino.h>
 
 namespace NAS::Tests
 {
@@ -111,11 +112,17 @@ static void PrintResultCode(NAS::Core::ResultCode code) noexcept
 [[nodiscard]]
 NAS::Core::Result SelfTest::Run() noexcept
 {
+    Serial.println();
+    Serial.println(">> START SelfTest::Run");
+    Serial.flush();
+
     NAS::Core::Logger logger;
 
     auto initResult = logger.Initialize();
     if (!initResult)
     {
+        Serial.println("!! Logger initialization failed");
+        Serial.flush();
         return initResult;
     }
 
@@ -127,7 +134,12 @@ NAS::Core::Result SelfTest::Run() noexcept
     FailureRecord failures[7];
     int failureCount = 0;
 
+    Serial.println(">> TestCore");
+    Serial.flush();
     layerResults[0] = TestCore();
+    Serial.println("<< TestCore");
+    Serial.flush();
+
     if (!layerResults[0].result && failureCount < 7)
     {
         failures[failureCount].layer = "CORE";
@@ -136,7 +148,12 @@ NAS::Core::Result SelfTest::Run() noexcept
         failureCount++;
     }
 
+    Serial.println(">> TestPlatform");
+    Serial.flush();
     layerResults[1] = TestPlatform();
+    Serial.println("<< TestPlatform");
+    Serial.flush();
+
     if (!layerResults[1].result && failureCount < 7)
     {
         failures[failureCount].layer = "PLATFORM";
@@ -145,7 +162,12 @@ NAS::Core::Result SelfTest::Run() noexcept
         failureCount++;
     }
 
+    Serial.println(">> TestDrivers");
+    Serial.flush();
     layerResults[2] = TestDrivers();
+    Serial.println("<< TestDrivers");
+    Serial.flush();
+
     if (!layerResults[2].result && failureCount < 7)
     {
         failures[failureCount].layer = "DRIVERS";
@@ -154,7 +176,12 @@ NAS::Core::Result SelfTest::Run() noexcept
         failureCount++;
     }
 
+    Serial.println(">> TestObjects");
+    Serial.flush();
     layerResults[3] = TestObjects();
+    Serial.println("<< TestObjects");
+    Serial.flush();
+
     if (!layerResults[3].result && failureCount < 7)
     {
         failures[failureCount].layer = "OBJECTS";
@@ -163,7 +190,12 @@ NAS::Core::Result SelfTest::Run() noexcept
         failureCount++;
     }
 
+    Serial.println(">> TestServices");
+    Serial.flush();
     layerResults[4] = TestServices();
+    Serial.println("<< TestServices");
+    Serial.flush();
+
     if (!layerResults[4].result && failureCount < 7)
     {
         failures[failureCount].layer = "SERVICES";
@@ -172,7 +204,12 @@ NAS::Core::Result SelfTest::Run() noexcept
         failureCount++;
     }
 
+    Serial.println(">> TestProtocol");
+    Serial.flush();
     layerResults[5] = TestProtocol();
+    Serial.println("<< TestProtocol");
+    Serial.flush();
+
     if (!layerResults[5].result && failureCount < 7)
     {
         failures[failureCount].layer = "PROTOCOL";
@@ -181,7 +218,12 @@ NAS::Core::Result SelfTest::Run() noexcept
         failureCount++;
     }
 
+    Serial.println(">> TestSystem");
+    Serial.flush();
     layerResults[6] = TestSystem();
+    Serial.println("<< TestSystem");
+    Serial.flush();
+
     if (!layerResults[6].result && failureCount < 7)
     {
         failures[failureCount].layer = "SYSTEM";
@@ -197,6 +239,8 @@ NAS::Core::Result SelfTest::Run() noexcept
         (void)logger.Info("BOOT SELF TEST PASSED");
         (void)logger.Info("==================================================");
         (void)logger.Info("");
+        Serial.println("<< SelfTest::Run PASSED");
+        Serial.flush();
         return NAS::Core::Result::Ok();
     }
 
@@ -226,6 +270,8 @@ NAS::Core::Result SelfTest::Run() noexcept
     }
 
     (void)logger.Info("");
+    Serial.println("<< SelfTest::Run FAILED");
+    Serial.flush();
     return NAS::Core::Result(NAS::Core::ResultCode::Failed);
 }
 

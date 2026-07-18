@@ -14,6 +14,7 @@
 #include "TestFormatter.h"
 #include "../Core/Logger.h"
 #include "../Core/Result.h"
+#include <Arduino.h>
 #include "../Platform/GPIO.h"
 #include "../Platform/Flash.h"
 #include "../Platform/PWM.h"
@@ -33,132 +34,187 @@ namespace NAS::Tests
 [[nodiscard]]
 static NAS::Core::Result TestGpio() noexcept
 {
+    Serial.println("  >> TestGpio");
+    Serial.flush();
     auto result = NAS::Platform::GPIO::Initialize();
     if (!result)
     {
+        Serial.println("  << TestGpio FAIL");
+        Serial.flush();
         return result;
     }
-
+    Serial.println("  << TestGpio PASS");
+    Serial.flush();
     return NAS::Core::Result::Ok();
 }
 
 [[nodiscard]]
 static NAS::Core::Result TestFlash() noexcept
 {
+    Serial.println("  >> TestFlash");
+    Serial.flush();
     auto result = NAS::Platform::Flash::Initialize();
     if (!result)
     {
+        Serial.println("  << TestFlash FAIL");
+        Serial.flush();
         return result;
     }
-
+    Serial.println("  << TestFlash PASS");
+    Serial.flush();
     return NAS::Core::Result::Ok();
 }
 
 [[nodiscard]]
 static NAS::Core::Result TestPwm() noexcept
 {
+    Serial.println("  >> TestPwm");
+    Serial.flush();
     auto result = NAS::Platform::PWM::Initialize();
     if (!result)
     {
+        Serial.println("  << TestPwm FAIL");
+        Serial.flush();
         return result;
     }
-
+    Serial.println("  << TestPwm PASS");
+    Serial.flush();
     return NAS::Core::Result::Ok();
 }
 
 [[nodiscard]]
 static NAS::Core::Result TestUart() noexcept
 {
-    auto result = NAS::Platform::UART::Initialize(1, 3, 115200);
+    Serial.println("  >> TestUart");
+    Serial.flush();
+    auto result = NAS::Platform::UART::Initialize(16, 17, 115200);
     if (!result)
     {
+        Serial.println("  << TestUart FAIL");
+        Serial.flush();
         return result;
     }
-
+    Serial.println("  << TestUart PASS");
+    Serial.flush();
     return NAS::Core::Result::Ok();
 }
 
 [[nodiscard]]
 static NAS::Core::Result TestTimer() noexcept
 {
+    Serial.println("  >> TestTimer");
+    Serial.flush();
     auto result = NAS::Platform::Timer::Initialize();
     if (!result)
     {
+        Serial.println("  << TestTimer FAIL");
+        Serial.flush();
         return result;
     }
-
+    Serial.println("  << TestTimer PASS");
+    Serial.flush();
     return NAS::Core::Result::Ok();
 }
 
 [[nodiscard]]
 static NAS::Core::Result TestI2c() noexcept
 {
+    Serial.println("  >> TestI2c");
+    Serial.flush();
     auto result = NAS::Platform::I2C::Initialize(21, 22, 100000);
     if (!result)
     {
+        Serial.println("  << TestI2c FAIL");
+        Serial.flush();
         return result;
     }
-
+    Serial.println("  << TestI2c PASS");
+    Serial.flush();
     return NAS::Core::Result::Ok();
 }
 
 [[nodiscard]]
 static NAS::Core::Result TestSpi() noexcept
 {
+    Serial.println("  >> TestSpi");
+    Serial.flush();
     auto result = NAS::Platform::SPI::Initialize(18, 19, 23, 5);
     if (!result)
     {
+        Serial.println("  << TestSpi FAIL");
+        Serial.flush();
         return result;
     }
-
+    Serial.println("  << TestSpi PASS");
+    Serial.flush();
     return NAS::Core::Result::Ok();
 }
 
 [[nodiscard]]
 static NAS::Core::Result TestUsb() noexcept
 {
+    Serial.println("  >> TestUsb");
+    Serial.flush();
     auto result = NAS::Platform::USB::Initialize();
     if (!result)
     {
+        Serial.println("  << TestUsb FAIL");
+        Serial.flush();
         return result;
     }
-
+    Serial.println("  << TestUsb PASS");
+    Serial.flush();
     return NAS::Core::Result::Ok();
 }
 
 [[nodiscard]]
 static NAS::Core::Result TestWatchdog() noexcept
 {
+    Serial.println("  >> TestWatchdog");
+    Serial.flush();
     auto result = NAS::Platform::Watchdog::Initialize();
     if (!result)
     {
+        Serial.println("  << TestWatchdog FAIL");
+        Serial.flush();
         return result;
     }
-
+    Serial.println("  << TestWatchdog PASS");
+    Serial.flush();
     return NAS::Core::Result::Ok();
 }
 
 [[nodiscard]]
 static NAS::Core::Result TestAdc() noexcept
 {
+    Serial.println("  >> TestAdc");
+    Serial.flush();
     auto result = NAS::Platform::ADC::Initialize();
     if (!result)
     {
+        Serial.println("  << TestAdc FAIL");
+        Serial.flush();
         return result;
     }
-
+    Serial.println("  << TestAdc PASS");
+    Serial.flush();
     return NAS::Core::Result::Ok();
 }
 
 [[nodiscard]]
 static NAS::Core::Result TestOneWire() noexcept
 {
+    Serial.println("  >> TestOneWire");
+    Serial.flush();
     auto result = NAS::Platform::OneWire::Initialize(13);
     if (!result)
     {
+        Serial.println("  << TestOneWire FAIL");
+        Serial.flush();
         return result;
     }
-
+    Serial.println("  << TestOneWire PASS");
+    Serial.flush();
     return NAS::Core::Result::Ok();
 }
 
@@ -339,6 +395,8 @@ LayerResult TestPlatform() noexcept
         layerResult.result = NAS::Core::Result(NAS::Core::ResultCode::Failed);
     }
 
+    Serial.println("TestPlatform: END");
+    Serial.flush();
     return layerResult;
 }
 
