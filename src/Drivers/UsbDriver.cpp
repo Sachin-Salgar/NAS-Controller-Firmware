@@ -26,7 +26,8 @@ Result UsbDriver::Initialize(std::uint32_t baudRate) noexcept
 
     auto result = NAS::Platform::USB::Initialize(baudRate);
 
-    if (!result.IsSuccess())
+    // AlreadyInitialized is acceptable (platform layer may have initialized already)
+    if (!result.IsSuccess() && result.Code() != ResultCode::AlreadyInitialized)
     {
         return result;
     }
