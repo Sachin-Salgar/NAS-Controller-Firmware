@@ -87,7 +87,7 @@ static NAS::Core::Result TestUart() noexcept
 {
     Serial.println("  >> TestUart");
     Serial.flush();
-    auto result = NAS::Platform::UART::Initialize(1, 3, 115200);
+    auto result = NAS::Platform::UART::Initialize(16, 17, 115200);
     if (!result)
     {
         Serial.println("  << TestUart FAIL");
