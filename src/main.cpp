@@ -8,7 +8,6 @@
 
 #include <Arduino.h>
 
-#include "Core/BuildInfo.h"
 #include "Core/Version.h"
 #include "System/SystemManager.h"
 #include "Tests/SelfTest.h"
