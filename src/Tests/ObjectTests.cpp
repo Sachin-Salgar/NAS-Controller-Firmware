@@ -17,6 +17,7 @@
 #include "../Objects/Configuration.h"
 #include "../Objects/Drive.h"
 #include "../Objects/Fan.h"
+#include "../Objects/Led.h"
 #include "../Objects/Relay.h"
 #include "../Objects/Statistics.h"
 #include "../Objects/SystemStatus.h"
@@ -221,29 +222,34 @@ static NAS::Core::Result TestLed() noexcept
         return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
     }
 
-    if (led.GetMode() != NAS::Objects::LedMode::Off)
+    if (led.GetState() != NAS::Objects::DriveLedState::Off)
     {
         return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
     }
 
-    result = led.SetColor(255, 128, 64);
+    result = led.SetState(NAS::Objects::DriveLedState::Idle);
     if (!result)
     {
         return result;
     }
 
-    result = led.SetMode(NAS::Objects::LedMode::Solid);
+    if (led.GetState() != NAS::Objects::DriveLedState::Idle)
+    {
+        return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
+    }
+
+    result = led.SetState(NAS::Objects::DriveLedState::Reading);
     if (!result)
     {
         return result;
     }
 
-    if (led.GetMode() != NAS::Objects::LedMode::Solid)
+    if (led.GetState() != NAS::Objects::DriveLedState::Reading)
     {
         return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
     }
 
-    result = led.TurnOff();
+    result = led.Refresh();
     if (!result)
     {
         return result;
