@@ -15,6 +15,7 @@
 #include "TestResult.h"
 #include "../Core/Logger.h"
 #include "../Core/Result.h"
+#include <Arduino.h>
 
 namespace NAS::Tests
 {
@@ -111,13 +112,24 @@ static void PrintResultCode(NAS::Core::ResultCode code) noexcept
 [[nodiscard]]
 NAS::Core::Result SelfTest::Run() noexcept
 {
+    Serial.println("[CP1] SelfTest::Run() started");
+    Serial.flush();
+
     NAS::Core::Logger logger;
+
+    Serial.println("[CP2] Logger instance created");
+    Serial.flush();
 
     auto initResult = logger.Initialize();
     if (!initResult)
     {
+        Serial.println("[CP_ERR] Logger initialization failed");
+        Serial.flush();
         return initResult;
     }
+
+    Serial.println("[CP3] Logger initialized");
+    Serial.flush();
 
     (void)logger.Info("");
     (void)logger.Info("Running Boot Self Test...");
@@ -127,7 +139,12 @@ NAS::Core::Result SelfTest::Run() noexcept
     FailureRecord failures[7];
     int failureCount = 0;
 
+    Serial.println("[CP4] About to call TestCore()");
+    Serial.flush();
     layerResults[0] = TestCore();
+    Serial.println("[CP5] TestCore() returned");
+    Serial.flush();
+
     if (!layerResults[0].result && failureCount < 7)
     {
         failures[failureCount].layer = "CORE";
@@ -136,7 +153,12 @@ NAS::Core::Result SelfTest::Run() noexcept
         failureCount++;
     }
 
+    Serial.println("[CP6] About to call TestPlatform()");
+    Serial.flush();
     layerResults[1] = TestPlatform();
+    Serial.println("[CP7] TestPlatform() returned");
+    Serial.flush();
+
     if (!layerResults[1].result && failureCount < 7)
     {
         failures[failureCount].layer = "PLATFORM";
@@ -145,7 +167,12 @@ NAS::Core::Result SelfTest::Run() noexcept
         failureCount++;
     }
 
+    Serial.println("[CP8] About to call TestDrivers()");
+    Serial.flush();
     layerResults[2] = TestDrivers();
+    Serial.println("[CP9] TestDrivers() returned");
+    Serial.flush();
+
     if (!layerResults[2].result && failureCount < 7)
     {
         failures[failureCount].layer = "DRIVERS";
@@ -154,7 +181,12 @@ NAS::Core::Result SelfTest::Run() noexcept
         failureCount++;
     }
 
+    Serial.println("[CP10] About to call TestObjects()");
+    Serial.flush();
     layerResults[3] = TestObjects();
+    Serial.println("[CP11] TestObjects() returned");
+    Serial.flush();
+
     if (!layerResults[3].result && failureCount < 7)
     {
         failures[failureCount].layer = "OBJECTS";
@@ -163,7 +195,12 @@ NAS::Core::Result SelfTest::Run() noexcept
         failureCount++;
     }
 
+    Serial.println("[CP12] About to call TestServices()");
+    Serial.flush();
     layerResults[4] = TestServices();
+    Serial.println("[CP13] TestServices() returned");
+    Serial.flush();
+
     if (!layerResults[4].result && failureCount < 7)
     {
         failures[failureCount].layer = "SERVICES";
@@ -172,7 +209,12 @@ NAS::Core::Result SelfTest::Run() noexcept
         failureCount++;
     }
 
+    Serial.println("[CP14] About to call TestProtocol()");
+    Serial.flush();
     layerResults[5] = TestProtocol();
+    Serial.println("[CP15] TestProtocol() returned");
+    Serial.flush();
+
     if (!layerResults[5].result && failureCount < 7)
     {
         failures[failureCount].layer = "PROTOCOL";
@@ -181,7 +223,12 @@ NAS::Core::Result SelfTest::Run() noexcept
         failureCount++;
     }
 
+    Serial.println("[CP16] About to call TestSystem()");
+    Serial.flush();
     layerResults[6] = TestSystem();
+    Serial.println("[CP17] TestSystem() returned");
+    Serial.flush();
+
     if (!layerResults[6].result && failureCount < 7)
     {
         failures[failureCount].layer = "SYSTEM";

@@ -308,7 +308,10 @@ static NAS::Core::Result TestScheduler() noexcept
     auto result = NAS::Core::Scheduler::Initialize();
     if (!result)
     {
-        return result;
+        if (result.Code() != NAS::Core::ResultCode::AlreadyInitialized)
+        {
+            return result;
+        }
     }
 
     static int taskExecutionCount = 0;
