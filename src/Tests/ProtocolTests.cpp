@@ -189,14 +189,32 @@ static NAS::Core::Result TestPacketParser() noexcept
 [[nodiscard]]
 static NAS::Core::Result TestPacketValidator() noexcept
 {
-    auto result = NAS::Protocol::PacketValidator::Initialize();
-    if (!result)
+    std::uint8_t buffer[256] = { 0 };
+    std::size_t packetLength = 0;
+
+    std::uint8_t payload[] = { 0xAA, 0xBB };
+
+    auto buildResult = NAS::Protocol::PacketBuilder::Build(
+        1U,
+        NAS::Protocol::Commands::Ping,
+        payload,
+        2U,
+        buffer,
+        256,
+        packetLength);
+
+    if (!buildResult)
     {
-        return result;
+        return buildResult;
     }
 
-    // TODO: PacketValidator::Validate requires packet structure validation.
-    // Verify initialization only.
+    auto validateResult = NAS::Protocol::PacketValidator::Validate(
+        buffer,
+        packetLength);
+    if (!validateResult)
+    {
+        return validateResult;
+    }
 
     return NAS::Core::Result::Ok();
 }
@@ -204,14 +222,29 @@ static NAS::Core::Result TestPacketValidator() noexcept
 [[nodiscard]]
 static NAS::Core::Result TestResponseBuilder() noexcept
 {
-    auto result = NAS::Protocol::ResponseBuilder::Initialize();
+    std::uint8_t responseBuffer[256] = { 0 };
+    std::size_t responseLength = 0;
+
+    std::uint8_t payload[] = { 0xCC, 0xDD };
+
+    auto result = NAS::Protocol::ResponseBuilder::BuildSuccess(
+        1U,
+        NAS::Protocol::Commands::Ping,
+        payload,
+        2U,
+        responseBuffer,
+        256,
+        responseLength);
+
     if (!result)
     {
         return result;
     }
 
-    // TODO: ResponseBuilder::Build requires full protocol context.
-    // Verify initialization only.
+    if (responseLength == 0)
+    {
+        return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
+    }
 
     return NAS::Core::Result::Ok();
 }
@@ -219,14 +252,22 @@ static NAS::Core::Result TestResponseBuilder() noexcept
 [[nodiscard]]
 static NAS::Core::Result TestCommandDispatcher() noexcept
 {
-    auto result = NAS::Protocol::CommandDispatcher::Initialize();
+    std::uint8_t requestPayload[256] = { 0 };
+    std::uint8_t responsePayload[256] = { 0 };
+    std::uint16_t responseLength = 0;
+
+    auto result = NAS::Protocol::CommandDispatcher::Dispatch(
+        NAS::Protocol::Commands::Ping,
+        requestPayload,
+        0U,
+        responsePayload,
+        256,
+        responseLength);
+
     if (!result)
     {
         return result;
     }
-
-    // TODO: CommandDispatcher::Dispatch requires context and handlers.
-    // Verify initialization only.
 
     return NAS::Core::Result::Ok();
 }

@@ -32,12 +32,11 @@ static NAS::Core::Result TestRelayDriver() noexcept
         return result;
     }
 
-    // Test relay state retrieval before configuration
     auto state = NAS::Drivers::RelayDriver::GetState(0);
-    (void)state;
-
-    // TODO: RelayDriver::Configure requires hardware pins to be available.
-    // Cannot fully test without hardware setup.
+    if (state != NAS::Drivers::RelayState::Off)
+    {
+        return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
+    }
 
     return NAS::Core::Result::Ok();
 }
@@ -51,12 +50,11 @@ static NAS::Core::Result TestPwmFanDriver() noexcept
         return result;
     }
 
-    // Verify GetSpeed returns valid value for unconfigured channel
     auto speed = NAS::Drivers::PWMFanDriver::GetSpeed(0);
-    (void)speed;
-
-    // TODO: PWMFanDriver::Configure and SetSpeed require PWM hardware.
-    // Cannot fully test without hardware setup.
+    if (speed > 100)
+    {
+        return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
+    }
 
     return NAS::Core::Result::Ok();
 }
@@ -70,15 +68,11 @@ static NAS::Core::Result TestTemperatureDriver() noexcept
         return result;
     }
 
-    // Verify SensorCount returns valid value
     auto sensorCount = NAS::Drivers::TemperatureDriver::SensorCount();
     if (sensorCount > 3U)
     {
         return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
     }
-
-    // TODO: TemperatureDriver::DiscoverSensors and ReadTemperature
-    // require OneWire sensors on the bus. Cannot fully test without hardware.
 
     return NAS::Core::Result::Ok();
 }
@@ -92,16 +86,11 @@ static NAS::Core::Result TestUsbDriver() noexcept
         return result;
     }
 
-    // Verify IsConnected returns bool (may be false if not connected)
     bool connected = NAS::Drivers::UsbDriver::IsConnected();
     (void)connected;
 
-    // Verify Available returns valid size
     auto available = NAS::Drivers::UsbDriver::Available();
     (void)available;
-
-    // TODO: UsbDriver Read/Write operations require active USB connection.
-    // Cannot fully test without host connection.
 
     return NAS::Core::Result::Ok();
 }
@@ -115,9 +104,6 @@ static NAS::Core::Result TestStorageDriver() noexcept
         return result;
     }
 
-    // TODO: StorageDriver Read/Write operations require actual storage.
-    // Cannot fully test without hardware. Verify initialization only.
-
     return NAS::Core::Result::Ok();
 }
 
@@ -130,9 +116,6 @@ static NAS::Core::Result TestAddressableLedDriver() noexcept
         return result;
     }
 
-    // TODO: AddressableLedDriver control requires hardware and LED strips.
-    // Cannot fully test without hardware setup.
-
     return NAS::Core::Result::Ok();
 }
 
@@ -144,10 +127,6 @@ static NAS::Core::Result TestWatchdogDriver() noexcept
     {
         return result;
     }
-
-    // TODO: WatchdogDriver::Reload cannot be tested safely as it resets.
-    // TODO: WatchdogDriver::Disable cannot be tested in production code.
-    // Verify initialization only.
 
     return NAS::Core::Result::Ok();
 }

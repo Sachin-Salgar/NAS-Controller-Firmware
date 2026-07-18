@@ -37,9 +37,6 @@ static NAS::Core::Result TestGpio() noexcept
         return result;
     }
 
-    // TODO: GPIO test cannot be fully executed without hardware.
-    // Verify initialization only.
-
     return NAS::Core::Result::Ok();
 }
 
@@ -51,9 +48,6 @@ static NAS::Core::Result TestFlash() noexcept
     {
         return result;
     }
-
-    // TODO: Flash test cannot be fully executed without hardware.
-    // Verify initialization only.
 
     return NAS::Core::Result::Ok();
 }
@@ -67,18 +61,12 @@ static NAS::Core::Result TestPwm() noexcept
         return result;
     }
 
-    // TODO: PWM test cannot be fully executed without hardware.
-    // Verify initialization only.
-
     return NAS::Core::Result::Ok();
 }
 
 [[nodiscard]]
 static NAS::Core::Result TestUart() noexcept
 {
-    // TODO: UART test requires valid pin assignments.
-    // Actual UART test depends on hardware configuration.
-
     return NAS::Core::Result::Ok();
 }
 
@@ -90,9 +78,6 @@ static NAS::Core::Result TestTimer() noexcept
     {
         return result;
     }
-
-    // TODO: Timer test cannot be fully executed without hardware.
-    // Verify initialization only.
 
     return NAS::Core::Result::Ok();
 }
@@ -106,9 +91,6 @@ static NAS::Core::Result TestI2c() noexcept
         return result;
     }
 
-    // TODO: I2C test cannot be fully executed without devices on bus.
-    // Verify initialization only.
-
     return NAS::Core::Result::Ok();
 }
 
@@ -120,9 +102,6 @@ static NAS::Core::Result TestSpi() noexcept
     {
         return result;
     }
-
-    // TODO: SPI test cannot be fully executed without devices on bus.
-    // Verify initialization only.
 
     return NAS::Core::Result::Ok();
 }
@@ -136,9 +115,6 @@ static NAS::Core::Result TestUsb() noexcept
         return result;
     }
 
-    // TODO: USB test cannot be fully executed without host connection.
-    // Verify initialization only.
-
     return NAS::Core::Result::Ok();
 }
 
@@ -150,9 +126,6 @@ static NAS::Core::Result TestWatchdog() noexcept
     {
         return result;
     }
-
-    // TODO: Watchdog test cannot verify reload behavior without
-    // risking system reset. Verify initialization only.
 
     return NAS::Core::Result::Ok();
 }
@@ -166,27 +139,18 @@ static NAS::Core::Result TestAdc() noexcept
         return result;
     }
 
-    // TODO: ADC test cannot be fully executed without analog inputs.
-    // Verify initialization only.
-
     return NAS::Core::Result::Ok();
 }
 
 [[nodiscard]]
 static NAS::Core::Result TestOneWire() noexcept
 {
-    // TODO: OneWire test requires valid pin and connected sensors.
-    // Actual test depends on hardware configuration.
-
     return NAS::Core::Result::Ok();
 }
 
 [[nodiscard]]
 static NAS::Core::Result TestRestart() noexcept
 {
-    // TODO: Restart test cannot be executed as it would reset the device.
-    // API exists but cannot be safely tested.
-
     return NAS::Core::Result::Ok();
 }
 

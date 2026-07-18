@@ -36,19 +36,29 @@ static NAS::Core::Result TestConfiguration() noexcept
     }
 
     auto& relayConfig = config.Relay();
-    (void)relayConfig;
+    if (relayConfig.enabled == false)
+    {
+        return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
+    }
 
     auto& fanConfig = config.Fan();
-    (void)fanConfig;
+    if (fanConfig.minimumSpeed > fanConfig.maximumSpeed)
+    {
+        return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
+    }
 
     auto& tempConfig = config.Temperature();
-    (void)tempConfig;
+    if (tempConfig.warningThreshold == 0.0F)
+    {
+        return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
+    }
 
     auto& ledConfig = config.Led();
-    (void)ledConfig;
+    if (ledConfig.brightness == 0)
+    {
+        return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
+    }
 
-    // TODO: Configuration::Load and Save require flash storage.
-    // Test ResetToDefaults to verify configuration state management.
     result = config.ResetToDefaults();
     if (!result)
     {
@@ -199,14 +209,44 @@ static NAS::Core::Result TestLed() noexcept
 {
     NAS::Objects::Led led;
 
-    auto result = led.Initialize(0, 13);
+    auto result = led.Initialize(0);
     if (!result)
     {
         return result;
     }
 
-    // TODO: Led object may have state getters that can be verified.
-    // Inspect implementation to determine available APIs.
+    if (led.GetIndex() != 0)
+    {
+        return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
+    }
+
+    if (led.GetMode() != NAS::Objects::LedMode::Off)
+    {
+        return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
+    }
+
+    result = led.SetColor(255, 128, 64);
+    if (!result)
+    {
+        return result;
+    }
+
+    result = led.SetMode(NAS::Objects::LedMode::Solid);
+    if (!result)
+    {
+        return result;
+    }
+
+    if (led.GetMode() != NAS::Objects::LedMode::Solid)
+    {
+        return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
+    }
+
+    result = led.TurnOff();
+    if (!result)
+    {
+        return result;
+    }
 
     return NAS::Core::Result::Ok();
 }
@@ -222,8 +262,42 @@ static NAS::Core::Result TestRelay() noexcept
         return result;
     }
 
-    // TODO: Relay object state management depends on implementation.
-    // Test what APIs are available in the actual Relay class.
+    if (relay.GetId() != 0)
+    {
+        return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
+    }
+
+    if (!relay.IsEnabled())
+    {
+        return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
+    }
+
+    if (relay.IsOn())
+    {
+        return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
+    }
+
+    result = relay.TurnOn();
+    if (!result)
+    {
+        return result;
+    }
+
+    if (!relay.IsOn())
+    {
+        return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
+    }
+
+    result = relay.TurnOff();
+    if (!result)
+    {
+        return result;
+    }
+
+    if (relay.IsOn())
+    {
+        return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
+    }
 
     return NAS::Core::Result::Ok();
 }
@@ -311,8 +385,32 @@ static NAS::Core::Result TestSystemStatus() noexcept
         return result;
     }
 
-    // TODO: SystemStatus behavior depends on implementation.
-    // Verify initialization only or test available getters.
+    if (status.GetState() != NAS::Objects::SystemState::Booting)
+    {
+        return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
+    }
+
+    result = status.SetState(NAS::Objects::SystemState::Ready);
+    if (!result)
+    {
+        return result;
+    }
+
+    if (status.GetState() != NAS::Objects::SystemState::Ready)
+    {
+        return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
+    }
+
+    result = status.SetFreeHeap(100000);
+    if (!result)
+    {
+        return result;
+    }
+
+    if (status.GetFreeHeap() != 100000)
+    {
+        return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
+    }
 
     return NAS::Core::Result::Ok();
 }
@@ -328,8 +426,26 @@ static NAS::Core::Result TestTemperatureSensor() noexcept
         return result;
     }
 
-    // TODO: TemperatureSensor behavior depends on implementation.
-    // Verify initialization and state management.
+    if (sensor.GetId() != 0)
+    {
+        return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
+    }
+
+    result = sensor.SetAlarmThreshold(50.0F);
+    if (!result)
+    {
+        return result;
+    }
+
+    if (sensor.GetAlarmThreshold() != 50.0F)
+    {
+        return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
+    }
+
+    if (sensor.IsAlarmActive())
+    {
+        return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
+    }
 
     return NAS::Core::Result::Ok();
 }
