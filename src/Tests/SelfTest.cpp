@@ -50,7 +50,7 @@ struct FailureRecord
 static void PrintResultCode(NAS::Core::ResultCode code) noexcept
 {
     NAS::Core::Logger logger;
-    logger.Initialize();
+    (void)logger.Initialize();
 
     const char* codeStr = "UnknownError";
 
@@ -105,7 +105,7 @@ static void PrintResultCode(NAS::Core::ResultCode code) noexcept
     else if (code == NAS::Core::ResultCode::InternalError)
         codeStr = "InternalError";
 
-    logger.Error(codeStr);
+    (void)logger.Error(codeStr);
 }
 
 [[nodiscard]]
@@ -119,9 +119,9 @@ NAS::Core::Result SelfTest::Run() noexcept
         return initResult;
     }
 
-    logger.Info("");
-    logger.Info("Running Boot Self Test...");
-    logger.Info("");
+    (void)logger.Info("");
+    (void)logger.Info("Running Boot Self Test...");
+    (void)logger.Info("");
 
     LayerResult layerResults[7];
     FailureRecord failures[7];
@@ -190,42 +190,42 @@ NAS::Core::Result SelfTest::Run() noexcept
         failureCount++;
     }
 
-    logger.Info("");
-    logger.Info("==================================================");
+    (void)logger.Info("");
+    (void)logger.Info("==================================================");
     if (failureCount == 0)
     {
-        logger.Info("BOOT SELF TEST PASSED");
-        logger.Info("==================================================");
-        logger.Info("");
+        (void)logger.Info("BOOT SELF TEST PASSED");
+        (void)logger.Info("==================================================");
+        (void)logger.Info("");
         return NAS::Core::Result::Ok();
     }
 
-    logger.Info("BOOT SELF TEST FAILED");
-    logger.Info("==================================================");
-    logger.Info("");
+    (void)logger.Info("BOOT SELF TEST FAILED");
+    (void)logger.Info("==================================================");
+    (void)logger.Info("");
 
     for (int i = 0; i < failureCount; ++i)
     {
-        logger.Info("Failed Test");
-        logger.Info("");
-        logger.Error(failures[i].layer);
-        logger.Error(" -> ");
-        logger.Error(failures[i].component);
-        logger.Info("");
-        logger.Info("Result Code");
-        logger.Info("");
+        (void)logger.Info("Failed Test");
+        (void)logger.Info("");
+        (void)logger.Error(failures[i].layer);
+        (void)logger.Error(" -> ");
+        (void)logger.Error(failures[i].component);
+        (void)logger.Info("");
+        (void)logger.Info("Result Code");
+        (void)logger.Info("");
 
         PrintResultCode(failures[i].code);
 
         if (i < failureCount - 1)
         {
-            logger.Info("");
-            logger.Info("---");
-            logger.Info("");
+            (void)logger.Info("");
+            (void)logger.Info("---");
+            (void)logger.Info("");
         }
     }
 
-    logger.Info("");
+    (void)logger.Info("");
     return NAS::Core::Result(NAS::Core::ResultCode::Failed);
 }
 
