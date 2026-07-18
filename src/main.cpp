@@ -17,18 +17,28 @@ using namespace NAS::Core;
 void setup()
 {
     Serial.begin(115200);
+    delay(2000);
 
+    Serial.println();
+    Serial.println("================================");
+    Serial.println("NAS Controller Boot");
+    Serial.println("================================");
+    Serial.println("Calling SystemManager::Initialize()");
 
     auto result =
         NAS::System::SystemManager::Initialize();
 
     if (!result.IsSuccess())
     {
+        Serial.println("SystemManager FAILED");
+
         while (true)
         {
             delay(1000);
         }
     }
+
+    Serial.println("SystemManager SUCCESS");
 }
 
 void loop()
