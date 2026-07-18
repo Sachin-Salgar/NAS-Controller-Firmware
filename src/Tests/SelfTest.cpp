@@ -112,24 +112,19 @@ static void PrintResultCode(NAS::Core::ResultCode code) noexcept
 [[nodiscard]]
 NAS::Core::Result SelfTest::Run() noexcept
 {
-    Serial.println("[CP1] SelfTest::Run() started");
+    Serial.println();
+    Serial.println(">> START SelfTest::Run");
     Serial.flush();
 
     NAS::Core::Logger logger;
 
-    Serial.println("[CP2] Logger instance created");
-    Serial.flush();
-
     auto initResult = logger.Initialize();
     if (!initResult)
     {
-        Serial.println("[CP_ERR] Logger initialization failed");
+        Serial.println("!! Logger initialization failed");
         Serial.flush();
         return initResult;
     }
-
-    Serial.println("[CP3] Logger initialized");
-    Serial.flush();
 
     (void)logger.Info("");
     (void)logger.Info("Running Boot Self Test...");
@@ -139,10 +134,10 @@ NAS::Core::Result SelfTest::Run() noexcept
     FailureRecord failures[7];
     int failureCount = 0;
 
-    Serial.println("[CP4] About to call TestCore()");
+    Serial.println(">> TestCore");
     Serial.flush();
     layerResults[0] = TestCore();
-    Serial.println("[CP5] TestCore() returned");
+    Serial.println("<< TestCore");
     Serial.flush();
 
     if (!layerResults[0].result && failureCount < 7)
@@ -153,10 +148,10 @@ NAS::Core::Result SelfTest::Run() noexcept
         failureCount++;
     }
 
-    Serial.println("[CP6] About to call TestPlatform()");
+    Serial.println(">> TestPlatform");
     Serial.flush();
     layerResults[1] = TestPlatform();
-    Serial.println("[CP7] TestPlatform() returned");
+    Serial.println("<< TestPlatform");
     Serial.flush();
 
     if (!layerResults[1].result && failureCount < 7)
@@ -167,10 +162,10 @@ NAS::Core::Result SelfTest::Run() noexcept
         failureCount++;
     }
 
-    Serial.println("[CP8] About to call TestDrivers()");
+    Serial.println(">> TestDrivers");
     Serial.flush();
     layerResults[2] = TestDrivers();
-    Serial.println("[CP9] TestDrivers() returned");
+    Serial.println("<< TestDrivers");
     Serial.flush();
 
     if (!layerResults[2].result && failureCount < 7)
@@ -181,10 +176,10 @@ NAS::Core::Result SelfTest::Run() noexcept
         failureCount++;
     }
 
-    Serial.println("[CP10] About to call TestObjects()");
+    Serial.println(">> TestObjects");
     Serial.flush();
     layerResults[3] = TestObjects();
-    Serial.println("[CP11] TestObjects() returned");
+    Serial.println("<< TestObjects");
     Serial.flush();
 
     if (!layerResults[3].result && failureCount < 7)
@@ -195,10 +190,10 @@ NAS::Core::Result SelfTest::Run() noexcept
         failureCount++;
     }
 
-    Serial.println("[CP12] About to call TestServices()");
+    Serial.println(">> TestServices");
     Serial.flush();
     layerResults[4] = TestServices();
-    Serial.println("[CP13] TestServices() returned");
+    Serial.println("<< TestServices");
     Serial.flush();
 
     if (!layerResults[4].result && failureCount < 7)
@@ -209,10 +204,10 @@ NAS::Core::Result SelfTest::Run() noexcept
         failureCount++;
     }
 
-    Serial.println("[CP14] About to call TestProtocol()");
+    Serial.println(">> TestProtocol");
     Serial.flush();
     layerResults[5] = TestProtocol();
-    Serial.println("[CP15] TestProtocol() returned");
+    Serial.println("<< TestProtocol");
     Serial.flush();
 
     if (!layerResults[5].result && failureCount < 7)
@@ -223,10 +218,10 @@ NAS::Core::Result SelfTest::Run() noexcept
         failureCount++;
     }
 
-    Serial.println("[CP16] About to call TestSystem()");
+    Serial.println(">> TestSystem");
     Serial.flush();
     layerResults[6] = TestSystem();
-    Serial.println("[CP17] TestSystem() returned");
+    Serial.println("<< TestSystem");
     Serial.flush();
 
     if (!layerResults[6].result && failureCount < 7)
@@ -244,6 +239,8 @@ NAS::Core::Result SelfTest::Run() noexcept
         (void)logger.Info("BOOT SELF TEST PASSED");
         (void)logger.Info("==================================================");
         (void)logger.Info("");
+        Serial.println("<< SelfTest::Run PASSED");
+        Serial.flush();
         return NAS::Core::Result::Ok();
     }
 
@@ -273,6 +270,8 @@ NAS::Core::Result SelfTest::Run() noexcept
     }
 
     (void)logger.Info("");
+    Serial.println("<< SelfTest::Run FAILED");
+    Serial.flush();
     return NAS::Core::Result(NAS::Core::ResultCode::Failed);
 }
 
