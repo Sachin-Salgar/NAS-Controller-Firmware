@@ -67,6 +67,12 @@ static NAS::Core::Result TestPwm() noexcept
 [[nodiscard]]
 static NAS::Core::Result TestUart() noexcept
 {
+    auto result = NAS::Platform::UART::Initialize(1, 3, 115200);
+    if (!result)
+    {
+        return result;
+    }
+
     return NAS::Core::Result::Ok();
 }
 
@@ -145,6 +151,12 @@ static NAS::Core::Result TestAdc() noexcept
 [[nodiscard]]
 static NAS::Core::Result TestOneWire() noexcept
 {
+    auto result = NAS::Platform::OneWire::Initialize(13);
+    if (!result)
+    {
+        return result;
+    }
+
     return NAS::Core::Result::Ok();
 }
 

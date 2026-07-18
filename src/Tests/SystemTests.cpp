@@ -39,9 +39,6 @@ static NAS::Core::Result TestApplication() noexcept
         return result;
     }
 
-    // TODO: Application::Run starts the main loop and does not return.
-    // Cannot test Run() in test context. Verify initialization only.
-
     return NAS::Core::Result::Ok();
 }
 
@@ -53,9 +50,6 @@ static NAS::Core::Result TestSystemManager() noexcept
     {
         return result;
     }
-
-    // TODO: SystemManager functionality depends on full system initialization.
-    // Verify initialization only.
 
     return NAS::Core::Result::Ok();
 }
