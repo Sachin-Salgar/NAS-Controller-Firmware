@@ -73,6 +73,7 @@ inline constexpr Color AnimationRed{255, 0, 0};        // Red
 inline constexpr Color AnimationGreen{0, 255, 0};      // Green
 inline constexpr Color AnimationBlue{0, 0, 255};       // Blue
 inline constexpr Color AnimationWhite{255, 255, 255}; // White
+inline constexpr Color AnimationOrange{255, 165, 0};   // Orange
 inline constexpr Color AnimationCyan{0, 255, 255};     // Cyan
 inline constexpr Color AnimationMagenta{255, 0, 255}; // Magenta
 inline constexpr Color AnimationYellow{255, 255, 0};   // Yellow
