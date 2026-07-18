@@ -10,6 +10,8 @@
  *
  ******************************************************************************/
 
+#include "TestResult.h"
+#include "TestFormatter.h"
 #include "../Core/Logger.h"
 #include "../Core/Result.h"
 #include "../Platform/GPIO.h"
@@ -166,152 +168,176 @@ static NAS::Core::Result TestRestart() noexcept
     return NAS::Core::Result::Ok();
 }
 
-struct LayerResult
-{
-    NAS::Core::Result result;
-    const char* failedComponent;
-    int passCount;
-    int failCount;
-    int skippedCount;
-};
-
 [[nodiscard]]
 LayerResult TestPlatform() noexcept
 {
     NAS::Core::Logger logger;
     logger.Initialize();
 
-    LayerResult layerResult = {NAS::Core::Result::Ok(), nullptr, 0, 0, 0};
+    LayerResult layerResult = {NAS::Core::Result::Ok(), nullptr,
+        NAS::Core::ResultCode::Success, 0, 0, 0};
 
-    logger.Info("--------------------------------------------------");
-    logger.Info("PLATFORM");
-    logger.Info("--------------------------------------------------");
-    logger.Info("");
+    TestFormatter::PrintHeader("PLATFORM");
 
     auto result = TestGpio();
     if (!result)
     {
-        logger.Error("GPIO.........................FAIL");
-        layerResult.result = result;
-        layerResult.failedComponent = "GPIO";
-        layerResult.failCount = 1;
-        return layerResult;
+        TestFormatter::PrintFail("GPIO");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "GPIO";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("GPIO");
+        layerResult.passCount++;
     }
-    logger.Info("GPIO.........................PASS");
-    layerResult.passCount++;
 
     result = TestFlash();
     if (!result)
     {
-        logger.Error("Flash.........................FAIL");
-        layerResult.result = result;
-        layerResult.failedComponent = "Flash";
-        layerResult.failCount = 1;
-        return layerResult;
+        TestFormatter::PrintFail("Flash");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "Flash";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("Flash");
+        layerResult.passCount++;
     }
-    logger.Info("Flash.........................PASS");
-    layerResult.passCount++;
 
     result = TestUsb();
     if (!result)
     {
-        logger.Error("USB...........................FAIL");
-        layerResult.result = result;
-        layerResult.failedComponent = "USB";
-        layerResult.failCount = 1;
-        return layerResult;
+        TestFormatter::PrintFail("USB");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "USB";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("USB");
+        layerResult.passCount++;
     }
-    logger.Info("USB...........................PASS");
-    layerResult.passCount++;
 
     result = TestPwm();
     if (!result)
     {
-        logger.Error("PWM...........................FAIL");
-        layerResult.result = result;
-        layerResult.failedComponent = "PWM";
-        layerResult.failCount = 1;
-        return layerResult;
+        TestFormatter::PrintFail("PWM");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "PWM";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("PWM");
+        layerResult.passCount++;
     }
-    logger.Info("PWM...........................PASS");
-    layerResult.passCount++;
 
     result = TestUart();
     if (!result)
     {
-        logger.Error("UART..........................FAIL");
-        layerResult.result = result;
-        layerResult.failedComponent = "UART";
-        layerResult.failCount = 1;
-        return layerResult;
+        TestFormatter::PrintFail("UART");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "UART";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("UART");
+        layerResult.passCount++;
     }
-    logger.Info("UART..........................PASS");
-    layerResult.passCount++;
 
     result = TestI2c();
     if (!result)
     {
-        logger.Error("I2C...........................FAIL");
-        layerResult.result = result;
-        layerResult.failedComponent = "I2C";
-        layerResult.failCount = 1;
-        return layerResult;
+        TestFormatter::PrintFail("I2C");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "I2C";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("I2C");
+        layerResult.passCount++;
     }
-    logger.Info("I2C...........................PASS");
-    layerResult.passCount++;
 
     result = TestSpi();
     if (!result)
     {
-        logger.Error("SPI...........................FAIL");
-        layerResult.result = result;
-        layerResult.failedComponent = "SPI";
-        layerResult.failCount = 1;
-        return layerResult;
+        TestFormatter::PrintFail("SPI");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "SPI";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("SPI");
+        layerResult.passCount++;
     }
-    logger.Info("SPI...........................PASS");
-    layerResult.passCount++;
 
     result = TestAdc();
     if (!result)
     {
-        logger.Error("ADC...........................FAIL");
-        layerResult.result = result;
-        layerResult.failedComponent = "ADC";
-        layerResult.failCount = 1;
-        return layerResult;
+        TestFormatter::PrintFail("ADC");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "ADC";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("ADC");
+        layerResult.passCount++;
     }
-    logger.Info("ADC...........................PASS");
-    layerResult.passCount++;
 
     result = TestTimer();
     if (!result)
     {
-        logger.Error("Timer.........................FAIL");
-        layerResult.result = result;
-        layerResult.failedComponent = "Timer";
-        layerResult.failCount = 1;
-        return layerResult;
+        TestFormatter::PrintFail("Timer");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "Timer";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("Timer");
+        layerResult.passCount++;
     }
-    logger.Info("Timer.........................PASS");
-    layerResult.passCount++;
 
     result = TestOneWire();
     if (!result)
     {
-        logger.Error("OneWire.......................FAIL");
-        layerResult.result = result;
-        layerResult.failedComponent = "OneWire";
-        layerResult.failCount = 1;
-        return layerResult;
+        TestFormatter::PrintFail("OneWire");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "OneWire";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintSkipped("OneWire", "No sensor attached");
+        layerResult.skippedCount++;
     }
-    logger.Warning("OneWire.......................SKIPPED (No sensor attached)");
-    layerResult.skippedCount++;
 
-    logger.Info("");
-    logger.Info("PASS 9");
-    logger.Info("SKIPPED 1");
-    logger.Info("");
+    TestFormatter::PrintFooter(layerResult.passCount, layerResult.failCount,
+        layerResult.skippedCount);
+
+    if (layerResult.failCount == 0)
+    {
+        layerResult.result = NAS::Core::Result::Ok();
+    } else {
+        layerResult.result = NAS::Core::Result(NAS::Core::ResultCode::Failed);
+    }
 
     return layerResult;
 }

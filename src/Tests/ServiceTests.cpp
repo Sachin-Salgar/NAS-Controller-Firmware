@@ -12,6 +12,8 @@
  *
  ******************************************************************************/
 
+#include "TestResult.h"
+#include "TestFormatter.h"
 #include "../Core/Logger.h"
 #include "../Core/Result.h"
 #include "../Services/ServiceManager.h"
@@ -225,140 +227,161 @@ static NAS::Core::Result TestServiceManager() noexcept
     return NAS::Core::Result::Ok();
 }
 
-struct LayerResult
-{
-    NAS::Core::Result result;
-    const char* failedComponent;
-    int passCount;
-    int failCount;
-    int skippedCount;
-};
-
 [[nodiscard]]
 LayerResult TestServices() noexcept
 {
     NAS::Core::Logger logger;
     logger.Initialize();
 
-    LayerResult layerResult = {NAS::Core::Result::Ok(), nullptr, 0, 0, 0};
+    LayerResult layerResult = {NAS::Core::Result::Ok(), nullptr,
+        NAS::Core::ResultCode::Success, 0, 0, 0};
 
-    logger.Info("--------------------------------------------------");
-    logger.Info("SERVICES");
-    logger.Info("--------------------------------------------------");
-    logger.Info("");
+    TestFormatter::PrintHeader("SERVICES");
 
     auto result = TestConfigurationService();
     if (!result)
     {
-        logger.Error("ConfigurationService.......FAIL");
-        layerResult.result = result;
-        layerResult.failedComponent = "ConfigurationService";
-        layerResult.failCount = 1;
-        return layerResult;
+        TestFormatter::PrintFail("ConfigurationService");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "ConfigurationService";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("ConfigurationService");
+        layerResult.passCount++;
     }
-    logger.Info("ConfigurationService.......PASS");
-    layerResult.passCount++;
 
     result = TestDriveService();
     if (!result)
     {
-        logger.Error("DriveService...............FAIL");
-        layerResult.result = result;
-        layerResult.failedComponent = "DriveService";
-        layerResult.failCount = 1;
-        return layerResult;
+        TestFormatter::PrintFail("DriveService");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "DriveService";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("DriveService");
+        layerResult.passCount++;
     }
-    logger.Info("DriveService...............PASS");
-    layerResult.passCount++;
 
     result = TestFanService();
     if (!result)
     {
-        logger.Error("FanService.................FAIL");
-        layerResult.result = result;
-        layerResult.failedComponent = "FanService";
-        layerResult.failCount = 1;
-        return layerResult;
+        TestFormatter::PrintFail("FanService");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "FanService";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("FanService");
+        layerResult.passCount++;
     }
-    logger.Info("FanService.................PASS");
-    layerResult.passCount++;
 
     result = TestLedService();
     if (!result)
     {
-        logger.Error("LedService.................FAIL");
-        layerResult.result = result;
-        layerResult.failedComponent = "LedService";
-        layerResult.failCount = 1;
-        return layerResult;
+        TestFormatter::PrintFail("LedService");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "LedService";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("LedService");
+        layerResult.passCount++;
     }
-    logger.Info("LedService.................PASS");
-    layerResult.passCount++;
 
     result = TestRelayService();
     if (!result)
     {
-        logger.Error("RelayService...............FAIL");
-        layerResult.result = result;
-        layerResult.failedComponent = "RelayService";
-        layerResult.failCount = 1;
-        return layerResult;
+        TestFormatter::PrintFail("RelayService");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "RelayService";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintSkipped("RelayService");
+        layerResult.skippedCount++;
     }
-    logger.Warning("RelayService...............SKIPPED");
-    layerResult.skippedCount++;
 
     result = TestStatisticsService();
     if (!result)
     {
-        logger.Error("StatisticsService..........FAIL");
-        layerResult.result = result;
-        layerResult.failedComponent = "StatisticsService";
-        layerResult.failCount = 1;
-        return layerResult;
+        TestFormatter::PrintFail("StatisticsService");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "StatisticsService";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("StatisticsService");
+        layerResult.passCount++;
     }
-    logger.Info("StatisticsService..........PASS");
-    layerResult.passCount++;
 
     result = TestSystemService();
     if (!result)
     {
-        logger.Error("SystemService..............FAIL");
-        layerResult.result = result;
-        layerResult.failedComponent = "SystemService";
-        layerResult.failCount = 1;
-        return layerResult;
+        TestFormatter::PrintFail("SystemService");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "SystemService";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("SystemService");
+        layerResult.passCount++;
     }
-    logger.Info("SystemService..............PASS");
-    layerResult.passCount++;
 
     result = TestTemperatureService();
     if (!result)
     {
-        logger.Error("TemperatureService.........FAIL");
-        layerResult.result = result;
-        layerResult.failedComponent = "TemperatureService";
-        layerResult.failCount = 1;
-        return layerResult;
+        TestFormatter::PrintFail("TemperatureService");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "TemperatureService";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintSkipped("TemperatureService");
+        layerResult.skippedCount++;
     }
-    logger.Warning("TemperatureService.........SKIPPED");
-    layerResult.skippedCount++;
 
     result = TestServiceManager();
     if (!result)
     {
-        logger.Error("ServiceManager.............FAIL");
-        layerResult.result = result;
-        layerResult.failedComponent = "ServiceManager";
-        layerResult.failCount = 1;
-        return layerResult;
+        TestFormatter::PrintFail("ServiceManager");
+        if (!layerResult.result)
+        {
+            layerResult.failedComponent = "ServiceManager";
+            layerResult.failureCode = result.Code();
+        }
+        layerResult.failCount++;
+    } else {
+        TestFormatter::PrintPass("ServiceManager");
+        layerResult.passCount++;
     }
-    logger.Info("ServiceManager.............PASS");
-    layerResult.passCount++;
 
-    logger.Info("");
-    logger.Info("PASS 7");
-    logger.Info("SKIPPED 2");
-    logger.Info("");
+    TestFormatter::PrintFooter(layerResult.passCount, layerResult.failCount,
+        layerResult.skippedCount);
+
+    if (layerResult.failCount == 0)
+    {
+        layerResult.result = NAS::Core::Result::Ok();
+    } else {
+        layerResult.result = NAS::Core::Result(NAS::Core::ResultCode::Failed);
+    }
 
     return layerResult;
 }

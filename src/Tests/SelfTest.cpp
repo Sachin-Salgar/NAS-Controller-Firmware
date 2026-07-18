@@ -6,26 +6,18 @@
  *
  * Description:
  * Production-quality diagnostic framework orchestrator.
- * Runs all layer tests and reports detailed results with failure diagnostics.
+ * Runs all layer tests independently, collects all failures,
+ * and reports detailed diagnostics with ResultCode.
  *
  ******************************************************************************/
 
 #include "SelfTest.h"
+#include "TestResult.h"
 #include "../Core/Logger.h"
 #include "../Core/Result.h"
 
 namespace NAS::Tests
 {
-
-// Forward declarations from test modules
-struct LayerResult
-{
-    NAS::Core::Result result;
-    const char* failedComponent;
-    int passCount;
-    int failCount;
-    int skippedCount;
-};
 
 [[nodiscard]]
 LayerResult TestCore() noexcept;
@@ -48,6 +40,74 @@ LayerResult TestProtocol() noexcept;
 [[nodiscard]]
 LayerResult TestSystem() noexcept;
 
+struct FailureRecord
+{
+    const char* layer;
+    const char* component;
+    NAS::Core::ResultCode code;
+};
+
+static void PrintResultCode(NAS::Core::ResultCode code) noexcept
+{
+    NAS::Core::Logger logger;
+    logger.Initialize();
+
+    const char* codeStr = "UnknownError";
+
+    if (code == NAS::Core::ResultCode::Success)
+        codeStr = "Success";
+    else if (code == NAS::Core::ResultCode::Failed)
+        codeStr = "Failed";
+    else if (code == NAS::Core::ResultCode::InvalidArgument)
+        codeStr = "InvalidArgument";
+    else if (code == NAS::Core::ResultCode::InvalidState)
+        codeStr = "InvalidState";
+    else if (code == NAS::Core::ResultCode::NotInitialized)
+        codeStr = "NotInitialized";
+    else if (code == NAS::Core::ResultCode::AlreadyInitialized)
+        codeStr = "AlreadyInitialized";
+    else if (code == NAS::Core::ResultCode::Timeout)
+        codeStr = "Timeout";
+    else if (code == NAS::Core::ResultCode::Busy)
+        codeStr = "Busy";
+    else if (code == NAS::Core::ResultCode::Unsupported)
+        codeStr = "Unsupported";
+    else if (code == NAS::Core::ResultCode::NotSupported)
+        codeStr = "NotSupported";
+    else if (code == NAS::Core::ResultCode::AccessDenied)
+        codeStr = "AccessDenied";
+    else if (code == NAS::Core::ResultCode::OutOfMemory)
+        codeStr = "OutOfMemory";
+    else if (code == NAS::Core::ResultCode::NullPointer)
+        codeStr = "NullPointer";
+    else if (code == NAS::Core::ResultCode::BufferTooSmall)
+        codeStr = "BufferTooSmall";
+    else if (code == NAS::Core::ResultCode::BufferFull)
+        codeStr = "BufferFull";
+    else if (code == NAS::Core::ResultCode::CommunicationError)
+        codeStr = "CommunicationError";
+    else if (code == NAS::Core::ResultCode::ChecksumError)
+        codeStr = "ChecksumError";
+    else if (code == NAS::Core::ResultCode::CrcError)
+        codeStr = "CrcError";
+    else if (code == NAS::Core::ResultCode::InvalidHeader)
+        codeStr = "InvalidHeader";
+    else if (code == NAS::Core::ResultCode::InvalidLength)
+        codeStr = "InvalidLength";
+    else if (code == NAS::Core::ResultCode::NotFound)
+        codeStr = "NotFound";
+    else if (code == NAS::Core::ResultCode::HardwareError)
+        codeStr = "HardwareError";
+    else if (code == NAS::Core::ResultCode::DeviceNotFound)
+        codeStr = "DeviceNotFound";
+    else if (code == NAS::Core::ResultCode::InvalidConfiguration)
+        codeStr = "InvalidConfiguration";
+    else if (code == NAS::Core::ResultCode::InternalError)
+        codeStr = "InternalError";
+
+    logger.Error(codeStr);
+}
+
 [[nodiscard]]
 NAS::Core::Result SelfTest::Run() noexcept
 {
@@ -64,152 +124,109 @@ NAS::Core::Result SelfTest::Run() noexcept
     logger.Info("");
 
     LayerResult layerResults[7];
-    int totalPass = 0;
-    int totalFail = 0;
-    int totalSkipped = 0;
-    const char* firstFailedComponent = nullptr;
-    const char* firstFailedLayer = nullptr;
+    FailureRecord failures[7];
+    int failureCount = 0;
 
-    // Test Core layer
     layerResults[0] = TestCore();
-    if (!layerResults[0].result)
+    if (!layerResults[0].result && failureCount < 7)
     {
-        totalFail += layerResults[0].failCount;
-        totalPass += layerResults[0].passCount;
-        totalSkipped += layerResults[0].skippedCount;
-        firstFailedComponent = layerResults[0].failedComponent;
-        firstFailedLayer = "CORE";
-    } else {
-        totalPass += layerResults[0].passCount;
-        totalSkipped += layerResults[0].skippedCount;
+        failures[failureCount].layer = "CORE";
+        failures[failureCount].component = layerResults[0].failedComponent;
+        failures[failureCount].code = layerResults[0].failureCode;
+        failureCount++;
     }
 
-    // Test Platform layer
-    if (!firstFailedComponent)
+    layerResults[1] = TestPlatform();
+    if (!layerResults[1].result && failureCount < 7)
     {
-        layerResults[1] = TestPlatform();
-        if (!layerResults[1].result)
-        {
-            totalFail += layerResults[1].failCount;
-            totalPass += layerResults[1].passCount;
-            totalSkipped += layerResults[1].skippedCount;
-            firstFailedComponent = layerResults[1].failedComponent;
-            firstFailedLayer = "PLATFORM";
-        } else {
-            totalPass += layerResults[1].passCount;
-            totalSkipped += layerResults[1].skippedCount;
-        }
+        failures[failureCount].layer = "PLATFORM";
+        failures[failureCount].component = layerResults[1].failedComponent;
+        failures[failureCount].code = layerResults[1].failureCode;
+        failureCount++;
     }
 
-    // Test Drivers layer
-    if (!firstFailedComponent)
+    layerResults[2] = TestDrivers();
+    if (!layerResults[2].result && failureCount < 7)
     {
-        layerResults[2] = TestDrivers();
-        if (!layerResults[2].result)
-        {
-            totalFail += layerResults[2].failCount;
-            totalPass += layerResults[2].passCount;
-            totalSkipped += layerResults[2].skippedCount;
-            firstFailedComponent = layerResults[2].failedComponent;
-            firstFailedLayer = "DRIVERS";
-        } else {
-            totalPass += layerResults[2].passCount;
-            totalSkipped += layerResults[2].skippedCount;
-        }
+        failures[failureCount].layer = "DRIVERS";
+        failures[failureCount].component = layerResults[2].failedComponent;
+        failures[failureCount].code = layerResults[2].failureCode;
+        failureCount++;
     }
 
-    // Test Objects layer
-    if (!firstFailedComponent)
+    layerResults[3] = TestObjects();
+    if (!layerResults[3].result && failureCount < 7)
     {
-        layerResults[3] = TestObjects();
-        if (!layerResults[3].result)
-        {
-            totalFail += layerResults[3].failCount;
-            totalPass += layerResults[3].passCount;
-            totalSkipped += layerResults[3].skippedCount;
-            firstFailedComponent = layerResults[3].failedComponent;
-            firstFailedLayer = "OBJECTS";
-        } else {
-            totalPass += layerResults[3].passCount;
-            totalSkipped += layerResults[3].skippedCount;
-        }
+        failures[failureCount].layer = "OBJECTS";
+        failures[failureCount].component = layerResults[3].failedComponent;
+        failures[failureCount].code = layerResults[3].failureCode;
+        failureCount++;
     }
 
-    // Test Services layer
-    if (!firstFailedComponent)
+    layerResults[4] = TestServices();
+    if (!layerResults[4].result && failureCount < 7)
     {
-        layerResults[4] = TestServices();
-        if (!layerResults[4].result)
-        {
-            totalFail += layerResults[4].failCount;
-            totalPass += layerResults[4].passCount;
-            totalSkipped += layerResults[4].skippedCount;
-            firstFailedComponent = layerResults[4].failedComponent;
-            firstFailedLayer = "SERVICES";
-        } else {
-            totalPass += layerResults[4].passCount;
-            totalSkipped += layerResults[4].skippedCount;
-        }
+        failures[failureCount].layer = "SERVICES";
+        failures[failureCount].component = layerResults[4].failedComponent;
+        failures[failureCount].code = layerResults[4].failureCode;
+        failureCount++;
     }
 
-    // Test Protocol layer
-    if (!firstFailedComponent)
+    layerResults[5] = TestProtocol();
+    if (!layerResults[5].result && failureCount < 7)
     {
-        layerResults[5] = TestProtocol();
-        if (!layerResults[5].result)
-        {
-            totalFail += layerResults[5].failCount;
-            totalPass += layerResults[5].passCount;
-            totalSkipped += layerResults[5].skippedCount;
-            firstFailedComponent = layerResults[5].failedComponent;
-            firstFailedLayer = "PROTOCOL";
-        } else {
-            totalPass += layerResults[5].passCount;
-            totalSkipped += layerResults[5].skippedCount;
-        }
+        failures[failureCount].layer = "PROTOCOL";
+        failures[failureCount].component = layerResults[5].failedComponent;
+        failures[failureCount].code = layerResults[5].failureCode;
+        failureCount++;
     }
 
-    // Test System layer
-    if (!firstFailedComponent)
+    layerResults[6] = TestSystem();
+    if (!layerResults[6].result && failureCount < 7)
     {
-        layerResults[6] = TestSystem();
-        if (!layerResults[6].result)
-        {
-            totalFail += layerResults[6].failCount;
-            totalPass += layerResults[6].passCount;
-            totalSkipped += layerResults[6].skippedCount;
-            firstFailedComponent = layerResults[6].failedComponent;
-            firstFailedLayer = "SYSTEM";
-        } else {
-            totalPass += layerResults[6].passCount;
-            totalSkipped += layerResults[6].skippedCount;
-        }
+        failures[failureCount].layer = "SYSTEM";
+        failures[failureCount].component = layerResults[6].failedComponent;
+        failures[failureCount].code = layerResults[6].failureCode;
+        failureCount++;
     }
 
     logger.Info("");
     logger.Info("==================================================");
-    if (firstFailedComponent)
+    if (failureCount == 0)
     {
-        logger.Info("BOOT SELF TEST FAILED");
-        logger.Info("==================================================");
-        logger.Info("");
-        logger.Info("Failed Test");
-        logger.Info("");
-        logger.Error(firstFailedLayer);
-        logger.Error(" -> ");
-        logger.Error(firstFailedComponent);
-        logger.Info("");
-        logger.Info("Result Code");
-        logger.Info("");
-        logger.Error("Check logs above for details");
-        logger.Info("");
-        return NAS::Core::Result(NAS::Core::ResultCode::Failed);
-    } else {
         logger.Info("BOOT SELF TEST PASSED");
         logger.Info("==================================================");
         logger.Info("");
         return NAS::Core::Result::Ok();
     }
+
+    logger.Info("BOOT SELF TEST FAILED");
+    logger.Info("==================================================");
+    logger.Info("");
+
+    for (int i = 0; i < failureCount; ++i)
+    {
+        logger.Info("Failed Test");
+        logger.Info("");
+        logger.Error(failures[i].layer);
+        logger.Error(" -> ");
+        logger.Error(failures[i].component);
+        logger.Info("");
+        logger.Info("Result Code");
+        logger.Info("");
+
+        PrintResultCode(failures[i].code);
+
+        if (i < failureCount - 1)
+        {
+            logger.Info("");
+            logger.Info("---");
+            logger.Info("");
+        }
+    }
+
+    logger.Info("");
+    return NAS::Core::Result(NAS::Core::ResultCode::Failed);
 }
 
 } // namespace NAS::Tests
