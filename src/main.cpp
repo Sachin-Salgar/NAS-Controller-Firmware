@@ -2,13 +2,7 @@
 
 #include "Core/Version.h"
 #include "System/SystemManager.h"
-#include "Tests/SelfTest.h"
 
-// Add this
-namespace NAS::Tests
-{
-    void RunLedAnimation();
-}
 
 using namespace NAS::Core;
 
@@ -34,10 +28,11 @@ void setup()
     Serial.begin(115200);
     delay(2000);
 
-    // Directly run LED animation
-    NAS::Tests::RunLedAnimation();
+    NAS::System::SystemManager::Initialize();
+    NAS::System::SystemManager::Start();
 }
 
 void loop()
 {
+    NAS::System::SystemManager::Run();
 }

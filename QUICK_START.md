@@ -18,7 +18,7 @@ Embedded firmware for ESP32 that manages external NAS hardware:
 
 ## CRITICAL FACTS
 
-🔴 **FIRMWARE IS BROKEN:** main.cpp runs animation test instead of SystemManager  
+✅ **FIRMWARE FIXED:** main.cpp now calls SystemManager correctly  
 🔴 **LED SYSTEM INCOMPLETE:** Only 8 of 60 LEDs designed, no system status LEDs  
 🟡 **NOT COMPILED:** Build status unknown, likely has errors  
 🟡 **NOT TESTED:** No hardware validation yet  
@@ -58,29 +58,15 @@ Core (Utilities)
 
 ## CRITICAL FIXES NEEDED (NOW)
 
-### #1: Fix main.cpp
+### #1: Fix main.cpp ✅ COMPLETE
 
-**Current (BROKEN):**
-```cpp
-void setup() {
-    Serial.begin(115200);
-    delay(2000);
-    NAS::Tests::RunLedAnimation();  // ❌ WRONG
-}
-```
+main.cpp has been fixed to properly initialize and run SystemManager.
 
-**Should Be:**
-```cpp
-void setup() {
-    Serial.begin(115200);
-    delay(2000);
-    NAS::System::SystemManager::Initialize();
-    NAS::System::SystemManager::Start();
-}
-void loop() {
-    NAS::System::SystemManager::Run();
-}
-```
+**What was changed:**
+- Removed test code that ran RunLedAnimation() forever
+- Added proper SystemManager initialization in setup()
+- Added SystemManager run loop in loop()
+- Removed unused Tests/SelfTest.h include
 
 ### #2: Fix LED System
 
@@ -284,12 +270,12 @@ Logger::Warn("High temperature warning");
 ## NEXT STEPS
 
 1. ✅ Read `PROJECT_REFERENCE.md` (scope, frozen architecture, tasks)
-2. ⬜ Read `docs/Architecture.md` (understand layers)
-3. ⬜ Fix main.cpp (stop animation test)
-4. ⬜ Fix LED subsystem (follow LED_AUDIT_REPORT.md)
-5. ⬜ Try compilation
-6. ⬜ Fix build errors
-7. ⬜ Hardware bring-up
+2. ✅ Read `docs/Architecture.md` (understand layers)
+3. ✅ Fix main.cpp (stop animation test)
+4. ⬜ Try compilation (`platformio run -e esp32dev`)
+5. ⬜ Fix any build errors
+6. ⬜ Fix LED subsystem (follow LED_AUDIT_REPORT.md)
+7. ⬜ Hardware bring-up and testing
 
 ---
 
