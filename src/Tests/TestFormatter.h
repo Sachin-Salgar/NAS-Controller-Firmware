@@ -25,48 +25,48 @@ public:
     static void PrintHeader(const char* layerName) noexcept
     {
         NAS::Core::Logger logger;
-        logger.Initialize();
-        logger.Info("--------------------------------------------------");
-        logger.Info(layerName);
-        logger.Info("--------------------------------------------------");
-        logger.Info("");
+        (void)logger.Initialize();
+        (void)logger.Info("--------------------------------------------------");
+        (void)logger.Info(layerName);
+        (void)logger.Info("--------------------------------------------------");
+        (void)logger.Info("");
     }
 
     static void PrintPass(const char* componentName) noexcept
     {
         NAS::Core::Logger logger;
-        logger.Initialize();
+        (void)logger.Initialize();
         char buffer[64];
         FormatComponentLine(componentName, "PASS", buffer, sizeof(buffer));
-        logger.Info(buffer);
+        (void)logger.Info(buffer);
     }
 
     static void PrintFail(const char* componentName) noexcept
     {
         NAS::Core::Logger logger;
-        logger.Initialize();
+        (void)logger.Initialize();
         char buffer[64];
         FormatComponentLine(componentName, "FAIL", buffer, sizeof(buffer));
-        logger.Error(buffer);
+        (void)logger.Error(buffer);
     }
 
     static void PrintSkipped(const char* componentName,
                              const char* reason = nullptr) noexcept
     {
         NAS::Core::Logger logger;
-        logger.Initialize();
+        (void)logger.Initialize();
 
         if (reason == nullptr)
         {
             char buffer[64];
             FormatComponentLine(componentName, "SKIPPED", buffer,
                 sizeof(buffer));
-            logger.Warning(buffer);
+            (void)logger.Warning(buffer);
         } else {
             char buffer[128];
             FormatComponentLineWithReason(componentName, "SKIPPED", reason,
                 buffer, sizeof(buffer));
-            logger.Warning(buffer);
+            (void)logger.Warning(buffer);
         }
     }
 
@@ -74,38 +74,38 @@ public:
                            int skippedCount) noexcept
     {
         NAS::Core::Logger logger;
-        logger.Initialize();
-        logger.Info("");
+        (void)logger.Initialize();
+        (void)logger.Info("");
 
         if (passCount > 0)
         {
             char buffer[32];
             FormatCount("PASS", passCount, buffer, sizeof(buffer));
-            logger.Info(buffer);
+            (void)logger.Info(buffer);
         }
 
         if (failCount > 0)
         {
             char buffer[32];
             FormatCount("FAIL", failCount, buffer, sizeof(buffer));
-            logger.Error(buffer);
+            (void)logger.Error(buffer);
         }
 
         if (skippedCount > 0)
         {
             char buffer[32];
             FormatCount("SKIPPED", skippedCount, buffer, sizeof(buffer));
-            logger.Warning(buffer);
+            (void)logger.Warning(buffer);
         }
 
-        logger.Info("");
+        (void)logger.Info("");
     }
 
     static void PrintSectionBreak() noexcept
     {
         NAS::Core::Logger logger;
-        logger.Initialize();
-        logger.Info("");
+        (void)logger.Initialize();
+        (void)logger.Info("");
     }
 
 private:
