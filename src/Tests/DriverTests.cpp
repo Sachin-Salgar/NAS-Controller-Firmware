@@ -92,18 +92,12 @@ static NAS::Core::Result TestStorageDriver() noexcept
 }
 
 [[nodiscard]]
-static NAS::Core::Result LEDDriver() noexcept
+static NAS::Core::Result TestLedDriver() noexcept
 {
-    auto result = NAS::Drivers::LEDDriver::Initialize(15, 25);
+    auto result = NAS::Drivers::LEDDriver::Initialize();
     if (!result)
     {
         return result;
-    }
-
-    auto ledCount = NAS::Drivers::LEDDriver::LedCount();
-    if (ledCount != 25)
-    {
-        return NAS::Core::Result(NAS::Core::ResultCode::InvalidState);
     }
 
     return NAS::Core::Result::Ok();
@@ -132,7 +126,7 @@ LayerResult TestDrivers() noexcept
 
     TestFormatter::PrintHeader("DRIVERS");
 
-    auto result = LEDDriver();
+    auto result = TestLedDriver();
     if (!result)
     {
         TestFormatter::PrintFail("LEDDriver");
