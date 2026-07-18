@@ -269,7 +269,7 @@ static NAS::Core::Result TestCommandDispatcher() noexcept
 LayerResult TestProtocol() noexcept
 {
     NAS::Core::Logger logger;
-    logger.Initialize();
+    (void)logger.Initialize();
 
     LayerResult layerResult = {NAS::Core::Result::Ok(), nullptr,
         NAS::Core::ResultCode::Success, 0, 0, 0};

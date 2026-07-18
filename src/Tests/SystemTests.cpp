@@ -60,7 +60,7 @@ static NAS::Core::Result TestSystemManager() noexcept
 LayerResult TestSystem() noexcept
 {
     NAS::Core::Logger logger;
-    logger.Initialize();
+    (void)logger.Initialize();
 
     LayerResult layerResult = {NAS::Core::Result::Ok(), nullptr,
         NAS::Core::ResultCode::Success, 0, 0, 0};
