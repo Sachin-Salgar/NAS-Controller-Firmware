@@ -139,23 +139,20 @@ Web UI updates dashboard in real-time
 
 ## Backend (Host Daemon)
 
-### Option A: Node.js + Express (RECOMMENDED)
+### SELECTED: Node.js + TypeScript + Express ✅
 
-**Pros:**
-- ✅ Easiest to implement
-- ✅ Large ecosystem (serialport, socket.io, etc.)
-- ✅ JavaScript throughout (frontend + backend)
-- ✅ Cross-platform (Windows, Mac, Linux)
-- ✅ Good performance for this use case
+**Rationale:** Easiest to implement, large ecosystem, JavaScript/TypeScript throughout (frontend + backend), cross-platform.
 
 **Stack:**
 ```
+Language:         TypeScript
 Framework:        Express.js
 Real-time:        Socket.io
 USB:              serialport npm
 Config:           dotenv + JSON files
 Logging:          winston or pino
 Testing:          Jest
+Build:            ts-node / esbuild
 ```
 
 **Daemon Structure:**
@@ -188,53 +185,14 @@ src/
    └── *.test.js         (unit tests)
 ```
 
-### Option B: Python + Flask
-
-**Pros:**
-- Good for data processing
-- Excellent serial library (pyserial)
-- Easy to integrate with data analysis
-
-**Cons:**
-- Extra Python dependency
-- Slightly slower than Node
-
-### Option C: C# + .NET
-
-**Pros:**
-- Enterprise-grade
-- Excellent async/await
-- Good for Windows deployment
-
-**Cons:**
-- Windows-only (unless .NET Core)
-- Heavier resources
-
-**Recommendation:** Start with **Node.js + Express**
 
 ---
 
 ## Frontend (Web UI)
 
-### Framework Selection
+### SELECTED: React + TypeScript + Vite + TailwindCSS ✅
 
-**Option A: React** (RECOMMENDED)
-- Large ecosystem
-- Component libraries ready (Material-UI, Chakra)
-- Large community
-- Ideal for dashboards
-
-**Option B: Vue 3**
-- Faster to learn
-- Smaller bundle
-- Good performance
-
-**Option C: Svelte**
-- Most efficient
-- Smallest bundle size
-- Modern approach
-
-**Recommendation:** React with Vite (fast build) + TailwindCSS
+**Rationale:** Large ecosystem, component libraries, ideal for dashboards, TypeScript for type safety across the stack.
 
 ### Frontend Structure
 
@@ -522,42 +480,42 @@ Firmware commands → Web UI actions:
 
 Before starting Phase 1, finalize these decisions:
 
-## Architecture
+## Architecture ✅ FROZEN
 
-- [ ] Confirm Host Daemon + Web UI approach
-- [ ] Decide daemon location (same PC as NAS, separate server, cloud)
-- [ ] Decide on multi-user support (yes/no)
-- [ ] Decide on offline mode (queue commands while disconnected?)
+- [x] **Host Daemon + Web UI approach** (CONFIRMED)
+- [x] **Daemon location:** Separate server/PC on network (can control from anywhere on network)
+- [x] **Multi-user support:** NO (single-user only, simpler implementation)
+- [x] **Offline mode:** NO (fail immediately if USB unavailable)
 
-## Technology
+## Technology ✅ FROZEN
 
-- [ ] Confirm Node.js + Express (or choose alternative)
-- [ ] Confirm React + Vite (or choose alternative)
-- [ ] Confirm TailwindCSS for styling
-- [ ] Confirm Socket.io for real-time updates
+- [x] **Backend:** Node.js + TypeScript + Express
+- [x] **Frontend:** React + TypeScript + Vite + TailwindCSS
+- [x] **Real-time:** Socket.io
+- [x] **USB:** serialport npm library
 
-## Features (Priority Order)
+## Features (Priority Order) ✅ FROZEN
 
-**MUST HAVE (Tier 1):**
-- [ ] Dashboard
-- [ ] Relay controls
-- [ ] Fan controls
-- [ ] LED controls
-- [ ] Test console
+**MUST HAVE (Tier 1 - Phase 1):**
+- [x] Dashboard
+- [x] Relay controls
+- [x] Fan controls
+- [x] LED controls
+- [x] Test console
 
-**NICE TO HAVE (Tier 2):**
-- [ ] Config editor
+**PHASE 2 (Starting with Configuration Editor):**
+- [x] **Config editor** (PRIORITY)
 - [ ] LED animation builder
 - [ ] Statistics & logging
 - [ ] Config profiles
 
 **FUTURE (Tier 3):**
-- [ ] Remote access
+- [ ] Remote access (network daemon already supports this)
 - [ ] Mobile app
 - [ ] Automation
 - [ ] Batch testing
 
-## Deployment
+## Deployment ✅ PLANNED
 
 - [ ] Windows installer (.exe)
 - [ ] Mac installer (.dmg)
@@ -565,14 +523,13 @@ Before starting Phase 1, finalize these decisions:
 - [ ] Docker container (optional)
 - [ ] Source code distribution (optional)
 
-## Security
+## Security ✅ FROZEN
 
-- [ ] Local-only access (localhost only)
-- [ ] Authentication required (yes/no)
-- [ ] Rate limiting on commands
-- [ ] Audit logging of actions
+- [x] **Local-only access (localhost only)** - No authentication required
+- [x] **Rate limiting on commands:** Yes (to prevent command flooding)
+- [x] **Audit logging of actions:** Yes (for debugging)
 
-## Testing
+## Testing ✅ PLANNED
 
 - [ ] Unit tests (backend)
 - [ ] Integration tests (daemon + firmware)
@@ -581,36 +538,49 @@ Before starting Phase 1, finalize these decisions:
 
 ---
 
+# DECISIONS FINALIZED ✅
+
+**Backend:** Node.js + TypeScript + Express
+**Frontend:** React + TypeScript + Vite + TailwindCSS
+**Deployment:** Separate server/PC on network
+**Users:** Single-user (no multi-user sync)
+**Offline:** Fail immediately (no command queue)
+**Phase 2 Focus:** Configuration Editor
+**Security:** Localhost-only, no auth required
+
+---
+
 # NEXT STEPS
 
-1. **Review this plan** with stakeholders
-2. **Make decisions** on all checkboxes above
-3. **Adjust features** based on priorities
-4. **Freeze scope** for Phase 1
-5. **Create repo structure** (daemon + frontend)
-6. **Start Phase 1 development**
+1. ✅ **Decisions made** (2024-07-19)
+2. **Create repo structure** (daemon + frontend separate)
+3. **Set up TypeScript** configurations for both
+4. **Create detailed API specification**
+5. **Create UI mockups** for main pages
+6. **Begin Phase 1 development**
+7. Deploy to separate server once ready
 
 ---
 
 # DOCUMENT STATUS
 
-**Current Status:** PLANNING (awaiting decisions)
+**Status:** ✅ **FROZEN** (ready for Phase 1 development)
 
-**To Freeze This Plan:**
-- [ ] Stakeholder approval on architecture
-- [ ] Feature priorities finalized
-- [ ] Technology choices confirmed
-- [ ] Success criteria validated
-- [ ] Timeline agreed upon
+**Decisions Completed:**
+- [x] Architecture confirmed
+- [x] Technology stack locked in
+- [x] Feature priorities finalized
+- [x] Security approach chosen
+- [x] Deployment model selected
 
-**Once Frozen:**
-- Will create architecture diagram
-- Will create detailed API specification
-- Will create UI mockups
-- Will begin Phase 1 development
+**Ready to Start:**
+- Set up GitHub repos (daemon + frontend)
+- Create TypeScript configurations
+- Build Phase 1 features (Dashboard, Controls, Test Console)
+- Test with real hardware
 
 ---
 
-**Document Created:** July 19, 2026  
-**Last Updated:** July 19, 2026  
-**Awaiting:** Stakeholder review and decisions
+**Document Created:** July 19, 2026
+**Decisions Finalized:** July 19, 2026
+**Status:** FROZEN - Ready to begin Phase 1 development
