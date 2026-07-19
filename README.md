@@ -125,34 +125,45 @@ Shared: Config & Utilities
 - Event logging and history
 - Debug logging support
 
+## Current Status
+
+**✅ Architecture Verified** – 100% compliant with frozen standards (ADR-0001)
+**✅ Firmware Fixed** – main.cpp properly initializes SystemManager
+**✅ LED System Complete** – All 60 LEDs designed with animations
+⚠️ **Not Compiled Yet** – Build verification needed
+⚠️ **Not Tested** – No hardware validation yet
+
+See `STATUS_REPORT.md` for detailed layer-by-layer status.
+
 ## Getting Started
 
 ### Prerequisites
 
 - PlatformIO Core or IDE
-- ESP32 development board
-- Connected hardware (relays, fans, sensors, LEDs)
+- ESP32 development board (ESP32-WROOM-32)
+- Connected hardware: relays, fans, temperature sensors, addressable LEDs
 
-### Building
+### Build & Test
 
 ```bash
-# Build for ESP32 Dev Module
+# Compile firmware
 platformio run -e esp32dev
-
-# Monitor serial output
-platformio run -e esp32dev --monitor
 
 # Upload to board
 platformio run -e esp32dev -t upload
+
+# View serial output (115200 baud)
+platformio run -e esp32dev --monitor
 ```
 
-### Development
+### Development Standards
 
-The firmware follows a strict coding standard documented in `docs/CodingStandard.md`. All code must:
-- Follow the dependency direction rules
-- Maintain layer separation
-- Include appropriate error handling via `Result` type
-- Use the Event Bus for inter-layer communication where appropriate
+All code must follow `docs/CodingStandard.md`:
+- **Naming:** PascalCase classes, camelCase variables, k-prefix constants
+- **Error Handling:** Use `Result<>` type, never boolean flags
+- **Layering:** Dependencies always point downward (frozen in Architecture.md)
+- **Memory:** Static allocation only, no dynamic memory after init
+- **Hardware:** Platform layer only, never in Services/Objects/Drivers
 
 ## Communication
 
@@ -194,6 +205,7 @@ See `docs/CommandSet.md` for complete command specifications.
 - ✅ All layers implemented
 - ✅ Service infrastructure in place
 - ✅ Protocol scaffolding complete
+- ✅ **Architecture alignment verified July 19, 2026** – 100% compliant with frozen standards (ADR-0001)
 
 ### Next Steps
 
@@ -207,15 +219,18 @@ See `docs/Roadmap.md` for detailed development phases.
 
 ## Documentation
 
-This project is documentation-driven. All major components, decisions, and specifications are documented:
+**Essential Reading:**
+- `docs/Architecture.md` – Frozen system design (8 layers, dependency rules)
+- `docs/CodingStandard.md` – Mandatory coding conventions (naming, error handling, memory)
+- `STATUS_REPORT.md` – What's working, what's not, next steps
 
-- `docs/Architecture.md` – Complete software architecture
-- `docs/Hardware.md` – Hardware platform specifications
-- `docs/Protocol.md` – Binary protocol format
-- `docs/CommandSet.md` – Available commands and payloads
-- `docs/CodingStandard.md` – Code conventions and style
-- `docs/Decisions/` – Architecture decision records (ADRs)
-- `docs/Repository-Structure.md` – Detailed file organization
+**Reference Docs:**
+- `docs/Hardware.md` – ESP32 GPIO, relays, fans, sensors, LED wiring
+- `docs/Protocol.md` – Binary packet format and validation
+- `docs/CommandSet.md` – Supported commands and payloads
+- `docs/Decisions/` – Architecture decision records (ADR-0001 through ADR-0008)
+- `docs/Repository-Structure.md` – Source code organization
+- `docs/Roadmap.md` – Development phases and milestones
 
 ## Architecture Freeze
 
