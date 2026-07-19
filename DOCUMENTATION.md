@@ -33,7 +33,6 @@ project root/
 ├── LICENSE                        ← License
 │
 ├── docs/                          ← Project-wide documentation
-│   ├── README.md                  ← Documentation index
 │   ├── DEVELOPER_GUIDE.md         ← Development workflow & standards
 │   ├── PROJECT_OVERVIEW.md        ← System overview
 │   ├── PROJECT_RULES.md           ← Core project rules
@@ -47,25 +46,25 @@ project root/
 │   ├── ERROR_RECOVERY_MATRIX.md   ← Error handling
 │   ├── SECURITY_POLICY.md         ← Security guidelines
 │   ├── CONTRIBUTING.md            ← Contribution guidelines
-│   ├── REPOSITORY_STRUCTURE.md    ← Repository layout
 │   ├── adr/                       ← Architecture decision records
 │   │   ├── 0001-websocket-first.md
 │   │   └── 0002-library-first-daemon.md
-│   ├── archive/                   ← Archived planning docs
-│   └── Roadmap.md                 ← Project roadmap
+│   └── archive/                   ← Archived planning docs
 │
 ├── firmware/                      ← ESP32 Firmware (C++)
 │   ├── README.md                  ← Firmware quick start
 │   ├── CHANGELOG.md               ← Firmware version history
 │   ├── docs/                      ← Firmware-specific documentation
 │   │   ├── README.md              ← Firmware docs index
-│   │   ├── Architecture.md
-│   │   ├── Hardware.md
-│   │   ├── Protocol.md
-│   │   ├── CommandSet.md
-│   │   ├── CodingStandard.md
-│   │   ├── LED_Subsystem.md
-│   │   ├── USB-Host-Protocol.md
+│   │   ├── Architecture.md        ← Firmware architecture
+│   │   ├── Hardware.md            ← Hardware specifications
+│   │   ├── Protocol.md            ← Protocol details
+│   │   ├── CommandSet.md          ← Command reference
+│   │   ├── CodingStandard.md      ← Firmware coding standards
+│   │   ├── LED_Subsystem.md       ← LED system documentation
+│   │   ├── USB-Host-Protocol.md   ← USB protocol spec
+│   │   ├── Roadmap.md             ← Firmware development roadmap
+│   │   ├── Repository-Structure.md ← Repository layout and layers
 │   │   ├── Decisions/             ← Firmware ADRs
 │   │   └── ...
 │   ├── src/                       ← Source code
@@ -123,8 +122,8 @@ project root/
 |----------|----------|--------|---------|
 | README.md | Root | ✅ Current | Project overview & quick start |
 | DOCUMENTATION.md | Root | ✅ Current | This navigation guide |
+| WEB_INTERFACE_PLAN.md | Root | ✅ Current | Web interface development plan (reference) |
 | LICENSE | Root | ✅ Current | Project license |
-| docs/README.md | docs/ | ✅ Current | Project documentation index |
 | DEVELOPER_GUIDE.md | docs/ | ✅ Current | Development workflow & standards |
 | PROJECT_OVERVIEW.md | docs/ | ✅ Current | System overview & architecture |
 | PROJECT_RULES.md | docs/ | ✅ Current | 10 core project rules |
@@ -138,22 +137,26 @@ project root/
 | GETTING_STARTED.md | docs/ | ✅ Current | Setup instructions |
 | CONTRIBUTING.md | docs/ | ✅ Current | Contribution guidelines |
 | IMPLEMENTATION_CHECKLIST.md | docs/ | ✅ Current | Phase 1 development tasks |
-| REPOSITORY_STRUCTURE.md | docs/ | ✅ Current | Repository layout |
-| Roadmap.md | docs/ | ✅ Current | Project roadmap |
 | docs/adr/0001-websocket-first.md | docs/adr/ | ✅ Current | WebSocket architecture decision |
 | docs/adr/0002-library-first-daemon.md | docs/adr/ | ✅ Current | Daemon architecture decision |
-| PROTOCOL_SPEC.md | shared/docs/ | ✅ Current | Binary protocol definition |
-| WEB_INTERFACE_PLAN.md | frontend/docs/ | ✅ Current | Web UI feature roadmap |
-| UI_GUIDELINES.md | frontend/docs/ | ✅ Current | Design system |
 | firmware/README.md | firmware/ | ✅ Current | Firmware quick start |
 | firmware/CHANGELOG.md | firmware/ | ✅ Current | Firmware version history |
 | firmware/docs/Architecture.md | firmware/docs/ | ✅ Current | Firmware architecture |
 | firmware/docs/Hardware.md | firmware/docs/ | ✅ Current | Hardware documentation |
 | firmware/docs/Protocol.md | firmware/docs/ | ✅ Current | Protocol details |
+| firmware/docs/CommandSet.md | firmware/docs/ | ✅ Current | Command reference |
+| firmware/docs/CodingStandard.md | firmware/docs/ | ✅ Current | Firmware coding standards |
+| firmware/docs/LED_Subsystem.md | firmware/docs/ | ✅ Current | LED system documentation |
+| firmware/docs/USB-Host-Protocol.md | firmware/docs/ | ✅ Current | USB protocol specification |
+| firmware/docs/Roadmap.md | firmware/docs/ | ✅ Current | Firmware development roadmap |
+| firmware/docs/Repository-Structure.md | firmware/docs/ | ✅ Current | Repository layout and layers |
 | firmware/docs/Decisions/ | firmware/docs/ | ✅ Current | Firmware ADRs |
-| daemon/docs/ | daemon/docs/ | ⏳ In Progress | Daemon documentation |
+| PROTOCOL_SPEC.md | shared/docs/ | ✅ Current | Binary protocol definition |
+| WEB_INTERFACE_PLAN.md | frontend/docs/ | ✅ Current | Web UI feature roadmap |
+| UI_GUIDELINES.md | frontend/docs/ | ✅ Current | Design system |
 | frontend/docs/README.md | frontend/docs/ | ✅ Current | Frontend docs index |
 | shared/docs/README.md | shared/docs/ | ✅ Current | Shared types docs |
+| daemon/docs/ | daemon/docs/ | ⏳ In Progress | Daemon documentation |
 
 ---
 
