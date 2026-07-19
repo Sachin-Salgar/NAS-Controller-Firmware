@@ -665,50 +665,108 @@ Before starting Phase 1, finalize these decisions:
 1. ✅ **Decisions made** (July 19, 2026)
 2. ✅ **Architecture finalized** (production-ready)
 3. ✅ **Protocol specification created** (PROTOCOL_SPEC.md)
-4. **Establish repository structure**
+4. **Establish repository structure (docs colocated with code)**
    ```
    nas-controller/
-   ├── firmware/                  (existing ESP32 firmware)
-   ├── daemon/                    (Node.js + TypeScript daemon)
+   │
+   ├── firmware/                      (existing ESP32 firmware)
    │   ├── src/
-   │   │   ├── core/              (NASController.Core library)
-   │   │   │   ├── protocol/      (packet encoding/decoding)
-   │   │   │   ├── transport/     (ITransport interface)
-   │   │   │   ├── queue/         (command queue + state machine)
-   │   │   │   ├── state/         (state store + subscriptions)
-   │   │   │   ├── events/        (event bus + packet inspector)
-   │   │   │   └── diagnostics/   (metrics, diagnostic mode)
-   │   │   ├── api/               (Express + Socket.io)
-   │   │   └── index.ts           (daemon entry point)
+   │   ├── docs/
+   │   │   ├── ARCHITECTURE.md
+   │   │   ├── COMMAND_SET.md
+   │   │   ├── LED_SYSTEM.md
+   │   │   ├── TASKS.md
+   │   │   └── ...
+   │   └── platformio.ini
+   │
+   ├── daemon/                        (Node.js + TypeScript daemon)
+   │   ├── src/
+   │   │   ├── core/                  (NASController.Core library)
+   │   │   │   ├── protocol/          (packet encoding/decoding)
+   │   │   │   ├── transport/         (ITransport interface)
+   │   │   │   ├── queue/             (command queue + state machine)
+   │   │   │   ├── state/             (state store + subscriptions)
+   │   │   │   ├── events/            (event bus + packet inspector)
+   │   │   │   ├── diagnostics/       (metrics, diagnostic mode)
+   │   │   │   └── controllers/       (plugin-style controllers)
+   │   │   ├── api/                   (Express + Socket.io layer)
+   │   │   └── index.ts               (daemon entry point)
    │   ├── tests/
+   │   ├── docs/
+   │   │   ├── ARCHITECTURE.md        (daemon architecture)
+   │   │   ├── WEBSOCKET_API.md       (WebSocket protocol)
+   │   │   ├── STATE_STORE.md         (state management)
+   │   │   ├── TRANSPORT_LAYER.md     (transport abstraction)
+   │   │   └── adr/                   (architecture decisions)
+   │   │       ├── 0002-library-first-daemon.md
+   │   │       └── ...
    │   └── package.json
-   ├── frontend/                  (React + Vite)
+   │
+   ├── frontend/                      (React + Vite)
    │   ├── src/
    │   │   ├── pages/
    │   │   ├── components/
-   │   │   └── services/
+   │   │   ├── services/
+   │   │   └── hooks/
    │   ├── public/
+   │   ├── docs/
+   │   │   ├── WEB_INTERFACE_PLAN.md  (feature list, roadmap)
+   │   │   ├── UI_GUIDELINES.md       (design system)
+   │   │   ├── COMPONENTS.md          (component catalog)
+   │   │   └── WEBSOCKET_CLIENT.md    (Socket.io integration)
    │   └── package.json
-   ├── shared/                    (TypeScript types + schemas)
-   │   ├── protocol.ts            (packet types)
-   │   ├── commands.ts            (command definitions)
-   │   ├── events.ts              (event types)
-   │   ├── capabilities.ts        (firmware capability schema)
-   │   ├── config.ts              (configuration schema)
+   │
+   ├── shared/                        (TypeScript types, shared by daemon + frontend)
+   │   ├── src/
+   │   │   ├── protocol.ts            (packet types)
+   │   │   ├── commands.ts            (command definitions)
+   │   │   ├── events.ts              (event types)
+   │   │   ├── capabilities.ts        (firmware capability schema)
+   │   │   └── config.ts              (configuration schema)
+   │   ├── docs/
+   │   │   ├── PROTOCOL_SPEC.md       (binary protocol definition)
+   │   │   ├── COMMAND_SET.md         (command reference)
+   │   │   ├── DATA_TYPES.md          (shared type definitions)
+   │   │   └── adr/
+   │   │       ├── 0001-websocket-first.md
+   │   │       └── ...
    │   └── package.json
-   ├── docs/
-   │   ├── architecture/          (system design docs)
-   │   ├── protocol/              (PROTOCOL_SPEC.md)
-   │   ├── adr/                   (Architecture Decision Records)
-   │   │   ├── 0001-websocket-first.md
-   │   │   ├── 0002-host-daemon.md
-   │   │   ├── 0003-capability-discovery.md
-   │   │   └── 0004-transport-abstraction.md
-   │   └── api/                   (API documentation)
-   ├── tools/                     (build scripts, utilities)
-   ├── scripts/                   (setup, deployment)
-   └── tests/                     (end-to-end tests)
+   │
+   ├── docs/                          (project-level documentation)
+   │   ├── PROJECT_OVERVIEW.md
+   │   ├── GETTING_STARTED.md
+   │   ├── ROADMAP.md
+   │   ├── CONTRIBUTING.md
+   │   ├── CHANGELOG.md
+   │   └── ARCHITECTURE_OVERVIEW.md   (high-level system design)
+   │
+   ├── tools/                         (build scripts, utilities)
+   ├── scripts/                       (setup, deployment, CI/CD)
+   └── README.md                      (project entry point)
    ```
+
+   **Documentation Organization Principle:**
+   - `firmware/docs/` → Firmware-specific documentation
+   - `daemon/docs/` → Daemon-specific documentation
+   - `frontend/docs/` → Frontend-specific documentation
+   - `shared/docs/` → Protocol specs and shared contracts (used by both firmware and daemon)
+   - `docs/` (root) → Project overview, roadmap, contribution guidelines
+
+**Document Placement Guide:**
+
+| Document | Location | Rationale |
+|----------|----------|-----------|
+| WEB_INTERFACE_PLAN.md | `frontend/docs/` | Frontend feature roadmap and architecture |
+| PROTOCOL_SPEC.md | `shared/docs/` | Defines contract between firmware and daemon |
+| CommandSet.md | `shared/docs/` | Shared command reference (firmware + daemon) |
+| Daemon Architecture | `daemon/docs/ARCHITECTURE.md` | Daemon internal design |
+| Transport Layer | `daemon/docs/TRANSPORT_LAYER.md` | Daemon component design |
+| ADR: WebSocket-first | `shared/docs/adr/` | Affects entire system |
+| ADR: Library-first daemon | `daemon/docs/adr/` | Daemon-specific decision |
+| ADR: Capability discovery | `daemon/docs/adr/` | Daemon pattern |
+| Project Roadmap | `docs/ROADMAP.md` | High-level timeline |
+| Contributing Guide | `docs/CONTRIBUTING.md` | Development guidelines |
+| Firmware Architecture | `firmware/docs/ARCHITECTURE.md` | Firmware design (already exists) |
 
 5. **Set up TypeScript configurations**
    - Root tsconfig.json (shared settings)
@@ -726,8 +784,12 @@ Before starting Phase 1, finalize these decisions:
 
 7. **Create ADRs (Architecture Decision Records)**
    - Document WHY each major decision was made
+   - ADRs colocated with component docs:
+     - `shared/docs/adr/0001-websocket-first.md` (affects entire system)
+     - `daemon/docs/adr/0002-library-first-daemon.md` (daemon-specific)
+     - `daemon/docs/adr/0003-capability-discovery.md` (daemon pattern)
+     - `shared/docs/adr/0004-transport-abstraction.md` (protocol/transport layer)
    - Reference: PROTOCOL_SPEC.md, WEB_INTERFACE_PLAN.md
-   - Examples: WebSocket-first, host daemon, capability discovery, transport abstraction
 
 ## Phase 1: Core Implementation (MVP) - Bottom-Up Build Order ✅
 
@@ -908,7 +970,25 @@ This separation of responsibilities ensures:
 
 You're ready to begin Phase 1 implementation.
 
-**First step:** Establish the repository structure shown above, create TypeScript configurations, and define shared types. The architecture is finalized—execution is the focus now.
+**First steps (in order):**
+1. Establish the repository structure (firmware, daemon, frontend, shared, docs)
+2. Colocate documentation with code (firmware/docs/, daemon/docs/, etc.)
+3. Create TypeScript configurations (root + daemon + frontend + shared)
+4. Define shared types (protocol, commands, events, capabilities, config)
+5. Write ADRs documenting major decisions
+6. Create project-level overview (docs/PROJECT_OVERVIEW.md)
+
+**Documentation Organization:**
+- Each component owns its documentation
+- `shared/docs/` contains protocol specs and shared contracts
+- ADRs live with the component they affect
+- This makes it immediately clear which docs apply to which part of the system
 
 **Key Takeaway:**
-Architecture evolved from functional to production-grade with clear layering, extensibility, testability, and maintainability. Design risks are resolved. Implementation risks remain (as expected at this phase). Begin with protocol + transport libraries, build up to daemon core, then API, then UI. Bottom-up ensures each layer has a tested foundation.
+Architecture evolved from functional to production-grade with clear layering, extensibility, testability, and maintainability. Design risks are resolved. Implementation risks remain (as expected at this phase).
+
+**Build strategy:** Protocol → Transport → Daemon Core → API → UI (bottom-up ensures each layer has tested foundation)
+
+**Documentation strategy:** Docs colocated with code (firmware/docs/ for firmware, daemon/docs/ for daemon, etc.) makes the system self-documenting and easy to navigate.
+
+The architecture is solid. The implementation path is clear. You're ready to code.
