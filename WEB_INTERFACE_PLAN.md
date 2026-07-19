@@ -89,22 +89,27 @@ Provide a web-based interface to control, monitor, configure, and test the NAS C
 
 ## Data Flow
 
-### Control Command (User → Firmware)
+### Control Command (User → Firmware) - WebSocket-First ✅
+
 ```
 User clicks "Turn On Relay 1"
   ↓
-Web UI sends: { type: "relay_on", id: 1 }
+Web UI sends via WebSocket: { type: "relay_on", id: 1, msgId: "abc123" }
   ↓
-Daemon translates to binary packet:
+Daemon receives on persistent WebSocket connection
+  ↓
+Command Router adds to Command Queue (state: Queued)
+  ↓
+Serial Queue Manager translates to binary packet:
   Header(0x55AA) | Seq(1) | Cmd(0x10) | Len(1) | Payload(1) | CRC16
   ↓
-Sends via USB Serial
+Sends via USB Serial (state: Sending)
   ↓
-Firmware processes command
+Firmware processes command, sends ACK/response
   ↓
-Daemon reads response packet
+State: Waiting ACK → Completed/Timeout/Failed
   ↓
-Daemon sends status update to browser via WebSocket
+Daemon broadcasts status update via WebSocket to all clients
   ↓
 Web UI updates in real-time
 ```
@@ -115,13 +120,26 @@ Firmware publishes event (e.g., temperature reading)
   ↓
 Daemon reads from serial (polling or interrupt)
   ↓
-Parses response packet
+Parses response packet with timestamp
   ↓
-Updates internal state
+Updates internal State Store (FirmwareState, HardwareState)
+  ↓
+Logs to Event Log
   ↓
 Broadcasts to all connected WebSocket clients
   ↓
-Web UI updates dashboard in real-time
+Web UI components subscribed to State Store update
+```
+
+### REST Usage (Limited to Static/File Operations)
+```
+Browser needs to download logs or firmware file
+  ↓
+Use HTTP REST endpoint
+  ↓
+GET /api/logs → Returns JSON or CSV
+GET /api/config/backup → Returns JSON
+(Minimizes REST, reserves it for bulk/static resources)
 ```
 
 ## Communication Protocol
@@ -155,35 +173,55 @@ Testing:          Jest
 Build:            ts-node / esbuild
 ```
 
-**Daemon Structure:**
+**Daemon Structure (with improvements):**
 ```
 src/
-├── index.js              (entry point)
+├── index.ts              (entry point)
 ├── config/
-│  └── index.js          (configuration)
-├── controllers/
-│  ├── relay.js          (relay commands)
-│  ├── fan.js            (fan commands)
-│  ├── led.js            (LED commands)
-│  ├── temperature.js    (temp sensor)
-│  ├── drive.js          (drive monitoring)
-│  └── system.js         (system commands)
+│  └── index.ts          (configuration, API versioning)
+├── controllers/          (plugin-style, self-registering)
+│  ├── baseController.ts (common interface)
+│  ├── relay.ts          (relay commands)
+│  ├── fan.ts            (fan commands)
+│  ├── led.ts            (LED commands)
+│  ├── temperature.ts    (temp sensor)
+│  ├── drive.ts          (drive monitoring)
+│  └── system.ts         (system commands)
 ├── protocol/
-│  ├── translator.js     (web command → binary)
-│  ├── parser.js         (binary → objects)
-│  └── crc16.js          (checksum validation)
+│  ├── translator.ts     (web command → binary)
+│  ├── parser.ts         (binary → objects)
+│  ├── crc16.ts          (checksum validation)
+│  └── capabilities.ts   (firmware capability discovery)
 ├── serial/
-│  ├── connection.js     (USB management)
-│  └── queue.js          (command queueing)
+│  ├── connection.ts     (USB management with auto-reconnect)
+│  ├── queue.ts          (command queueing with state machine)
+│  └── reconnect.ts      (auto-reconnect + state resync logic)
 ├── state/
-│  └── store.js          (in-memory state)
+│  ├── store.ts          (global state store)
+│  ├── firmware.ts       (FirmwareState)
+│  ├── hardware.ts       (HardwareState)
+│  ├── config.ts         (ConfigState)
+│  └── statistics.ts     (StatisticsState)
+├── events/
+│  ├── eventLog.ts       (event history with timestamps)
+│  └── broadcaster.ts    (WebSocket event broadcaster)
 ├── api/
-│  └── routes.js         (REST endpoints)
-├── websocket/
-│  └── events.js         (real-time updates)
+│  ├── websocket.ts      (WebSocket command router)
+│  ├── rest.ts           (minimal REST: logs, files, static)
+│  └── packetInspector.ts (live packet sniffer/decoder)
 └── tests/
-   └── *.test.js         (unit tests)
+   └── *.test.ts         (unit tests)
 ```
+
+**Key Architectural Improvements:**
+- Plugin-style controllers with common interface
+- Command Queue with state machine (Queued → Sending → Waiting ACK → Completed/Timeout/Failed)
+- Auto-reconnect with USB disconnect handling
+- Capability discovery from firmware
+- Single state store with subscriptions
+- Event log for all state changes
+- Live packet inspector for debugging
+- API versioning support built-in
 
 
 ---
@@ -276,6 +314,13 @@ These features must work for MVP.
   - [ ] Test LED animation
   - [ ] Read all sensors
 
+### 1.4 Live Packet Inspector (NEW) ✅
+- [ ] Real-time TX/RX packet display
+- [ ] Hex dump with timestamps
+- [ ] Decoded packet meaning (command name, parameters)
+- [ ] Filtering by packet type
+- [ ] Export packet trace (CSV/JSON)
+
 ---
 
 ## TIER 2: Advanced Features (Phase 2)
@@ -303,14 +348,15 @@ Additional features that add value.
 - [ ] Export animation (code or config)
 - [ ] Import pre-built animations
 
-### 2.3 Statistics & Logging
+### 2.3 Statistics & Logging (Enhanced) ✅
 - [ ] Uptime tracking
 - [ ] Boot count
 - [ ] Temperature history (graph)
-- [ ] Event log
+- [ ] Rich Event Log
   - [ ] Timestamps
   - [ ] Event type (error, warning, info)
   - [ ] Details
+  - [ ] Examples: Relay 3 ON, Drive 2 Removed, Fan Failure, Temperature High, Power Lost, Configuration Saved, USB Reconnected
 - [ ] Export logs (CSV, JSON)
 
 ### 2.4 Configuration Profiles
@@ -486,13 +532,19 @@ Before starting Phase 1, finalize these decisions:
 - [x] **Daemon location:** Separate server/PC on network (can control from anywhere on network)
 - [x] **Multi-user support:** NO (single-user only, simpler implementation)
 - [x] **Offline mode:** NO (fail immediately if USB unavailable)
+- [x] **Auto-Reconnect:** YES (disconnect detected, auto-reconnect every 1s, state resync)
+- [x] **Communication:** WebSocket-first (REST only for logs/files/static)
+- [x] **Capability Discovery:** YES (firmware reports its capabilities on connect)
 
 ## Technology ✅ FROZEN
 
 - [x] **Backend:** Node.js + TypeScript + Express
 - [x] **Frontend:** React + TypeScript + Vite + TailwindCSS
-- [x] **Real-time:** Socket.io
+- [x] **Real-time:** Socket.io (WebSocket-first)
 - [x] **USB:** serialport npm library
+- [x] **State Management:** Centralized store with subscriptions
+- [x] **Command Queue:** State machine (Queued → Sending → Waiting ACK → Completed/Timeout/Failed)
+- [x] **Plugin Architecture:** Controllers self-register via common interface
 
 ## Features (Priority Order) ✅ FROZEN
 
@@ -548,17 +600,36 @@ Before starting Phase 1, finalize these decisions:
 **Phase 2 Focus:** Configuration Editor
 **Security:** Localhost-only, no auth required
 
+**Architecture Enhancements (Per Stakeholder Review):**
+- **WebSocket-first:** All commands via persistent WebSocket (REST only for static/logs)
+- **Command Queue States:** Queued → Sending → Waiting ACK → Completed/Timeout/Failed
+- **Auto-Reconnect:** USB disconnect detection + automatic reconnection + state resync
+- **Capability Discovery:** Firmware reports capabilities (drive count, relay count, LED count, etc.)
+- **State Store:** Centralized state (FirmwareState, HardwareState, ConfigState, StatisticsState)
+- **Event Log:** Rich event history with timestamps for all state changes
+- **Plugin Controllers:** Self-registering controllers with common interface
+- **Live Packet Inspector:** Real-time TX/RX packet viewer with hex dump + decoded meaning
+- **API Versioning:** Protocol versioning support built in from the start
+
 ---
 
 # NEXT STEPS
 
-1. ✅ **Decisions made** (2024-07-19)
-2. **Create repo structure** (daemon + frontend separate)
-3. **Set up TypeScript** configurations for both
-4. **Create detailed API specification**
-5. **Create UI mockups** for main pages
-6. **Begin Phase 1 development**
-7. Deploy to separate server once ready
+1. ✅ **Decisions made** (July 19, 2026)
+2. ✅ **Architecture enhanced** (stakeholder feedback incorporated)
+3. **Create repo structure** (daemon + frontend separate)
+4. **Set up TypeScript** configurations for both
+5. **Define WebSocket protocol** (message types, command queue state machine)
+6. **Design State Store** (FirmwareState, HardwareState, ConfigState, StatisticsState schemas)
+7. **Create detailed API specification** (WebSocket messages, capability discovery response)
+8. **Create UI mockups** for main pages (Dashboard, Controls, Packet Inspector)
+9. **Begin Phase 1 development**
+   - Start with serial connection + auto-reconnect
+   - Implement capability discovery
+   - Build command queue with state machine
+   - Create state store + WebSocket broadcaster
+   - Build UI pages
+10. Deploy to separate server once ready
 
 ---
 
@@ -583,4 +654,6 @@ Before starting Phase 1, finalize these decisions:
 
 **Document Created:** July 19, 2026
 **Decisions Finalized:** July 19, 2026
+**Architecture Enhanced:** July 19, 2026 (stakeholder feedback incorporated)
 **Status:** FROZEN - Ready to begin Phase 1 development
+**Overall Assessment:** 9.5/10 (per stakeholder review)
