@@ -11,7 +11,7 @@
 
 ### Development
 - **[docs/IMPLEMENTATION_CHECKLIST.md](./docs/IMPLEMENTATION_CHECKLIST.md)** - Phase 1 implementation tasks
-- **[CHANGELOG.md](./CHANGELOG.md)** - Version history and changes
+- **[firmware/CHANGELOG.md](./firmware/CHANGELOG.md)** - Firmware version history
 
 ### Component Documentation
 
@@ -30,7 +30,6 @@
 project root/
 ├── README.md                      ← START HERE
 ├── DOCUMENTATION.md               ← You are here
-├── CHANGELOG.md                   ← Version history
 ├── LICENSE                        ← License
 │
 ├── docs/                          ← Project-wide docs
@@ -40,6 +39,7 @@ project root/
 │
 ├── firmware/                      ← ESP32 Firmware (C++)
 │   ├── README.md                  ← Firmware quick start
+│   ├── CHANGELOG.md               ← Firmware version history
 │   ├── docs/                      ← Firmware-specific docs
 │   ├── src/                       ← Source code
 │   └── platformio.ini             ← Build config
@@ -92,12 +92,13 @@ project root/
 | Document | Location | Status | Purpose |
 |----------|----------|--------|---------|
 | README.md | Root | ✅ Current | Project overview & quick start |
-| CHANGELOG.md | Root | ✅ Current | Version history |
 | DOCUMENTATION.md | Root | ✅ Current | This navigation guide |
+| LICENSE | Root | ✅ Current | Project license |
 | IMPLEMENTATION_CHECKLIST.md | docs/ | ✅ Current | Phase 1 development tasks |
 | PROTOCOL_SPEC.md | shared/docs/ | ✅ Current | Binary protocol definition |
 | WEB_INTERFACE_PLAN.md | frontend/docs/ | ✅ Current | Web UI feature roadmap |
 | firmware/README.md | firmware/ | ✅ Current | Firmware quick start |
+| firmware/CHANGELOG.md | firmware/ | ✅ Current | Firmware version history |
 | firmware/docs/ | firmware/docs/ | ✅ Current | Firmware-specific docs |
 | daemon/docs/ | daemon/docs/ | ⏳ TBD | Daemon documentation |
 | frontend/docs/README.md | frontend/docs/ | ⏳ TBD | Frontend docs index |
@@ -159,7 +160,7 @@ These documents are kept for reference but are superseded by current implementat
 → [docs/IMPLEMENTATION_CHECKLIST.md](./docs/IMPLEMENTATION_CHECKLIST.md)
 
 **"I want to see what's changed"**
-→ [CHANGELOG.md](./CHANGELOG.md)
+→ [firmware/CHANGELOG.md](./firmware/CHANGELOG.md)
 
 ---
 
@@ -170,7 +171,7 @@ These documents are kept for reference but are superseded by current implementat
 - ✅ PROTOCOL_SPEC.md (protocol definition)
 - ✅ WEB_INTERFACE_PLAN.md (feature roadmap)
 - ✅ IMPLEMENTATION_CHECKLIST.md (development tasks)
-- ✅ CHANGELOG.md (version history)
+- ✅ firmware/CHANGELOG.md (firmware version history)
 - ✅ Firmware documentation in firmware/docs/
 
 ### Coming Soon
