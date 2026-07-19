@@ -1,9 +1,15 @@
-# NAS Controller Firmware - Current Status Report
+# NAS Controller Firmware - Status & Next Steps
 
 **Generated:** July 18, 2026
-**Updated:** July 19, 2026 - Architecture alignment verified
-**Scope:** Code review and integration status
-**Purpose:** Clear visibility into what's ready and what needs work
+**Updated:** July 19, 2026 - Architecture alignment verified, documentation consolidated
+**Purpose:** Current implementation status, what's working, what's next
+
+**Quick Links:**
+- `README.md` – Project overview and getting started
+- `docs/Architecture.md` – Frozen system design (must read)
+- `docs/CodingStandard.md` – Development standards (must follow)
+- `LED_AUDIT_REPORT.md` – Original LED analysis
+- `LED_REDESIGN_COMPLETE.md` – LED implementation details
 
 ---
 
