@@ -173,31 +173,34 @@ Testing:          Jest
 Build:            ts-node / esbuild
 ```
 
-**Daemon Structure (with improvements):**
+**Daemon Structure (production-ready):**
 ```
 src/
 ├── index.ts              (entry point)
 ├── config/
 │  └── index.ts          (configuration, API versioning)
-├── controllers/          (plugin-style, self-registering)
-│  ├── baseController.ts (common interface)
-│  ├── relay.ts          (relay commands)
-│  ├── fan.ts            (fan commands)
-│  ├── led.ts            (LED commands)
-│  ├── temperature.ts    (temp sensor)
-│  ├── drive.ts          (drive monitoring)
-│  └── system.ts         (system commands)
+├── transport/            (ABSTRACTED LAYER - critical for testability)
+│  ├── ITransport.ts     (transport interface)
+│  ├── SerialTransport.ts (USB CDC implementation)
+│  ├── MockTransport.ts  (testing/development without hardware)
+│  ├── TcpTransport.ts   (future: network)
+│  └── BluetoothTransport.ts (future)
 ├── protocol/
 │  ├── translator.ts     (web command → binary)
 │  ├── parser.ts         (binary → objects)
 │  ├── crc16.ts          (checksum validation)
-│  └── capabilities.ts   (firmware capability discovery)
-├── serial/
-│  ├── connection.ts     (USB management with auto-reconnect)
-│  ├── queue.ts          (command queueing with state machine)
-│  └── reconnect.ts      (auto-reconnect + state resync logic)
+│  ├── capabilities.ts   (firmware capability discovery)
+│  ├── errorClassifier.ts (error categorization)
+│  └── sync.ts           (state synchronization on reconnect)
+├── controllers/          (plugin-style, self-registering)
+│  ├── baseController.ts (common interface)
+│  ├── relay.ts, fan.ts, led.ts, etc.
+├── queue/
+│  ├── commandQueue.ts   (state machine: Queued → Sending → Waiting ACK → Completed/Timeout/Failed)
+│  ├── transaction.ts    (atomic config changes: Begin → Send → Validate → Commit)
+│  └── reconnect.ts      (reconnection sequence)
 ├── state/
-│  ├── store.ts          (global state store)
+│  ├── store.ts          (global state store - DAEMON OWNS ALL STATE)
 │  ├── firmware.ts       (FirmwareState)
 │  ├── hardware.ts       (HardwareState)
 │  ├── config.ts         (ConfigState)
@@ -205,23 +208,30 @@ src/
 ├── events/
 │  ├── eventLog.ts       (event history with timestamps)
 │  └── broadcaster.ts    (WebSocket event broadcaster)
+├── diagnostics/         (NEW: production debugging)
+│  ├── diagnosticMode.ts (packet logging, timing, metrics)
+│  ├── performance.ts    (latency, throughput, queue depth tracking)
+│  └── metrics.ts        (avg latency, max latency, cmds/sec, reconnect count, uptime)
 ├── api/
 │  ├── websocket.ts      (WebSocket command router)
 │  ├── rest.ts           (minimal REST: logs, files, static)
-│  └── packetInspector.ts (live packet sniffer/decoder)
+│  ├── packetInspector.ts (live packet sniffer/decoder)
+│  └── diagnostics.ts    (expose diagnostic metrics)
 └── tests/
-   └── *.test.ts         (unit tests)
+   ├── *.test.ts         (unit tests)
+   ├── mocks/            (mock device for integration testing)
+   └── integration/      (end-to-end tests)
 ```
 
-**Key Architectural Improvements:**
-- Plugin-style controllers with common interface
-- Command Queue with state machine (Queued → Sending → Waiting ACK → Completed/Timeout/Failed)
-- Auto-reconnect with USB disconnect handling
-- Capability discovery from firmware
-- Single state store with subscriptions
-- Event log for all state changes
-- Live packet inspector for debugging
-- API versioning support built-in
+**Key Architectural Principles:**
+- **Daemon owns all state. Firmware owns all hardware. UI owns only presentation.**
+- **Abstracted transport layer:** ITransport interface allows serial, TCP, Bluetooth, mock
+- **Atomic config transactions:** Begin → Send → Validate → Commit (all-or-nothing)
+- **State synchronization on reconnect:** PING → GET_CAPABILITIES → GET_ALL_CONFIG → GET_ALL_STATUS
+- **Error classification:** Transport, Protocol, Firmware, Validation, User, Internal
+- **Diagnostic mode:** Every packet logged, timing info, queue transitions, CRC verification
+- **Mock device:** Complete simulator for testing UI + daemon without hardware
+- **Performance metrics:** Latency, throughput, queue depth, reconnect count, uptime
 
 
 ---
@@ -526,15 +536,20 @@ Firmware commands → Web UI actions:
 
 Before starting Phase 1, finalize these decisions:
 
-## Architecture ✅ FROZEN
+## Architecture ✅ PRODUCTION-READY (FROZEN)
 
 - [x] **Host Daemon + Web UI approach** (CONFIRMED)
-- [x] **Daemon location:** Separate server/PC on network (can control from anywhere on network)
-- [x] **Multi-user support:** NO (single-user only, simpler implementation)
+- [x] **Daemon location:** Separate server/PC on network
+- [x] **Multi-user support:** NO (single-user only)
 - [x] **Offline mode:** NO (fail immediately if USB unavailable)
-- [x] **Auto-Reconnect:** YES (disconnect detected, auto-reconnect every 1s, state resync)
+- [x] **Auto-Reconnect:** YES (disconnect detected, auto-reconnect every 1s, full state resync)
 - [x] **Communication:** WebSocket-first (REST only for logs/files/static)
-- [x] **Capability Discovery:** YES (firmware reports its capabilities on connect)
+- [x] **Capability Discovery:** YES (firmware reports capabilities on connect)
+- [x] **Transport Layer:** ABSTRACTED (ITransport interface for serial/TCP/BT/mock)
+- [x] **Config Changes:** ATOMIC TRANSACTIONS (Begin → Send → Validate → Commit)
+- [x] **Error Handling:** CLASSIFIED (Transport, Protocol, Firmware, Validation, User, Internal)
+- [x] **Diagnostic Mode:** YES (packet logging, timing, queue transitions, metrics)
+- [x] **Virtual Device:** YES (complete mock device for testing)
 
 ## Technology ✅ FROZEN
 
@@ -600,10 +615,10 @@ Before starting Phase 1, finalize these decisions:
 **Phase 2 Focus:** Configuration Editor
 **Security:** Localhost-only, no auth required
 
-**Architecture Enhancements (Per Stakeholder Review):**
+**Tier 1 Enhancements (Stakeholder Review Round 1):**
 - **WebSocket-first:** All commands via persistent WebSocket (REST only for static/logs)
 - **Command Queue States:** Queued → Sending → Waiting ACK → Completed/Timeout/Failed
-- **Auto-Reconnect:** USB disconnect detection + automatic reconnection + state resync
+- **Auto-Reconnect:** USB disconnect detection + automatic reconnection + full state resync
 - **Capability Discovery:** Firmware reports capabilities (drive count, relay count, LED count, etc.)
 - **State Store:** Centralized state (FirmwareState, HardwareState, ConfigState, StatisticsState)
 - **Event Log:** Rich event history with timestamps for all state changes
@@ -611,25 +626,87 @@ Before starting Phase 1, finalize these decisions:
 - **Live Packet Inspector:** Real-time TX/RX packet viewer with hex dump + decoded meaning
 - **API Versioning:** Protocol versioning support built in from the start
 
+**Tier 2 Enhancements (Stakeholder Review Round 2 - Production Quality):**
+- **Abstracted Transport Layer:** ITransport interface (SerialTransport, MockTransport, TcpTransport, BluetoothTransport)
+  - Allows testing entire application without ESP32 hardware
+  - Easy to add new communication methods
+- **Protocol Specification Document:** PROTOCOL_SPEC.md (packet layout, byte order, CRC, ACK/NAK, timeouts, retry policy, error codes)
+- **State Synchronization on Reconnect:** PING → GET_CAPABILITIES → GET_ALL_CONFIG → GET_ALL_STATUS
+  - Guarantees UI reflects firmware's actual state
+- **Atomic Config Transactions:** Begin Config → Send Changes → Validate → Commit (all-or-nothing)
+  - Prevents partially applied configurations
+- **Error Classification:** Transport, Protocol, Firmware, Validation, User, Internal errors
+  - Simplifies logging and troubleshooting
+- **Diagnostic Mode:** Packet logging, timing information, queue state transitions, CRC verification, performance metrics
+- **Virtual Device (Mock Transport):** Complete firmware simulator for development and testing without hardware
+- **Performance Monitoring:** Command latency, throughput, queue depth, packet loss, reconnect count, uptime
+- **Guiding Principle:** Daemon owns all state. Firmware owns all hardware. UI owns only presentation.
+
 ---
 
-# NEXT STEPS
+# IMPLEMENTATION ROADMAP
+
+## Pre-Development (Planning Phase)
 
 1. ✅ **Decisions made** (July 19, 2026)
-2. ✅ **Architecture enhanced** (stakeholder feedback incorporated)
-3. **Create repo structure** (daemon + frontend separate)
-4. **Set up TypeScript** configurations for both
-5. **Define WebSocket protocol** (message types, command queue state machine)
-6. **Design State Store** (FirmwareState, HardwareState, ConfigState, StatisticsState schemas)
-7. **Create detailed API specification** (WebSocket messages, capability discovery response)
-8. **Create UI mockups** for main pages (Dashboard, Controls, Packet Inspector)
-9. **Begin Phase 1 development**
-   - Start with serial connection + auto-reconnect
-   - Implement capability discovery
-   - Build command queue with state machine
-   - Create state store + WebSocket broadcaster
-   - Build UI pages
-10. Deploy to separate server once ready
+2. ✅ **Architecture finalized** (production-ready)
+3. **Create PROTOCOL_SPEC.md** (single source of truth for packet format, CRC, ACK/NAK, timeouts, error codes)
+4. **Create repo structure** (daemon + frontend separate)
+5. **Set up TypeScript** configurations for both (strict mode)
+6. **Design interfaces** (ITransport, IController, ICommand, IState)
+7. **Design State Store schema** (FirmwareState, HardwareState, ConfigState, StatisticsState)
+
+## Phase 1: Core Implementation (MVP)
+
+8. **Transport Layer**
+   - Implement ITransport interface
+   - SerialTransport (USB CDC)
+   - MockTransport (virtual device)
+   - Error classification system
+
+9. **Protocol & Command Queue**
+   - Packet translator/parser
+   - Command queue with state machine
+   - Atomic config transactions
+   - Reconnection sequence
+
+10. **Daemon State Management**
+    - Central state store with subscriptions
+    - Event log with timestamps
+    - WebSocket broadcaster
+    - Diagnostic mode
+
+11. **Backend API**
+    - WebSocket endpoints (command router)
+    - REST endpoints (logs, static files)
+    - Packet inspector
+    - Performance metrics endpoint
+
+12. **Frontend**
+    - Dashboard (real-time status)
+    - Control panel (relays, fans, LEDs)
+    - Test console
+    - Packet inspector page
+
+13. **Testing & Validation**
+    - Unit tests (all components)
+    - Integration tests (daemon + mock device)
+    - Manual testing on real hardware
+    - Cross-platform validation
+
+## Phase 2: Advanced Features
+
+14. **Configuration Editor** (priority)
+15. **LED Animation Builder**
+16. **Statistics & Logging**
+17. **Configuration Profiles**
+
+## Phase 3: Production Readiness
+
+18. **Installers** (.exe, .dmg, .deb)
+19. **Documentation** (user guide, API docs)
+20. **Performance optimization** (if needed)
+21. **Deployment** to separate server
 
 ---
 
@@ -652,8 +729,27 @@ Before starting Phase 1, finalize these decisions:
 
 ---
 
+---
+
+# ARCHITECTURAL PRINCIPLES (Guiding Philosophy)
+
+> **The daemon owns all state. The firmware owns all hardware. The UI owns only presentation.**
+
+This separation of responsibilities ensures:
+- **Testability:** Daemon can be tested without hardware (via MockTransport)
+- **Maintainability:** Clear layer boundaries make changes safer
+- **Extensibility:** New hardware features don't require UI changes (capability discovery)
+- **Reliability:** Single source of truth prevents inconsistent state
+
+---
+
+# DOCUMENT STATUS
+
 **Document Created:** July 19, 2026
-**Decisions Finalized:** July 19, 2026
-**Architecture Enhanced:** July 19, 2026 (stakeholder feedback incorporated)
-**Status:** FROZEN - Ready to begin Phase 1 development
-**Overall Assessment:** 9.5/10 (per stakeholder review)
+**Round 1 Review:** July 19, 2026 (architecture enhanced with WebSocket-first, auto-reconnect, capability discovery)
+**Round 2 Review:** July 19, 2026 (production-quality refinements: abstracted transport, atomic transactions, diagnostics)
+**Status:** ✅ **PRODUCTION-READY** - Ready to begin Phase 1 implementation
+**Overall Assessment:** **10/10** (per stakeholder review)
+
+**Key Takeaway:**
+Architecture has evolved from functional to production-grade with clear layering, extensibility, testability, and maintainability. All major risks shifted from design to implementation quality. Ready for development.
