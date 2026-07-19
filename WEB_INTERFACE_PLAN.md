@@ -161,17 +161,29 @@ GET /api/config/backup → Returns JSON
 
 **Rationale:** Easiest to implement, large ecosystem, JavaScript/TypeScript throughout (frontend + backend), cross-platform.
 
-**Stack:**
+**Stack (Library-First Architecture):**
 ```
-Language:         TypeScript
-Framework:        Express.js
-Real-time:        Socket.io
+Core Library:     NASController.Core (pure TypeScript, no external deps)
+  ├── Protocol (encoder/decoder, CRC, ACK/NAK, retry logic)
+  ├── Transport (ITransport abstraction: Serial, Mock, TCP, BT)
+  ├── Queue (command queue with state machine)
+  ├── State (centralized store with subscriptions)
+  ├── Events (event bus + packet inspector)
+  └── Diagnostics (metrics, diagnostic mode)
+
+API Layer:        Express.js + Socket.io (thin bridge UI ↔ Core)
+Testing:          Jest + MockTransport (test core without hardware)
 USB:              serialport npm
 Config:           dotenv + JSON files
 Logging:          winston or pino
-Testing:          Jest
 Build:            ts-node / esbuild
 ```
+
+**Why Library-First?**
+- ✅ Entire daemon testable without server running
+- ✅ Reusable in other applications (CLI, Electron, etc.)
+- ✅ Clear separation: logic ≠ plumbing
+- ✅ No vendor lock-in
 
 **Daemon Structure (production-ready):**
 ```
@@ -553,13 +565,15 @@ Before starting Phase 1, finalize these decisions:
 
 ## Technology ✅ FROZEN
 
-- [x] **Backend:** Node.js + TypeScript + Express
+- [x] **Backend:** Node.js + TypeScript (library-first, Express + Socket.io for API)
 - [x] **Frontend:** React + TypeScript + Vite + TailwindCSS
 - [x] **Real-time:** Socket.io (WebSocket-first)
 - [x] **USB:** serialport npm library
 - [x] **State Management:** Centralized store with subscriptions
 - [x] **Command Queue:** State machine (Queued → Sending → Waiting ACK → Completed/Timeout/Failed)
 - [x] **Plugin Architecture:** Controllers self-register via common interface
+- [x] **Type Sharing:** Shared package with Protocol, Commands, Events, Capabilities, Config types
+- [x] **Schema Versioning:** Protocol v1, Config v1, Events v1, Capabilities v1 (future-proof)
 
 ## Features (Priority Order) ✅ FROZEN
 
@@ -646,53 +660,130 @@ Before starting Phase 1, finalize these decisions:
 
 # IMPLEMENTATION ROADMAP
 
-## Pre-Development (Planning Phase)
+## Pre-Development (Repository Setup)
 
 1. ✅ **Decisions made** (July 19, 2026)
 2. ✅ **Architecture finalized** (production-ready)
-3. **Create PROTOCOL_SPEC.md** (single source of truth for packet format, CRC, ACK/NAK, timeouts, error codes)
-4. **Create repo structure** (daemon + frontend separate)
-5. **Set up TypeScript** configurations for both (strict mode)
-6. **Design interfaces** (ITransport, IController, ICommand, IState)
-7. **Design State Store schema** (FirmwareState, HardwareState, ConfigState, StatisticsState)
+3. ✅ **Protocol specification created** (PROTOCOL_SPEC.md)
+4. **Establish repository structure**
+   ```
+   nas-controller/
+   ├── firmware/                  (existing ESP32 firmware)
+   ├── daemon/                    (Node.js + TypeScript daemon)
+   │   ├── src/
+   │   │   ├── core/              (NASController.Core library)
+   │   │   │   ├── protocol/      (packet encoding/decoding)
+   │   │   │   ├── transport/     (ITransport interface)
+   │   │   │   ├── queue/         (command queue + state machine)
+   │   │   │   ├── state/         (state store + subscriptions)
+   │   │   │   ├── events/        (event bus + packet inspector)
+   │   │   │   └── diagnostics/   (metrics, diagnostic mode)
+   │   │   ├── api/               (Express + Socket.io)
+   │   │   └── index.ts           (daemon entry point)
+   │   ├── tests/
+   │   └── package.json
+   ├── frontend/                  (React + Vite)
+   │   ├── src/
+   │   │   ├── pages/
+   │   │   ├── components/
+   │   │   └── services/
+   │   ├── public/
+   │   └── package.json
+   ├── shared/                    (TypeScript types + schemas)
+   │   ├── protocol.ts            (packet types)
+   │   ├── commands.ts            (command definitions)
+   │   ├── events.ts              (event types)
+   │   ├── capabilities.ts        (firmware capability schema)
+   │   ├── config.ts              (configuration schema)
+   │   └── package.json
+   ├── docs/
+   │   ├── architecture/          (system design docs)
+   │   ├── protocol/              (PROTOCOL_SPEC.md)
+   │   ├── adr/                   (Architecture Decision Records)
+   │   │   ├── 0001-websocket-first.md
+   │   │   ├── 0002-host-daemon.md
+   │   │   ├── 0003-capability-discovery.md
+   │   │   └── 0004-transport-abstraction.md
+   │   └── api/                   (API documentation)
+   ├── tools/                     (build scripts, utilities)
+   ├── scripts/                   (setup, deployment)
+   └── tests/                     (end-to-end tests)
+   ```
 
-## Phase 1: Core Implementation (MVP)
+5. **Set up TypeScript configurations**
+   - Root tsconfig.json (shared settings)
+   - daemon/tsconfig.json (strict mode)
+   - frontend/tsconfig.json (react mode)
+   - shared/tsconfig.json (library mode)
 
-8. **Transport Layer**
-   - Implement ITransport interface
-   - SerialTransport (USB CDC)
-   - MockTransport (virtual device)
-   - Error classification system
+6. **Define shared type packages**
+   - Protocol types (PROTOCOL_SPEC → shared/protocol.ts)
+   - Command definitions (shared/commands.ts)
+   - Event types (shared/events.ts)
+   - Capability schema (shared/capabilities.ts)
+   - Configuration schema (shared/config.ts)
+   - Versioning for all (protocol v1, config v1, events v1, etc.)
 
-9. **Protocol & Command Queue**
-   - Packet translator/parser
-   - Command queue with state machine
-   - Atomic config transactions
-   - Reconnection sequence
+7. **Create ADRs (Architecture Decision Records)**
+   - Document WHY each major decision was made
+   - Reference: PROTOCOL_SPEC.md, WEB_INTERFACE_PLAN.md
+   - Examples: WebSocket-first, host daemon, capability discovery, transport abstraction
 
-10. **Daemon State Management**
-    - Central state store with subscriptions
-    - Event log with timestamps
-    - WebSocket broadcaster
-    - Diagnostic mode
+## Phase 1: Core Implementation (MVP) - Bottom-Up Build Order ✅
 
-11. **Backend API**
-    - WebSocket endpoints (command router)
-    - REST endpoints (logs, static files)
-    - Packet inspector
-    - Performance metrics endpoint
+**Build Order:** Protocol → Transport → Daemon Core → WebSocket API → React UI
+(Each higher layer is built on tested lower layer)
 
-12. **Frontend**
-    - Dashboard (real-time status)
-    - Control panel (relays, fans, LEDs)
-    - Test console
-    - Packet inspector page
+### 1. Protocol Library (Foundation)
+- [x] Packet encoder/decoder
+- [x] CRC16 implementation
+- [x] Sequence number handling
+- [x] ACK/NAK response logic
+- [x] Retry policy with backoff
+- [ ] Unit tests (jest)
+- [ ] Integration tests with mock device
 
-13. **Testing & Validation**
-    - Unit tests (all components)
-    - Integration tests (daemon + mock device)
-    - Manual testing on real hardware
-    - Cross-platform validation
+### 2. Transport Layer (Abstraction)
+- [ ] ITransport interface definition
+- [ ] SerialTransport (USB CDC implementation)
+- [ ] MockTransport (virtual device for testing)
+- [ ] Error classification system
+- [ ] Auto-reconnect logic
+- [ ] Unit tests for each transport
+
+### 3. Daemon Core (NASController.Core Library)
+- [ ] Command Queue with state machine
+- [ ] Central State Store (subscriptions)
+- [ ] Event Bus (event log with timestamps)
+- [ ] Packet Inspector (packet capture/decode)
+- [ ] Capability Discovery (query firmware at startup)
+- [ ] Configuration Transactions (atomic changes)
+- [ ] Diagnostic mode (packet logging, metrics)
+- [ ] NO dependency on Express or Socket.io (pure library)
+- [ ] Comprehensive unit tests
+
+### 4. WebSocket API (Express + Socket.io)
+- [ ] Express server setup
+- [ ] Socket.io connection manager
+- [ ] WebSocket command router (bridge UI ↔ daemon core)
+- [ ] REST endpoints (logs, files, diagnostics)
+- [ ] Packet inspector endpoint
+- [ ] Performance metrics endpoint
+
+### 5. React Dashboard (Web UI)
+- [ ] Dashboard page (real-time status)
+- [ ] Control panel (relays, fans, LEDs)
+- [ ] Test console (send raw commands)
+- [ ] Packet inspector page
+- [ ] State subscriptions via Socket.io
+- [ ] Real-time updates
+- [ ] Cross-browser testing
+
+### 6. Testing & Validation
+- [ ] Unit test coverage (protocol, transport, core)
+- [ ] Integration tests (daemon core + mock transport)
+- [ ] Manual testing on real hardware
+- [ ] Cross-platform validation (Windows, Mac, Linux)
 
 ## Phase 2: Advanced Features
 
@@ -748,8 +839,76 @@ This separation of responsibilities ensures:
 **Document Created:** July 19, 2026
 **Round 1 Review:** July 19, 2026 (architecture enhanced with WebSocket-first, auto-reconnect, capability discovery)
 **Round 2 Review:** July 19, 2026 (production-quality refinements: abstracted transport, atomic transactions, diagnostics)
-**Status:** ✅ **PRODUCTION-READY** - Ready to begin Phase 1 implementation
-**Overall Assessment:** **10/10** (per stakeholder review)
+**Round 3 Review:** July 19, 2026 (implementation strategy finalized: bottom-up build order, library-first daemon, shared types, ADRs)
+**Status:** ✅ **READY FOR PHASE 1 IMPLEMENTATION**
+**Overall Assessment:** **10/10** (per stakeholder reviews)
+
+---
+
+# IMPLEMENTATION STRATEGY SUMMARY
+
+## Before Writing Code
+
+1. ✅ Establish repository structure (mono-repo with firmware, daemon, frontend, shared, docs)
+2. ✅ Create TypeScript configurations (root + daemon + frontend + shared)
+3. ✅ Define shared types (protocol, commands, events, capabilities, config)
+4. ✅ Write ADRs documenting major decisions (WebSocket-first, library-first daemon, etc.)
+5. ✅ Protocol specification complete (PROTOCOL_SPEC.md)
+
+## Build Order (Bottom-Up)
+
+**Step 1: Protocol Library**
+- Packet encoder/decoder, CRC16, sequence numbers
+- ACK/NAK logic, retry handling
+- Unit tests with 100% coverage
+
+**Step 2: Transport Layer**
+- ITransport interface, SerialTransport, MockTransport
+- Auto-reconnect, error classification
+- Unit tests for each transport
+
+**Step 3: Daemon Core (NASController.Core Library)**
+- Command queue, state store, event bus
+- Packet inspector, capability discovery
+- Configuration transactions
+- Diagnostic mode + metrics
+- Pure TypeScript, NO external dependencies (except serialport)
+- Full unit test coverage
+- Integration tests with MockTransport
+
+**Step 4: WebSocket API (Express + Socket.io)**
+- Thin bridge between React UI and NASController.Core
+- WebSocket command router
+- REST endpoints (logs, files, diagnostics)
+
+**Step 5: React Dashboard**
+- Pages: Dashboard, Controls, Test Console, Packet Inspector
+- Real-time state subscriptions
+- Cross-browser testing
+
+## Key Principles
+
+> **The daemon owns all state. The firmware owns all hardware. The UI owns only presentation.**
+
+> **NASController.Core is a library first, Express server second.**
+
+> **Each layer is tested independently before the next layer is built.**
+
+## Tools & Infrastructure
+
+- **Testing:** Jest (protocol, transport, core tests run without hardware)
+- **Types:** Shared package with protocol definitions
+- **Documentation:** ADRs explain WHY decisions were made
+- **Mocking:** MockTransport enables full development/testing without ESP32
+- **Versioning:** Protocol v1, Config v1, Events v1, Capabilities v1 (built-in)
+
+---
+
+# NEXT: REPOSITORY SETUP
+
+You're ready to begin Phase 1 implementation.
+
+**First step:** Establish the repository structure shown above, create TypeScript configurations, and define shared types. The architecture is finalized—execution is the focus now.
 
 **Key Takeaway:**
-Architecture has evolved from functional to production-grade with clear layering, extensibility, testability, and maintainability. All major risks shifted from design to implementation quality. Ready for development.
+Architecture evolved from functional to production-grade with clear layering, extensibility, testability, and maintainability. Design risks are resolved. Implementation risks remain (as expected at this phase). Begin with protocol + transport libraries, build up to daemon core, then API, then UI. Bottom-up ensures each layer has a tested foundation.
