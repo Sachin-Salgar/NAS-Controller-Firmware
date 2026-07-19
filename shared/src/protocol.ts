@@ -1,63 +1,79 @@
-// Protocol frame format constants
-export const PACKET_HEADER = 0x55AA;
-export const PACKET_FOOTER = 0xAA;
-export const MAX_PAYLOAD_SIZE = 256;
-export const PROTOCOL_VERSION = 1;
+// ============================================================================
+// PROTOCOL INFORMATION
+// ============================================================================
+// Consolidated protocol metadata - single source of truth for protocol details
 
-// CRC16 algorithm parameters
-export const CRC16_INITIAL_VALUE = 0xFFFF;
-export const CRC16_POLYNOMIAL = 0x1021;
-export const CRC16_FINAL_XOR = 0x0000;
+export const ProtocolInfo = {
+  Version: "1.0.0",
+  ConfigVersion: 1,
+  Header: 0x55aa,
+  Footer: 0xaa,
+  CRC: "CRC16-CCITT",
+  CRCInitialValue: 0xffff,
+  CRCPolynomial: 0x1021,
+  CRCFinalXOR: 0x0000,
+  MaxPacketSize: 256,
+  MaxPayloadSize: 256,
+  ACKTimeout: 100,
+  ResponseTimeout: 500,
+  CommandTimeout: 1000,
+  MaxRetryAttempts: 3,
+} as const;
 
-// System command codes
-export const CMD_SYSTEM_PING = 0x01;
-export const CMD_SYSTEM_RESET = 0x02;
-export const CMD_GET_CAPABILITIES = 0x03;
+// ============================================================================
+// RESPONSE CODE BITMASKS
+// ============================================================================
 
-// Relay command codes
-export const CMD_RELAY_SET = 0x10;
-export const CMD_RELAY_GET = 0x11;
+export const ResponseBit = {
+  ACK: 0x80,      // Bit 7: Acknowledgement
+  NAK: 0x40,      // Bit 6: Negative acknowledgement
+  Response: 0x90, // Bit 7,4: Data response
+} as const;
 
-// Status command codes
-export const CMD_GET_ALL_STATUS = 0x20;
+// ============================================================================
+// COMMAND CODES
+// ============================================================================
 
-// Fan command codes
-export const CMD_FAN_SET_SPEED = 0x30;
-export const CMD_FAN_GET = 0x31;
-export const CMD_FAN_SET_MODE = 0x32;
+export const CommandCode = {
+  // System Commands (0x01-0x0F)
+  SYSTEM_PING: 0x01,
+  SYSTEM_RESET: 0x02,
+  GET_CAPABILITIES: 0x03,
 
-// Temperature command codes
-export const CMD_TEMP_READ = 0x40;
+  // Relay Commands (0x10-0x1F)
+  RELAY_SET: 0x10,
+  RELAY_GET: 0x11,
 
-// LED command codes
-export const CMD_LED_SET_COLOR = 0x50;
-export const CMD_LED_SET_BRIGHTNESS = 0x51;
-export const CMD_LED_SET_ANIMATION = 0x52;
+  // Status Commands (0x20-0x2F)
+  GET_ALL_STATUS: 0x20,
 
-// Configuration command codes
-export const CMD_CONFIG_GET = 0x60;
-export const CMD_CONFIG_SET = 0x61;
-export const CMD_CONFIG_BEGIN = 0x62;
-export const CMD_CONFIG_COMMIT = 0x63;
+  // Fan Commands (0x30-0x3F)
+  FAN_SET_SPEED: 0x30,
+  FAN_GET: 0x31,
+  FAN_SET_MODE: 0x32,
 
-// Event log command codes
-export const CMD_GET_EVENT_LOG = 0x70;
+  // Temperature Commands (0x40-0x4F)
+  TEMP_READ: 0x40,
 
-// Response code bitmasks
-export const ACK_MASK = 0x80;
-export const NAK_MASK = 0x40;
-export const RESPONSE_MASK = 0x90;
+  // LED Commands (0x50-0x5F)
+  LED_SET_COLOR: 0x50,
+  LED_SET_BRIGHTNESS: 0x51,
+  LED_SET_ANIMATION: 0x52,
 
-// Timeout values (milliseconds)
-export const ACK_TIMEOUT_MS = 100;
-export const RESPONSE_TIMEOUT_MS = 500;
-export const COMMAND_TIMEOUT_MS = 1000;
+  // Configuration Commands (0x60-0x6F)
+  CONFIG_GET: 0x60,
+  CONFIG_SET: 0x61,
+  CONFIG_BEGIN: 0x62,
+  CONFIG_COMMIT: 0x63,
 
-// Retry configuration
-export const MAX_RETRY_ATTEMPTS = 3;
-export const RETRY_BACKOFF_MS = [0, 100, 200]; // Delays for retry 1, 2, 3
+  // Event Log Commands (0x70-0x7F)
+  GET_EVENT_LOG: 0x70,
+} as const;
 
-// Error codes
+// ============================================================================
+// ENUMERATIONS
+// ============================================================================
+
 export enum ErrorCode {
   OK = 0x00,
   INVALID_COMMAND = 0x01,
@@ -69,23 +85,20 @@ export enum ErrorCode {
   OUT_OF_RANGE = 0x07,
   CONFIG_LOCKED = 0x08,
   CONFIG_INVALID = 0x09,
-  UNKNOWN_ERROR = 0x0A,
+  UNKNOWN_ERROR = 0x0a,
 }
 
-// Relay states
 export enum RelayState {
   OFF = 0x00,
   ON = 0x01,
 }
 
-// Fan modes
 export enum FanMode {
   MANUAL = 0x00,
   AUTO = 0x01,
   OFF = 0x02,
 }
 
-// LED animation types
 export enum LEDAnimation {
   BOOT = 0x00,
   IDLE = 0x01,
@@ -94,191 +107,44 @@ export enum LEDAnimation {
   CUSTOM = 0x04,
 }
 
-// Command state machine
-export enum CommandState {
-  QUEUED = "queued",
-  SENDING = "sending",
-  WAITING_ACK = "waiting_ack",
-  COMPLETED = "completed",
-  FAILED = "failed",
-  TIMEOUT = "timeout",
+// ============================================================================
+// PACKET STRUCTURE DEFINITIONS
+// ============================================================================
+
+export interface PacketHeader {
+  magic: number; // 0x55AA (2 bytes, big-endian)
 }
 
-// Packet structure interfaces
+export interface PacketMetadata {
+  sequence: number;      // 1 byte (0x00-0xFF)
+  command: number;       // 1 byte
+  length: number;        // 2 bytes (payload length, big-endian)
+}
+
+export interface PacketFooter {
+  crc16: number;  // 2 bytes (big-endian)
+  terminator: number; // 1 byte (0xAA)
+}
+
 export interface Packet {
-  header: number;
-  sequence: number;
-  command: number;
-  length: number;
+  header: PacketHeader;
+  metadata: PacketMetadata;
   payload: Uint8Array;
-  crc16: number;
-  footer: number;
+  footer: PacketFooter;
 }
 
-export interface DecodedPacket {
+export interface ParsedPacket {
   sequence: number;
   command: number;
   payload: Uint8Array;
 }
 
-export interface EncodedPacket {
-  data: Uint8Array;
-  length: number;
-}
+// ============================================================================
+// DATA TRANSFER OBJECTS (DTOs)
+// ============================================================================
 
-// Command request/response types
-export interface BaseCommand {
-  sequence: number;
-  command: number;
-}
-
-// System Commands
-export interface PingCommand extends BaseCommand {
-  command: typeof CMD_SYSTEM_PING;
-}
-
-export interface ResetCommand extends BaseCommand {
-  command: typeof CMD_SYSTEM_RESET;
-}
-
-export interface GetCapabilitiesCommand extends BaseCommand {
-  command: typeof CMD_GET_CAPABILITIES;
-}
-
-// Relay Commands
-export interface RelaySetCommand extends BaseCommand {
-  command: typeof CMD_RELAY_SET;
-  relayId: number;
-  state: RelayState;
-}
-
-export interface RelayGetCommand extends BaseCommand {
-  command: typeof CMD_RELAY_GET;
-  relayId: number;
-}
-
-// Fan Commands
-export interface FanSetSpeedCommand extends BaseCommand {
-  command: typeof CMD_FAN_SET_SPEED;
-  fanId: number;
-  speed: number;
-}
-
-export interface FanGetCommand extends BaseCommand {
-  command: typeof CMD_FAN_GET;
-  fanId: number;
-}
-
-export interface FanSetModeCommand extends BaseCommand {
-  command: typeof CMD_FAN_SET_MODE;
-  fanId: number;
-  mode: FanMode;
-}
-
-// Temperature Commands
-export interface TemperatureReadCommand extends BaseCommand {
-  command: typeof CMD_TEMP_READ;
-  sensorId: number;
-}
-
-// LED Commands
-export interface LEDSetColorCommand extends BaseCommand {
-  command: typeof CMD_LED_SET_COLOR;
-  red: number;
-  green: number;
-  blue: number;
-}
-
-export interface LEDSetBrightnessCommand extends BaseCommand {
-  command: typeof CMD_LED_SET_BRIGHTNESS;
-  brightness: number;
-}
-
-export interface LEDSetAnimationCommand extends BaseCommand {
-  command: typeof CMD_LED_SET_ANIMATION;
-  animation: LEDAnimation;
-}
-
-// Configuration Commands
-export interface ConfigGetCommand extends BaseCommand {
-  command: typeof CMD_CONFIG_GET;
-}
-
-export interface ConfigSetCommand extends BaseCommand {
-  command: typeof CMD_CONFIG_SET;
-  configData: Uint8Array;
-}
-
-export interface ConfigBeginCommand extends BaseCommand {
-  command: typeof CMD_CONFIG_BEGIN;
-}
-
-export interface ConfigCommitCommand extends BaseCommand {
-  command: typeof CMD_CONFIG_COMMIT;
-}
-
-// Status Commands
-export interface GetAllStatusCommand extends BaseCommand {
-  command: typeof CMD_GET_ALL_STATUS;
-}
-
-// Event Log Commands
-export interface GetEventLogCommand extends BaseCommand {
-  command: typeof CMD_GET_EVENT_LOG;
-  startIndex: number;
-  count: number;
-}
-
-// Union type for all commands
-export type Command =
-  | PingCommand
-  | ResetCommand
-  | GetCapabilitiesCommand
-  | RelaySetCommand
-  | RelayGetCommand
-  | FanSetSpeedCommand
-  | FanGetCommand
-  | FanSetModeCommand
-  | TemperatureReadCommand
-  | LEDSetColorCommand
-  | LEDSetBrightnessCommand
-  | LEDSetAnimationCommand
-  | ConfigGetCommand
-  | ConfigSetCommand
-  | ConfigBeginCommand
-  | ConfigCommitCommand
-  | GetAllStatusCommand
-  | GetEventLogCommand;
-
-// Response types
-export interface CommandResponse {
-  sequence: number;
-  command: number;
-  isAck: boolean;
-  isNak: boolean;
-  errorCode?: ErrorCode;
-  payload?: Uint8Array;
-}
-
-export interface AckResponse extends CommandResponse {
-  isAck: true;
-  isNak: false;
-}
-
-export interface NakResponse extends CommandResponse {
-  isAck: false;
-  isNak: true;
-  errorCode: ErrorCode;
-}
-
-export interface DataResponse extends CommandResponse {
-  isAck: false;
-  isNak: false;
-  payload: Uint8Array;
-}
-
-// Capabilities response
-export interface CapabilitiesResponse {
+// Capability definitions
+export interface CapabilityInfo {
   protocolVersion: number;
   configVersion: number;
   firmwareVersion: number;
@@ -290,42 +156,404 @@ export interface CapabilitiesResponse {
   supportedCommands: Uint8Array;
 }
 
-// Status response
-export interface StatusResponse {
-  relayStates: RelayState[];
-  fanSpeeds: number[];
-  temperatures: number[];
-  drivePresent: boolean[];
-  timestamp: number;
+// Hardware configuration DTOs
+export interface RelayConfig {
+  id: number;
+  label?: string;
 }
 
-// Configuration response
-export interface ConfigurationResponse {
-  version: number;
-  data: Uint8Array;
+export interface FanConfig {
+  id: number;
+  label?: string;
+  minSpeed: number;
+  maxSpeed: number;
 }
 
-// Fan status response
-export interface FanStatusResponse {
-  fanId: number;
+export interface TemperatureSensorConfig {
+  id: number;
+  label?: string;
+}
+
+export interface DriveConfig {
+  id: number;
+  label?: string;
+}
+
+export interface LEDConfig {
+  id: number;
+  label?: string;
+}
+
+// Hardware status DTOs
+export interface RelayStatus {
+  id: number;
+  state: RelayState;
+}
+
+export interface FanStatus {
+  id: number;
   speed: number;
+  mode: FanMode;
   status: number;
 }
 
-// Temperature sensor response
-export interface TemperatureSensorResponse {
-  sensorId: number;
+export interface TemperatureStatus {
+  id: number;
   temperature: number;
 }
 
-// Event log response
-export interface EventLogResponse {
-  entries: EventLogEntry[];
+export interface DriveStatus {
+  id: number;
+  present: boolean;
 }
 
+export interface LEDStatus {
+  id: number;
+  red: number;
+  green: number;
+  blue: number;
+  brightness: number;
+  animation: LEDAnimation;
+}
+
+export interface SystemStatus {
+  relays: RelayStatus[];
+  fans: FanStatus[];
+  temperatures: TemperatureStatus[];
+  drives: DriveStatus[];
+  leds: LEDStatus[];
+  timestamp: number;
+}
+
+// Configuration DTOs
+export interface ConfigurationData {
+  version: number;
+  fanAutoMinSpeed: number;
+  fanAutoMaxSpeed: number;
+  tempWarningThreshold: number;
+  tempCriticalThreshold: number;
+  autoStartEnabled: boolean;
+  debugMode: boolean;
+}
+
+// Event log DTOs
 export interface EventLogEntry {
   index: number;
   timestamp: number;
   eventType: number;
   data: Uint8Array;
 }
+
+// ============================================================================
+// COMMAND REQUEST TYPES
+// ============================================================================
+
+export interface BaseCommand {
+  sequence: number;
+  command: number;
+}
+
+export interface SystemPingRequest extends BaseCommand {
+  command: typeof CommandCode.SYSTEM_PING;
+}
+
+export interface SystemResetRequest extends BaseCommand {
+  command: typeof CommandCode.SYSTEM_RESET;
+}
+
+export interface GetCapabilitiesRequest extends BaseCommand {
+  command: typeof CommandCode.GET_CAPABILITIES;
+}
+
+export interface RelaySetRequest extends BaseCommand {
+  command: typeof CommandCode.RELAY_SET;
+  relayId: number;
+  state: RelayState;
+}
+
+export interface RelayGetRequest extends BaseCommand {
+  command: typeof CommandCode.RELAY_GET;
+  relayId: number;
+}
+
+export interface FanSetSpeedRequest extends BaseCommand {
+  command: typeof CommandCode.FAN_SET_SPEED;
+  fanId: number;
+  speed: number;
+}
+
+export interface FanGetRequest extends BaseCommand {
+  command: typeof CommandCode.FAN_GET;
+  fanId: number;
+}
+
+export interface FanSetModeRequest extends BaseCommand {
+  command: typeof CommandCode.FAN_SET_MODE;
+  fanId: number;
+  mode: FanMode;
+}
+
+export interface TemperatureReadRequest extends BaseCommand {
+  command: typeof CommandCode.TEMP_READ;
+  sensorId: number;
+}
+
+export interface LEDSetColorRequest extends BaseCommand {
+  command: typeof CommandCode.LED_SET_COLOR;
+  red: number;
+  green: number;
+  blue: number;
+}
+
+export interface LEDSetBrightnessRequest extends BaseCommand {
+  command: typeof CommandCode.LED_SET_BRIGHTNESS;
+  brightness: number;
+}
+
+export interface LEDSetAnimationRequest extends BaseCommand {
+  command: typeof CommandCode.LED_SET_ANIMATION;
+  animation: LEDAnimation;
+}
+
+export interface ConfigGetRequest extends BaseCommand {
+  command: typeof CommandCode.CONFIG_GET;
+}
+
+export interface ConfigSetRequest extends BaseCommand {
+  command: typeof CommandCode.CONFIG_SET;
+  configData: Uint8Array;
+}
+
+export interface ConfigBeginRequest extends BaseCommand {
+  command: typeof CommandCode.CONFIG_BEGIN;
+}
+
+export interface ConfigCommitRequest extends BaseCommand {
+  command: typeof CommandCode.CONFIG_COMMIT;
+}
+
+export interface GetAllStatusRequest extends BaseCommand {
+  command: typeof CommandCode.GET_ALL_STATUS;
+}
+
+export interface GetEventLogRequest extends BaseCommand {
+  command: typeof CommandCode.GET_EVENT_LOG;
+  startIndex: number;
+  count: number;
+}
+
+// Union of all command types
+export type Command =
+  | SystemPingRequest
+  | SystemResetRequest
+  | GetCapabilitiesRequest
+  | RelaySetRequest
+  | RelayGetRequest
+  | FanSetSpeedRequest
+  | FanGetRequest
+  | FanSetModeRequest
+  | TemperatureReadRequest
+  | LEDSetColorRequest
+  | LEDSetBrightnessRequest
+  | LEDSetAnimationRequest
+  | ConfigGetRequest
+  | ConfigSetRequest
+  | ConfigBeginRequest
+  | ConfigCommitRequest
+  | GetAllStatusRequest
+  | GetEventLogRequest;
+
+// ============================================================================
+// RESPONSE TYPES
+// ============================================================================
+
+export interface BaseResponse {
+  sequence: number;
+  command: number;
+}
+
+export interface AckResponse extends BaseResponse {
+  isAck: true;
+  isNak: false;
+  errorCode?: never;
+  payload?: never;
+}
+
+export interface NakResponse extends BaseResponse {
+  isAck: false;
+  isNak: true;
+  errorCode: ErrorCode;
+  payload?: never;
+}
+
+export interface DataResponse extends BaseResponse {
+  isAck: false;
+  isNak: false;
+  errorCode?: never;
+  payload: Uint8Array;
+}
+
+export type Response = AckResponse | NakResponse | DataResponse;
+
+// ============================================================================
+// EVENT DEFINITIONS
+// ============================================================================
+
+export enum EventType {
+  DEVICE_CONNECTED = "device_connected",
+  DEVICE_DISCONNECTED = "device_disconnected",
+  RELAY_STATE_CHANGED = "relay_state_changed",
+  FAN_SPEED_CHANGED = "fan_speed_changed",
+  FAN_MODE_CHANGED = "fan_mode_changed",
+  LED_COLOR_CHANGED = "led_color_changed",
+  LED_ANIMATION_CHANGED = "led_animation_changed",
+  TEMPERATURE_CHANGED = "temperature_changed",
+  CONFIGURATION_CHANGED = "configuration_changed",
+  COMMAND_SENT = "command_sent",
+  COMMAND_COMPLETED = "command_completed",
+  COMMAND_FAILED = "command_failed",
+  ERROR_OCCURRED = "error_occurred",
+}
+
+export interface DeviceConnectedEvent {
+  type: EventType.DEVICE_CONNECTED;
+  timestamp: number;
+  capabilities: CapabilityInfo;
+}
+
+export interface DeviceDisconnectedEvent {
+  type: EventType.DEVICE_DISCONNECTED;
+  timestamp: number;
+  reason: string;
+}
+
+export interface RelayStateChangedEvent {
+  type: EventType.RELAY_STATE_CHANGED;
+  timestamp: number;
+  relayId: number;
+  previousState: RelayState;
+  newState: RelayState;
+}
+
+export interface FanSpeedChangedEvent {
+  type: EventType.FAN_SPEED_CHANGED;
+  timestamp: number;
+  fanId: number;
+  previousSpeed: number;
+  newSpeed: number;
+}
+
+export interface FanModeChangedEvent {
+  type: EventType.FAN_MODE_CHANGED;
+  timestamp: number;
+  fanId: number;
+  previousMode: FanMode;
+  newMode: FanMode;
+}
+
+export interface LEDColorChangedEvent {
+  type: EventType.LED_COLOR_CHANGED;
+  timestamp: number;
+  ledId: number;
+  red: number;
+  green: number;
+  blue: number;
+}
+
+export interface LEDAnimationChangedEvent {
+  type: EventType.LED_ANIMATION_CHANGED;
+  timestamp: number;
+  ledId: number;
+  animation: LEDAnimation;
+}
+
+export interface TemperatureChangedEvent {
+  type: EventType.TEMPERATURE_CHANGED;
+  timestamp: number;
+  sensorId: number;
+  previousTemperature: number;
+  newTemperature: number;
+}
+
+export interface ConfigurationChangedEvent {
+  type: EventType.CONFIGURATION_CHANGED;
+  timestamp: number;
+  section: string;
+}
+
+export interface CommandSentEvent {
+  type: EventType.COMMAND_SENT;
+  timestamp: number;
+  sequence: number;
+  command: number;
+}
+
+export interface CommandCompletedEvent {
+  type: EventType.COMMAND_COMPLETED;
+  timestamp: number;
+  sequence: number;
+  command: number;
+  duration: number;
+}
+
+export interface CommandFailedEvent {
+  type: EventType.COMMAND_FAILED;
+  timestamp: number;
+  sequence: number;
+  command: number;
+  errorCode: ErrorCode;
+  attempts: number;
+}
+
+export interface ErrorOccurredEvent {
+  type: EventType.ERROR_OCCURRED;
+  timestamp: number;
+  errorCode: string;
+  message: string;
+  severity: "warning" | "error";
+}
+
+export type Event =
+  | DeviceConnectedEvent
+  | DeviceDisconnectedEvent
+  | RelayStateChangedEvent
+  | FanSpeedChangedEvent
+  | FanModeChangedEvent
+  | LEDColorChangedEvent
+  | LEDAnimationChangedEvent
+  | TemperatureChangedEvent
+  | ConfigurationChangedEvent
+  | CommandSentEvent
+  | CommandCompletedEvent
+  | CommandFailedEvent
+  | ErrorOccurredEvent;
+
+// ============================================================================
+// RESULT TYPE FOR SUCCESS/FAILURE HANDLING
+// ============================================================================
+
+export type Success<T> = {
+  success: true;
+  value: T;
+};
+
+export type Failure = {
+  success: false;
+  error: {
+    code: string;
+    message: string;
+  };
+};
+
+export type Result<T> = Success<T> | Failure;
+
+// Constructor functions for Result
+export const Ok = <T>(value: T): Result<T> => ({
+  success: true,
+  value,
+});
+
+export const Err = (code: string, message: string): Result<never> => ({
+  success: false,
+  error: { code, message },
+});

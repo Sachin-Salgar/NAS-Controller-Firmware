@@ -1,8 +1,5 @@
-// Protocol exports
+// Export all protocol definitions (contracts only)
 export * from "./protocol";
 
-// Error exports
-export * from "./errors";
-
-// Type exports
+// Export pure type aliases
 export * from "./types";
