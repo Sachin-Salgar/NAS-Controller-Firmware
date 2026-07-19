@@ -13,6 +13,7 @@
 
 #include <cstdint>
 
+#include "../Config/LedMap.h"
 #include "../Core/Result.h"
 #include "../Objects/Led.h"
 
@@ -23,7 +24,7 @@ class LedService
 {
 public:
 
-    static constexpr std::uint16_t DriveLedCount = 8U;
+    static constexpr std::uint16_t DriveLedCount = NAS::Config::LedMap::DriveRegionCount;
 
     [[nodiscard]]
     static NAS::Core::Result Initialize() noexcept;
