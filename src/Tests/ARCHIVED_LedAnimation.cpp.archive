@@ -1,0 +1,214 @@
+// ARCHIVED - DO NOT USE
+// This file contains legacy LED animation code that has been superseded
+// by the new non-blocking animation framework in:
+// - src/Services/LedAnimator.h (base class)
+// - src/Services/BootAnimation.h/cpp
+// - src/Services/IdleAnimation.h/cpp
+// - src/Services/ErrorAnimation.h/cpp
+// - src/Services/ShutdownAnimation.h/cpp
+// - src/Services/LedEffects.h/cpp
+//
+// Key differences in new framework:
+// 1. Non-blocking: Uses Update(deltaMs) instead of blocking delay()
+// 2. Composable: Each animation is independent LedAnimator subclass
+// 3. Centralized: Managed through LedEffects and LedManager
+// 4. Integrated: Works with EventBus and system lifecycle
+//
+// This code is preserved for reference but should not be compiled.
+// To use animations, integrate LedManager into your service initialization.
+
+#include <Arduino.h>
+
+#include "../Platform/WS2812.h"
+
+namespace NAS::Tests
+{
+
+using namespace NAS::Platform;
+
+static void Show()
+{
+    WS2812::Show();
+    delay(25);
+}
+
+void RunLedAnimation()
+{
+    WS2812::Initialize();
+    WS2812::SetBrightness(120);
+
+    while (true)
+    {
+        //--------------------------------------------------
+        // Rainbow Wipe
+        //--------------------------------------------------
+        const WS2812::Color rainbow[] =
+        {
+            {255,0,0},
+            {255,80,0},
+            {255,255,0},
+            {0,255,0},
+            {0,255,255},
+            {0,0,255},
+            {180,0,255}
+        };
+
+        for (uint8_t c = 0; c < 7; c++)
+        {
+            WS2812::Clear();
+
+            for (uint16_t i = 0; i < 60; i++)
+            {
+                WS2812::SetPixel(i, rainbow[c]);
+                WS2812::Show();
+                delay(10);
+            }
+
+            delay(250);
+        }
+
+        //--------------------------------------------------
+        // Knight Rider
+        //--------------------------------------------------
+
+        for (int repeat = 0; repeat < 3; repeat++)
+        {
+            for (int pos = 0; pos < 60; pos++)
+            {
+                WS2812::Clear();
+
+                WS2812::SetPixel(pos,{255,0,0});
+
+                if(pos>0)
+                    WS2812::SetPixel(pos-1,{120,0,0});
+
+                if(pos>1)
+                    WS2812::SetPixel(pos-2,{40,0,0});
+
+                WS2812::Show();
+                delay(18);
+            }
+
+            for (int pos = 59; pos >= 0; pos--)
+            {
+                WS2812::Clear();
+
+                WS2812::SetPixel(pos,{255,0,0});
+
+                if(pos<59)
+                    WS2812::SetPixel(pos+1,{120,0,0});
+
+                if(pos<58)
+                    WS2812::SetPixel(pos+2,{40,0,0});
+
+                WS2812::Show();
+                delay(18);
+            }
+        }
+
+        //--------------------------------------------------
+        // Breathing Purple
+        //--------------------------------------------------
+
+        for(int b=5;b<255;b+=5)
+        {
+            WS2812::SetBrightness(b);
+            WS2812::Fill({180,0,255});
+            WS2812::Show();
+            delay(18);
+        }
+
+        for(int b=255;b>5;b-=5)
+        {
+            WS2812::SetBrightness(b);
+            WS2812::Fill({180,0,255});
+            WS2812::Show();
+            delay(18);
+        }
+
+        WS2812::SetBrightness(120);
+
+        //--------------------------------------------------
+        // Sparkles
+        //--------------------------------------------------
+
+        WS2812::Clear();
+
+        for(int i=0;i<250;i++)
+        {
+            uint16_t pixel=random(60);
+
+            WS2812::SetPixel(pixel,{255,255,255});
+            WS2812::Show();
+
+            delay(15);
+
+            WS2812::SetPixel(pixel,{0,0,0});
+        }
+
+        //--------------------------------------------------
+        // Meteor
+        //--------------------------------------------------
+
+        for(int head=0;head<70;head++)
+        {
+            WS2812::Clear();
+
+            for(int tail=0;tail<8;tail++)
+            {
+                int p=head-tail;
+
+                if(p>=0 && p<60)
+                {
+                    uint8_t level=255-(tail*30);
+
+                    WS2812::SetPixel(p,{0,level,255});
+                }
+            }
+
+            WS2812::Show();
+            delay(22);
+        }
+
+        //--------------------------------------------------
+        // RGB Flash
+        //--------------------------------------------------
+
+        const WS2812::Color flash[]=
+        {
+            {255,0,0},
+            {0,255,0},
+            {0,0,255},
+            {255,255,255},
+            {255,255,0},
+            {0,255,255},
+            {255,0,255}
+        };
+
+        for(auto c:flash)
+        {
+            WS2812::Fill(c);
+            WS2812::Show();
+            delay(250);
+        }
+
+        //--------------------------------------------------
+        // Fade Out
+        //--------------------------------------------------
+
+        for(int b=120;b>=0;b-=4)
+        {
+            WS2812::SetBrightness(b);
+            WS2812::Show();
+            delay(20);
+        }
+
+        WS2812::Clear();
+        WS2812::SetBrightness(120);
+        WS2812::Show();
+
+        delay(500);
+    }
+}
+
+} // namespace NAS::Tests
