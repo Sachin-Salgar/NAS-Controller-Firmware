@@ -32,33 +32,62 @@ project root/
 ├── DOCUMENTATION.md               ← You are here
 ├── LICENSE                        ← License
 │
-├── docs/                          ← Project-wide docs
+├── docs/                          ← Project-wide documentation
+│   ├── DEVELOPER_GUIDE.md         ← Development workflow & standards
+│   ├── PROJECT_OVERVIEW.md        ← System overview
+│   ├── PROJECT_RULES.md           ← Core project rules
+│   ├── GETTING_STARTED.md         ← Setup instructions
 │   ├── IMPLEMENTATION_CHECKLIST.md ← Development tasks
-│   ├── archive/                   ← Previous planning docs
-│   └── ...                        ← (foundation docs TBD)
+│   ├── ARCHITECTURE_FREEZE.md     ← Frozen architecture
+│   ├── DEPENDENCY_DIAGRAM.md      ← Dependency rules
+│   ├── CODING_STANDARDS.md        ← Coding conventions
+│   ├── MODULE_BOUNDARIES.md       ← Module definitions
+│   ├── BOOT_SHUTDOWN_SEQUENCE.md  ← System lifecycle
+│   ├── ERROR_RECOVERY_MATRIX.md   ← Error handling
+│   ├── SECURITY_POLICY.md         ← Security guidelines
+│   ├── CONTRIBUTING.md            ← Contribution guidelines
+│   ├── adr/                       ← Architecture decision records
+│   │   ├── 0001-websocket-first.md
+│   │   └── 0002-library-first-daemon.md
+│   └── archive/                   ← Archived planning docs
 │
 ├── firmware/                      ← ESP32 Firmware (C++)
 │   ├── README.md                  ← Firmware quick start
 │   ├── CHANGELOG.md               ← Firmware version history
-│   ├── docs/                      ← Firmware-specific docs
+│   ├── docs/                      ← Firmware-specific documentation
+│   │   ├── README.md              ← Firmware docs index
+│   │   ├── Architecture.md        ← Firmware architecture
+│   │   ├── Hardware.md            ← Hardware specifications
+│   │   ├── Protocol.md            ← Protocol details
+│   │   ├── CommandSet.md          ← Command reference
+│   │   ├── CodingStandard.md      ← Firmware coding standards
+│   │   ├── LED_Subsystem.md       ← LED system documentation
+│   │   ├── USB-Host-Protocol.md   ← USB protocol spec
+│   │   ├── Roadmap.md             ← Firmware development roadmap
+│   │   ├── Repository-Structure.md ← Repository layout and layers
+│   │   ├── Decisions/             ← Firmware ADRs
+│   │   └── ...
 │   ├── src/                       ← Source code
 │   └── platformio.ini             ← Build config
 │
 ├── daemon/                        ← Host Daemon (Node.js)
-│   ├── docs/                      ← Daemon docs (TBD)
-│   └── src/                       ← Source code (TBD)
+│   ├── docs/                      ← Daemon documentation
+│   │   └── adr/                   ← (component-specific ADRs if any)
+│   └── src/                       ← Source code
 │
 ├── frontend/                      ← Web Interface (React)
 │   ├── docs/
 │   │   ├── WEB_INTERFACE_PLAN.md  ← Feature roadmap & architecture
-│   │   └── README.md              ← Frontend docs index (TBD)
-│   └── src/                       ← Source code (TBD)
+│   │   ├── UI_GUIDELINES.md       ← Design system
+│   │   └── README.md              ← Frontend docs index
+│   └── src/                       ← Source code
 │
 └── shared/                        ← Shared Types & Protocol
     ├── docs/
     │   ├── PROTOCOL_SPEC.md       ← Binary protocol definition
-    │   └── README.md              ← Shared docs index (TBD)
-    └── src/                       ← Shared TypeScript types (TBD)
+    │   ├── README.md              ← Shared docs index
+    │   └── adr/                   ← (component-specific ADRs if any)
+    └── src/                       ← Shared TypeScript types
 ```
 
 ---
@@ -93,16 +122,41 @@ project root/
 |----------|----------|--------|---------|
 | README.md | Root | ✅ Current | Project overview & quick start |
 | DOCUMENTATION.md | Root | ✅ Current | This navigation guide |
+| WEB_INTERFACE_PLAN.md | Root | ✅ Current | Web interface development plan (reference) |
 | LICENSE | Root | ✅ Current | Project license |
+| DEVELOPER_GUIDE.md | docs/ | ✅ Current | Development workflow & standards |
+| PROJECT_OVERVIEW.md | docs/ | ✅ Current | System overview & architecture |
+| PROJECT_RULES.md | docs/ | ✅ Current | 10 core project rules |
+| CODING_STANDARDS.md | docs/ | ✅ Current | Coding conventions |
+| ARCHITECTURE_FREEZE.md | docs/ | ✅ Current | Frozen architecture v1.0 |
+| DEPENDENCY_DIAGRAM.md | docs/ | ✅ Current | Dependency flow rules |
+| MODULE_BOUNDARIES.md | docs/ | ✅ Current | Module definitions |
+| BOOT_SHUTDOWN_SEQUENCE.md | docs/ | ✅ Current | System lifecycle |
+| ERROR_RECOVERY_MATRIX.md | docs/ | ✅ Current | Error handling rules |
+| SECURITY_POLICY.md | docs/ | ✅ Current | Security guidelines |
+| GETTING_STARTED.md | docs/ | ✅ Current | Setup instructions |
+| CONTRIBUTING.md | docs/ | ✅ Current | Contribution guidelines |
 | IMPLEMENTATION_CHECKLIST.md | docs/ | ✅ Current | Phase 1 development tasks |
-| PROTOCOL_SPEC.md | shared/docs/ | ✅ Current | Binary protocol definition |
-| WEB_INTERFACE_PLAN.md | frontend/docs/ | ✅ Current | Web UI feature roadmap |
+| docs/adr/0001-websocket-first.md | docs/adr/ | ✅ Current | WebSocket architecture decision |
+| docs/adr/0002-library-first-daemon.md | docs/adr/ | ✅ Current | Daemon architecture decision |
 | firmware/README.md | firmware/ | ✅ Current | Firmware quick start |
 | firmware/CHANGELOG.md | firmware/ | ✅ Current | Firmware version history |
-| firmware/docs/ | firmware/docs/ | ✅ Current | Firmware-specific docs |
-| daemon/docs/ | daemon/docs/ | ⏳ TBD | Daemon documentation |
-| frontend/docs/README.md | frontend/docs/ | ⏳ TBD | Frontend docs index |
-| shared/docs/README.md | shared/docs/ | ⏳ TBD | Shared types docs |
+| firmware/docs/Architecture.md | firmware/docs/ | ✅ Current | Firmware architecture |
+| firmware/docs/Hardware.md | firmware/docs/ | ✅ Current | Hardware documentation |
+| firmware/docs/Protocol.md | firmware/docs/ | ✅ Current | Protocol details |
+| firmware/docs/CommandSet.md | firmware/docs/ | ✅ Current | Command reference |
+| firmware/docs/CodingStandard.md | firmware/docs/ | ✅ Current | Firmware coding standards |
+| firmware/docs/LED_Subsystem.md | firmware/docs/ | ✅ Current | LED system documentation |
+| firmware/docs/USB-Host-Protocol.md | firmware/docs/ | ✅ Current | USB protocol specification |
+| firmware/docs/Roadmap.md | firmware/docs/ | ✅ Current | Firmware development roadmap |
+| firmware/docs/Repository-Structure.md | firmware/docs/ | ✅ Current | Repository layout and layers |
+| firmware/docs/Decisions/ | firmware/docs/ | ✅ Current | Firmware ADRs |
+| PROTOCOL_SPEC.md | shared/docs/ | ✅ Current | Binary protocol definition |
+| WEB_INTERFACE_PLAN.md | Root | ✅ Current | Web UI feature roadmap & architecture |
+| UI_GUIDELINES.md | frontend/docs/ | ✅ Current | Design system |
+| frontend/docs/README.md | frontend/docs/ | ✅ Current | Frontend docs index |
+| shared/docs/README.md | shared/docs/ | ✅ Current | Shared types docs |
+| daemon/docs/ | daemon/docs/ | ⏳ In Progress | Daemon documentation |
 
 ---
 
@@ -166,19 +220,34 @@ These documents are kept for reference but are superseded by current implementat
 
 ## ✅ Documentation Status Summary
 
-### Ready to Use
-- ✅ README.md (project overview)
-- ✅ PROTOCOL_SPEC.md (protocol definition)
-- ✅ WEB_INTERFACE_PLAN.md (feature roadmap)
-- ✅ IMPLEMENTATION_CHECKLIST.md (development tasks)
-- ✅ firmware/CHANGELOG.md (firmware version history)
-- ✅ Firmware documentation in firmware/docs/
+### Project-Level (docs/)
+- ✅ Complete documentation structure established
+- ✅ Developer guide, standards, and rules
+- ✅ Architecture decisions documented (ADRs)
+- ✅ Error recovery and security policies
+- ✅ Contribution guidelines
 
-### Coming Soon
-- ⏳ Daemon documentation
-- ⏳ Frontend documentation index
-- ⏳ Shared types documentation
-- ⏳ Project-wide foundation documents (standards, architecture, etc.)
+### Firmware (firmware/docs/)
+- ✅ Complete firmware documentation
+- ✅ Architecture, hardware, and protocol specs
+- ✅ Firmware ADRs in Decisions/
+
+### Frontend (frontend/docs/)
+- ✅ WEB_INTERFACE_PLAN.md (comprehensive feature roadmap)
+- ✅ UI_GUIDELINES.md (design system)
+- ✅ README.md (documentation index)
+
+### Shared (shared/docs/)
+- ✅ PROTOCOL_SPEC.md (complete protocol definition)
+- ✅ README.md (shared types index)
+
+### Daemon (daemon/docs/)
+- ⏳ In Progress - Daemon architecture documentation
+
+### Organization
+- ✅ ADRs consolidated in docs/adr/ (single source of truth)
+- ✅ Firmware decisions moved to firmware/docs/Decisions/
+- ✅ No duplicate files across component docs
 
 ---
 
@@ -194,5 +263,6 @@ These documents are kept for reference but are superseded by current implementat
 
 ---
 
-**Last Updated:** July 19, 2026
-**Purpose:** Consolidate and organize all project documentation
+**Last Updated:** July 19, 2026 (reorganized documentation structure)
+**Status:** ✅ Documentation fully organized and deduplicated
+**Purpose:** Consolidate and organize all project documentation by component

@@ -168,7 +168,7 @@ Core Library:     NASController.Core (pure TypeScript, no external deps)
   ├── Transport (ITransport abstraction: Serial, Mock, TCP, BT)
   ├── Queue (command queue with state machine)
   ├── State (centralized store with subscriptions)
-  ├── Events (event bus + packet inspector)
+  ├── Events (event bus and packet inspector)
   └── Diagnostics (metrics, diagnostic mode)
 
 API Layer:        Express.js + Socket.io (thin bridge UI ↔ Core)
@@ -181,8 +181,8 @@ Build:            ts-node / esbuild
 
 **Why Library-First?**
 - ✅ Entire daemon testable without server running
-- ✅ Reusable in other applications (CLI, Electron, etc.)
-- ✅ Clear separation: logic ≠ plumbing
+- ✅ Reusable in other applications (CLI, Electron app, etc.)
+- ✅ Clear separation: business logic ≠ HTTP plumbing
 - ✅ No vendor lock-in
 
 **Daemon Structure (production-ready):**
