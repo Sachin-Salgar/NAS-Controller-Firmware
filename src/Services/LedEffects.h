@@ -16,6 +16,10 @@
 #include <cstdint>
 
 #include "../Core/Result.h"
+#include "BootAnimation.h"
+#include "ShutdownAnimation.h"
+#include "IdleAnimation.h"
+#include "ErrorAnimation.h"
 
 namespace NAS::Services
 {
