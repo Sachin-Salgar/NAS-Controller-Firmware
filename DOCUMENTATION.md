@@ -152,7 +152,7 @@ project root/
 | firmware/docs/Repository-Structure.md | firmware/docs/ | ✅ Current | Repository layout and layers |
 | firmware/docs/Decisions/ | firmware/docs/ | ✅ Current | Firmware ADRs |
 | PROTOCOL_SPEC.md | shared/docs/ | ✅ Current | Binary protocol definition |
-| WEB_INTERFACE_PLAN.md | frontend/docs/ | ✅ Current | Web UI feature roadmap |
+| WEB_INTERFACE_PLAN.md | Root | ✅ Current | Web UI feature roadmap & architecture |
 | UI_GUIDELINES.md | frontend/docs/ | ✅ Current | Design system |
 | frontend/docs/README.md | frontend/docs/ | ✅ Current | Frontend docs index |
 | shared/docs/README.md | shared/docs/ | ✅ Current | Shared types docs |
