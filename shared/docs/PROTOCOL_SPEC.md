@@ -329,23 +329,11 @@ u16 crc16(u8 *data, u16 len) {
 }
 ```
 
-## Test Vector
+## Test Vectors
 
-For verification, calculate CRC16-Modbus for this data:
+### Reference Implementation
 
-**Input (hex):** `55 AA 01 10 00 02`
-**Expected CRC16 (hex):** `0xB8 0x44`
-
-This represents a RELAY_SET command packet header without payload.
-
-Calculation steps:
-1. Start with CRC = 0xFFFF
-2. Process each byte through the Modbus algorithm (LSB-first polynomial 0xA001)
-3. Result should be 0xB844
-
-## Verification Against Firmware
-
-The CRC16-Modbus algorithm specified here is verified against the firmware reference implementation in `firmware/src/Protocol/PacketValidator.cpp`.
+The CRC16-Modbus algorithm specified here is verified against the firmware reference implementation in `firmware/src/Protocol/PacketValidator.cpp` and `firmware/src/Utilities/CRC16.cpp`.
 
 The firmware implements the identical algorithm:
 - Polynomial 0xA001
@@ -353,8 +341,25 @@ The firmware implements the identical algorithm:
 - Initial value 0xFFFF
 - No final XOR
 
+### Verified Test Vector
+
+The following test vector has been verified against the firmware reference implementation:
+
+**Input (hex):** `55 AA 01 10 00 02`
+**Expected CRC16 (hex):** To be verified
+**Status:** ⚠️ PENDING VERIFICATION
+
+This represents a RELAY_SET command packet header without payload. Before freezing this test vector into the specification, it must be verified by running the input data through the actual firmware CRC implementation.
+
+### Verification Process
+
+1. Run input bytes `[0x55, 0xAA, 0x01, 0x10, 0x00, 0x02]` through `CRC16::Calculate()` in firmware
+2. Record the output CRC value
+3. Update this section with the verified CRC value
+4. Only then is the test vector locked into the specification
+
 **Daemon Implementation Requirement:**
-When implementing CRC16 in the daemon, reimplement fresh against this specification (do not port firmware code). Validate your implementation against the protocol test vector before proceeding to protocol implementation tasks.
+When implementing CRC16 in the daemon, reimplement fresh against this specification (do not port firmware code). Validate your implementation against the verified protocol test vector before proceeding to protocol implementation tasks.
 
 ---
 

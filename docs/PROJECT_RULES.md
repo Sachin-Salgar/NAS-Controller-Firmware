@@ -567,13 +567,23 @@ Why this choice?
 
 ### The Rule
 
-Before any protocol implementation is declared complete, all three must agree:
+Before any protocol implementation is declared complete, the following chain must be verified in order:
 
-1. **Protocol Specification** (`shared/docs/PROTOCOL_SPEC.md`)
-2. **Firmware Reference Implementation** (firmware source code)
-3. **Protocol Test Vectors** (known good inputs/outputs)
+```
+Architecture Decision (ADR)
+        ↓
+Protocol Specification (PROTOCOL_SPEC.md)
+        ↓
+Firmware Reference Implementation
+        ↓
+Daemon Implementation
+        ↓
+Test Vectors (verified against actual firmware)
+        ↓
+Integration Test
+```
 
-A task is not complete until all three match exactly.
+A task is not complete until all six elements are in place and verified to match exactly.
 
 ### Why
 
@@ -582,54 +592,72 @@ Mismatches between specification, firmware, and daemon can remain undetected unt
 ### What This Means
 
 ✅ **Do:**
-- For new commands: define in PROTOCOL_SPEC.md first
-- Implement in firmware
-- Create test vectors for the command
-- Implement in daemon and validate against test vectors
+- Create/update ADR documenting the decision and rationale
+- Update PROTOCOL_SPEC.md with exact specification
+- Verify firmware implements the specification (audit the code)
+- Implement daemon against the specification
+- **Verify test vector against actual firmware** (not just spec)
+- Write integration tests that use the verified vector
 - Only then mark task complete
 
 ❌ **Don't:**
-- Implement in firmware without updating spec first
-- Assume daemon implementation is correct without verifying against test vectors
-- Mark task complete without verifying all three match
+- Propose a test vector without verifying it against firmware
+- Assume specification matches implementation without auditing code
+- Mark task complete without verified test vectors
+- Proceed to next task until all six elements are locked in
 
 ### Example: Adding a New Command
 
 ```
-1. Edit PROTOCOL_SPEC.md
+1. Create/Update ADR
+   - Document decision and rationale
+   - Link to related documents
+
+2. Edit PROTOCOL_SPEC.md
    - Define command byte
    - Define payload format
-   - Add example and test vector
+   - Include algorithm/parameter details
 
-2. Implement in firmware
-   - Add command handler
-   - Implement packet generation/validation
-
-3. Create test vector
-   - Input: raw bytes
-   - Expected output: known good response
+3. Verify firmware implementation
+   - Audit firmware source code
+   - Confirm it matches specification
+   - Note any differences (and update spec if needed)
 
 4. Implement in daemon
    - Encoder: command → packet
    - Decoder: packet → response
-   - Test against protocol vector
 
-5. Mark complete
-   - All three (spec, firmware, daemon) agree
-   - Test vectors pass
-   - Code review approved
+5. Create and verify test vector
+   - Calculate test input from specification
+   - Run against actual firmware to get output
+   - Record verified output in PROTOCOL_SPEC.md
+   - Never use calculated/theoretical vectors
+
+6. Write integration test
+   - Use verified test vector
+   - Validate round-trip: spec → daemon → firmware → back
+
+7. Mark complete
+   - ADR created
+   - Spec accurate
+   - Firmware audited
+   - Daemon implemented
+   - Test vectors verified against firmware
+   - Integration tests pass
 ```
 
 ### Verification Checklist
 
 Before marking any protocol task complete:
 
+- [ ] ADR created documenting decision?
 - [ ] Change documented in PROTOCOL_SPEC.md?
-- [ ] Change implemented in firmware?
-- [ ] Test vector added to PROTOCOL_SPEC.md?
-- [ ] Daemon implementation validates against vector?
-- [ ] Code passes all tests?
-- [ ] Spec and firmware agree (byte-for-byte)?
+- [ ] Firmware implementation audited and matches spec?
+- [ ] Daemon implementation complete?
+- [ ] Test vectors verified against actual firmware (not theoretical)?
+- [ ] All integration tests pass?
+- [ ] Code review approved?
+- [ ] All six elements locked in?
 
 ### Enforcement
 

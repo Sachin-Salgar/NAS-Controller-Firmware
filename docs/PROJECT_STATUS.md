@@ -2,9 +2,9 @@
 
 **Document Version:** 1.0
 **Project Version:** 1.0
-**Status:** Phase 1 - CRC16-Modbus Alignment Complete, Packet Encoder Next
+**Status:** Phase 1 - CRC16-Modbus Alignment Documented, Verification Session Next
 **Last Updated:** 2026-07-20
-**Last Session:** CRC16-Modbus protocol alignment (ADR-0010) approved  
+**Last Session:** ADR-0003 created, documentation corrected, verification checklist prepared  
 
 ---
 
@@ -15,23 +15,32 @@
 | **Planning Phase** | ✅ Complete | Architecture v1.0 frozen |
 | **Architecture Review** | ✅ Complete | Reviewed and approved |
 | **Shared Package** | ✅ Complete | Frozen (protocol contracts only) |
-| **CRC16-Modbus Alignment (Task 2)** | ✅ Complete | ADR-0010 approved, protocol spec updated |
+| **CRC16-Modbus Alignment (Task 2)** | ✅ Complete | ADR-0003 approved, protocol spec updated |
 | **Implementation Phase** | 🔄 In Progress | Phase 1 Task 3 - Packet Encoder Next |
 | **Documentation** | ✅ Complete | Hierarchy established, synchronized |
 
 ---
 
-## ⏭️ Next Implementation Task
+## ⏭️ Next Session: Verification Session (Not Implementation)
 
-**Phase 1, Task 3: Packet Encoder Implementation**
+**Pre-Task 2: CRC16 Verification Checklist**
 
-- **Location:** `daemon/src/core/protocol/packet-encoder.ts`
-- **Tests:** `daemon/src/core/protocol/__tests__/packet-encoder.test.ts`
-- **Deliverable:** Binary packet generation with CRC calculation
-- **Dependencies:** Task 2 (CRC16-Modbus Alignment) ✅ Complete
-- **Estimated Effort:** 1 day
+**Purpose:** Verify all decisions, ADRs, and specifications before Task 2 reimplementation
 
-Task 3 is ready to start in the next session.
+**Checklist:** See `docs/VERIFICATION_SESSION_CHECKLIST.md`
+
+**What to verify:**
+1. ADR numbering correct (0001, 0002, 0003)
+2. CRC test vector verified against firmware
+3. All documents reference CRC16-Modbus consistently
+4. Old daemon CRC implementation exists and ready to delete
+5. PROJECT_STATUS.md reflects Task 2 restart
+
+**Effort:** 30-45 minutes (verification only, no code changes)
+
+**Status:** ⏳ Verification Session Pending (creates baseline for Task 2)
+
+After verification passes, Task 2 reimplementation can proceed with confidence.
 
 ---
 
@@ -334,15 +343,15 @@ cd frontend && npm run dev (in another terminal)
 
 ### 2026-07-20 - CRC16-Modbus Protocol Alignment (Current)
 - ✅ Investigation report completed: firmware uses CRC16-Modbus throughout (0xA001 polynomial)
-- ✅ Created ADR-0010 documenting the alignment decision (firmware impl → protocol spec)
+- ✅ Decision documented in ADR-0003 (docs/adr/0003-crc16-modbus.md)
 - ✅ Updated PROTOCOL_SPEC.md CRC16 section to specify CRC16-Modbus
   - Polynomial: 0xA001 (reflected)
   - Initial value: 0xFFFF
   - Input/Output reflection: Yes
   - Final XOR: 0x0000
-- ✅ Added implementation notes and test vector verification
-- ✅ PROTOCOL_REGISTRY.md requires no updates (no algorithm references)
-- ⏭️ Next: Phase 1 Task 2 Reimplementation - Reimplement CRC16 daemon library against new spec
+- ✅ Added Rule 14: Implementation Verification Rule (permanent prevention rule)
+- ✅ PROTOCOL_REGISTRY.md verified (no algorithm references to update)
+- ⏭️ Next: Verification Session - Verify CRC test vector against firmware before Task 2 reimplementation
 
 ### 2026-07-20 (Earlier) - Architecture Review & Final Cleanup
 - ✅ Architecture reviewed and frozen (v1.0)
