@@ -13,15 +13,22 @@ export const ProtocolConstants = {
 } as const;
 
 // ============================================================================
-// PROTOCOL LIMITS
+// PACKET LIMITS
 // ============================================================================
-// Resource constraints - may change with hardware improvements
-export const ProtocolLimits = {
+// Constraints on packet structure - inherent to protocol format
+export const PacketLimits = {
   MaxPacketSize: 256,
   MaxPayloadSize: 256,
   MaxSequenceNumber: 0xff,  // 0x00-0xFF (256 values)
   MaxCommandCode: 0xff,
   MaxErrorCode: 0x0a,
+} as const;
+
+// ============================================================================
+// HARDWARE LIMITS
+// ============================================================================
+// Hardware capabilities - may increase with improved controllers
+export const HardwareLimits = {
   MaxRelays: 16,
   MaxFans: 8,
   MaxLEDs: 4,
@@ -30,50 +37,39 @@ export const ProtocolLimits = {
 } as const;
 
 // ============================================================================
-// PROTOCOL TIMING
-// ============================================================================
-// Timeout and retry values - may need adjustment for reliability
-export const ProtocolTiming = {
-  AckTimeout: 100,           // ms - ACK should come quickly
-  ResponseTimeout: 500,      // ms - Data response may take longer
-  CommandTimeout: 1000,      // ms - Total timeout for command
-  RetryBaseDelay: 100,       // ms - Initial retry delay
-  MaxRetryAttempts: 3,
-  ReconnectInitialDelay: 1000,   // ms - Initial reconnect wait
-  ReconnectMaxDelay: 8000,       // ms - Cap reconnect wait at 8 seconds
-} as const;
-
-// ============================================================================
-// PROTOCOL FEATURE FLAGS
+// PROTOCOL FEATURE FLAGS (BITMASKS)
 // ============================================================================
 // Capabilities that firmware may or may not support
-// Firmware reports these in GET_CAPABILITIES response
-export enum ProtocolFeatureFlag {
-  PWM_FAN_CONTROL = "pwm_fan_control",
-  RGB_LED = "rgb_led",
-  TEMPERATURE_SENSOR = "temperature_sensor",
-  REAL_TIME_CLOCK = "real_time_clock",
-  EVENT_LOG = "event_log",
-  CONFIGURATION_PERSISTENCE = "configuration_persistence",
-  FIRMWARE_UPDATE = "firmware_update",
-  NETWORK_INTERFACE = "network_interface",
-}
+// Firmware reports these in GET_CAPABILITIES response as a bitmask
+// Example: firmware returns 0x003F means features 0, 1, 2, 3, 4, 5 are present
+// Daemon can decode with: if (capabilities & FEATURE_PWM_FAN) { ... }
+export const FeatureFlag = {
+  PWM_FAN_CONTROL: 0x0001,
+  RGB_LED: 0x0002,
+  TEMPERATURE_SENSOR: 0x0004,
+  EVENT_LOG: 0x0008,
+  CONFIGURATION_PERSISTENCE: 0x0010,
+  REAL_TIME_CLOCK: 0x0020,
+  FIRMWARE_UPDATE: 0x0040,
+  NETWORK_INTERFACE: 0x0080,
+} as const;
 
-export const ProtocolFeatures = {
-  // Standard features required for MVP
-  CORE: [
-    ProtocolFeatureFlag.PWM_FAN_CONTROL,
-    ProtocolFeatureFlag.RGB_LED,
-    ProtocolFeatureFlag.TEMPERATURE_SENSOR,
-    ProtocolFeatureFlag.EVENT_LOG,
-    ProtocolFeatureFlag.CONFIGURATION_PERSISTENCE,
-  ],
-  // Optional features
-  EXTENDED: [
-    ProtocolFeatureFlag.REAL_TIME_CLOCK,
-    ProtocolFeatureFlag.FIRMWARE_UPDATE,
-    ProtocolFeatureFlag.NETWORK_INTERFACE,
-  ],
+export const FeatureSet = {
+  // Minimum features required for MVP (0x001F = 0b00011111)
+  CORE: FeatureFlag.PWM_FAN_CONTROL |
+        FeatureFlag.RGB_LED |
+        FeatureFlag.TEMPERATURE_SENSOR |
+        FeatureFlag.EVENT_LOG |
+        FeatureFlag.CONFIGURATION_PERSISTENCE,
+  // All known features
+  ALL: FeatureFlag.PWM_FAN_CONTROL |
+       FeatureFlag.RGB_LED |
+       FeatureFlag.TEMPERATURE_SENSOR |
+       FeatureFlag.EVENT_LOG |
+       FeatureFlag.CONFIGURATION_PERSISTENCE |
+       FeatureFlag.REAL_TIME_CLOCK |
+       FeatureFlag.FIRMWARE_UPDATE |
+       FeatureFlag.NETWORK_INTERFACE,
 } as const;
 
 // ============================================================================
