@@ -1,8 +1,13 @@
-# Protocol Test Vector Repository
+# Protocol Test Vector Templates Repository
 
-**Purpose:** Canonical test vectors for CRC16-Modbus implementation verification
+**Purpose:** Templates for test vectors that will become canonical after firmware verification
 
-**Status:** ⏳ Awaiting generation during final verification session
+**Status:** ⏳ TEMPLATES PREPARED - Awaiting firmware execution to generate canonical vectors
+
+**Important Distinction:**
+- **Vector Templates** (current state): Input bytes specified, CRC values are NULL, awaiting firmware execution
+- **Canonical Vectors** (after verification): CRC values captured from firmware, packet bytes frozen, ready for all implementations to use
+- Templates are NOT evidence. Canonical vectors are evidence only after firmware generates them.
 
 ---
 
@@ -60,9 +65,9 @@ Each vector is stored as `vector_NNN.json` with the following schema:
 
 ---
 
-## Vector Checklist
+## Vector Templates
 
-The following **five canonical vectors** must be generated and frozen:
+The following **five vector templates** have been prepared. They will become canonical after firmware execution:
 
 ### Vector 1: Minimum Packet (Empty Payload)
 - **Purpose:** Boundary condition (smallest valid packet)

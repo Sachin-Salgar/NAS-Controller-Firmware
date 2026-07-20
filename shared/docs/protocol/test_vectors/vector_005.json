@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "vector_version": 1,
+  "id": "005",
+  "name": "Invalid Packet - CRC Failure Case",
+  "description": "Valid packet structure with intentionally corrupted CRC bytes for error detection testing",
+  "purpose": "Verify CRC validation correctly rejects packets with corrupted CRC",
+  "category": "Error Detection",
+  "protocol_version": "1.0.0",
+  "firmware_version": null,
+  "firmware_commit": null,
+  "crc_algorithm": {
+    "scheme": "CRC-16-Modbus",
+    "polynomial": "0xA001",
+    "initial_value": "0xFFFF",
+    "input_reflection": true,
+    "output_reflection": true,
+    "final_xor": "0x0000"
+  },
+  "crc_coverage": {
+    "description": "CRC would be calculated over Header through Payload (same as other vectors)",
+    "includes": [
+      "Header (0x55 0xAA)",
+      "Sequence (1 byte)",
+      "Command (1 byte)",
+      "Length (2 bytes, big-endian)",
+      "Payload (2 bytes)"
+    ],
+    "excludes": [
+      "CRC field (2 bytes) - intentionally corrupted in this vector",
+      "Footer (0xAA)"
+    ],
+    "coverage_start_byte": 0,
+    "coverage_end_byte": 7,
+    "total_bytes_covered": 8
+  },
+  "packet_before_crc": {
+    "description": "Valid input bytes (before CRC field)",
+    "bytes_hex": "55AA0510000200",
+    "bytes_array": ["0x55", "0xAA", "0x05", "0x10", "0x00", "0x02", "0x00", "0x01"],
+    "breakdown": {
+      "header": "0x55 0xAA (frame delimiter)",
+      "sequence": "0x05 (command sequence number)",
+      "command": "0x10 (RELAY_SET)",
+      "length": "0x00 0x02 (big-endian: 2 bytes)",
+      "payload": "0x00 0x01 (Relay 0, State ON)"
+    }
+  },
+  "crc_output": {
+    "crc_value_correct": null,
+    "crc_value_transmitted": "0xFFFF",
+    "note": "Transmitted value is intentionally WRONG (0xFFFF is a placeholder, not the real CRC)",
+    "corruption": "The CRC bytes in the transmitted packet are corrupted on purpose"
+  },
+  "transmitted_packet": {
+    "description": "Complete packet as transmitted (with corrupted CRC)",
+    "bytes_hex": "55AA0510000200FFFFAA",
+    "bytes_array": ["0x55", "0xAA", "0x05", "0x10", "0x00", "0x02", "0x00", "0x01", "0xFF", "0xFF", "0xAA"],
+    "breakdown": {
+      "valid_part": "0x55 0xAA 0x05 0x10 0x00 0x02 0x00 0x01 (packet before CRC)",
+      "invalid_crc": "0xFF 0xFF (intentionally wrong)",
+      "footer": "0xAA (valid frame terminator)"
+    }
+  },
+  "expected_firmware_response": {
+    "description": "How firmware should respond to this packet",
+    "response_type": "NAK (Negative Acknowledgement)",
+    "response_command": "0x50",
+    "response_sequence": "0x05",
+    "response_payload": ["0x04"],
+    "error_code": "0x04 (CRC_FAILED)",
+    "expected_behavior": "Firmware receives packet, calculates correct CRC, compares with transmitted 0xFFFF, sees mismatch, sends NAK with error code 0x04"
+  },
+  "verification": {
+    "status": "pending_firmware_execution",
+    "method": "Negative test: verify firmware correctly rejects this packet",
+    "procedure": "1. Run firmware test harness\n2. Calculate correct CRC for packet_before_crc bytes\n3. Confirm correct CRC != 0xFFFF\n4. Send complete packet with corrupted CRC (0xFF 0xFF) to firmware\n5. Verify firmware responds with NAK (Cmd=0x50, Seq=0x05, Error=0x04)\n6. Document that error detection works correctly",
+    "date": null,
+    "verified_by": null,
+    "notes": "This is a TEMPLATE for error detection testing. Verification confirms firmware error handling."
+  },
+  "testing_notes": [
+    "Verifies CRC validation is working (critical security property)",
+    "Tests firmware error response to corrupted packets",
+    "Confirms daemon receives and handles NAK correctly",
+    "Ensures system can detect and report communication errors",
+    "This is a NEGATIVE test: we expect rejection"
+  ],
+  "why_this_test_matters": {
+    "rationale": "CRC validation is the primary defense against data corruption",
+    "tests": [
+      "Firmware CRC validation on received packets (detects corruption)",
+      "Firmware error response mechanism (NAK generation)",
+      "Daemon error handling (processes NAK appropriately)",
+      "System reliability (can detect and report communication failures)"
+    ]
+  },
+  "interoperability": {
+    "requirement": "Every implementation must handle CRC validation consistently",
+    "applies_to": [
+      "Firmware reference implementation (must validate and reject)",
+      "Daemon (must send valid CRC, handle NAK responses)",
+      "Python tools (must validate CRC)",
+      "Test utilities (must detect errors)",
+      "Any future implementation"
+    ],
+    "note": "Error handling must be identical across all implementations"
+  }
+}

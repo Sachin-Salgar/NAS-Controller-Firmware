@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "vector_version": 1,
+  "id": "002",
+  "name": "Typical Relay Set Command",
+  "description": "Common operation: set relay to a specific state",
+  "purpose": "Typical use case: verify CRC with small payload",
+  "category": "Typical Operation",
+  "protocol_version": "1.0.0",
+  "firmware_version": null,
+  "firmware_commit": null,
+  "crc_algorithm": {
+    "scheme": "CRC-16-Modbus",
+    "polynomial": "0xA001",
+    "initial_value": "0xFFFF",
+    "input_reflection": true,
+    "output_reflection": true,
+    "final_xor": "0x0000"
+  },
+  "crc_coverage": {
+    "description": "CRC calculated over Header through Payload (all data bytes before CRC field)",
+    "includes": [
+      "Header (0x55 0xAA)",
+      "Sequence (1 byte)",
+      "Command (1 byte)",
+      "Length (2 bytes, big-endian)",
+      "Payload (2 bytes)"
+    ],
+    "excludes": [
+      "CRC field (2 bytes)",
+      "Footer (0xAA)"
+    ],
+    "coverage_start_byte": 0,
+    "coverage_end_byte": 7,
+    "total_bytes_covered": 8
+  },
+  "packet_before_crc": {
+    "description": "Input bytes to CRC algorithm",
+    "bytes_hex": "55AA0210000201",
+    "bytes_array": ["0x55", "0xAA", "0x02", "0x10", "0x00", "0x02", "0x00", "0x01"],
+    "breakdown": {
+      "header": "0x55 0xAA (frame delimiter)",
+      "sequence": "0x02 (command sequence number)",
+      "command": "0x10 (RELAY_SET)",
+      "length": "0x00 0x02 (big-endian: 2 bytes)",
+      "payload": "0x00 0x01 (Relay ID 0, State ON)"
+    }
+  },
+  "command_details": {
+    "command": "RELAY_SET (0x10)",
+    "payload_format": [
+      {
+        "name": "relay_id",
+        "size_bytes": 1,
+        "value": "0x00",
+        "meaning": "Relay 0"
+      },
+      {
+        "name": "state",
+        "size_bytes": 1,
+        "value": "0x01",
+        "meaning": "ON (0x00=OFF, 0x01=ON)"
+      }
+    ]
+  },
+  "crc_output": {
+    "crc_value": null,
+    "transmitted_crc_bytes": null,
+    "byte_order": "Big-endian (MSB first, then LSB)",
+    "note": "Values will be populated by firmware execution"
+  },
+  "expected_complete_packet": {
+    "description": "Full packet including CRC and footer (what will be transmitted)",
+    "bytes_hex": null,
+    "total_length_bytes": 11,
+    "structure": "Header(2) + Seq(1) + Cmd(1) + Len(2) + Payload(2) + CRC(2) + Footer(1)",
+    "note": "Bytes 8-9 will contain CRC output, byte 10 will be footer 0xAA"
+  },
+  "real_world_scenario": {
+    "description": "User turns on relay 0 via web dashboard",
+    "flow": [
+      "User clicks 'Relay 0 ON' button in web interface",
+      "Frontend sends WebSocket command to daemon",
+      "Daemon creates this packet",
+      "Daemon transmits to firmware via USB/serial",
+      "Firmware receives packet",
+      "Firmware validates CRC",
+      "Firmware recognizes RELAY_SET command",
+      "Firmware turns on relay 0",
+      "Firmware sends ACK response to daemon"
+    ]
+  },
+  "verification": {
+    "status": "pending_firmware_execution",
+    "method": "Execute firmware CRC16::Calculate() on packet_before_crc bytes",
+    "procedure": "1. Run firmware test harness\n2. Execute CRC16::Calculate([0x55, 0xAA, 0x02, 0x10, 0x00, 0x02, 0x00, 0x01], 8)\n3. Capture the returned u16 value\n4. Transmit complete packet (including CRC and footer 0xAA)\n5. Capture transmitted bytes from serial/USB\n6. Record actual crc_value and transmitted_crc_bytes",
+    "date": null,
+    "verified_by": null,
+    "notes": "This is a TEMPLATE, not a canonical vector. Canonical status pending firmware execution."
+  },
+  "interoperability": {
+    "requirement": "Every implementation must produce identical complete packet bytes",
+    "applies_to": [
+      "Firmware reference implementation",
+      "Daemon (TypeScript/Node.js)",
+      "Python tools",
+      "Test utilities",
+      "Mobile applications",
+      "WebAssembly implementations",
+      "Any future implementation"
+    ],
+    "note": "Byte-for-byte match required, not just CRC values"
+  }
+}
