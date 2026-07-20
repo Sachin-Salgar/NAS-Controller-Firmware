@@ -440,6 +440,27 @@ The daemon can now import from shared and implement the protocol layer.
 
 ---
 
+## Backward Compatibility Guarantee
+
+**Shared contracts must remain backward compatible whenever possible.**
+
+When modifying shared:
+1. Never remove existing definitions
+2. Never change meanings of existing constants
+3. New fields should be additive only (at the end)
+4. New command codes go into reserved ranges
+5. New error codes extend existing enums (don't replace)
+
+Example:
+- ✅ Add new command 0x81 in reserved range
+- ✅ Add new feature flag 0x0100
+- ❌ Remove command 0x10 (breaks firmware)
+- ❌ Change ErrorCode.TIMEOUT from 0x06 to 0x07 (breaks wire protocol)
+
+This ensures old firmware works with new daemon and vice versa.
+
+---
+
 ## Strict Instruction
 
 > **Do not modify `shared/` again unless a protocol contract changes.**
