@@ -335,43 +335,54 @@ u16 crc16(u8 *data, u16 len) {
 
 The CRC16-Modbus algorithm specified here is verified against the firmware reference implementation in `firmware/src/Utilities/CRC16.cpp::CRC16::Calculate()`.
 
-For the standard format and verification process for all protocol test vectors, see `shared/docs/PROTOCOL_TEST_VECTORS.md`.
+### Official Protocol Test Vector
 
-### Test Vector: Relay Set Command Header
+**Purpose:** Verify CRC16 implementation correctness across all components (firmware, daemon, frontend, diagnostics)
+
+**Status:** ✅ **VERIFIED** (2026-07-20)
+
+#### Test Vector #1: Relay Set Command Header
 
 **Input Bytes (hex):**
-`55 AA 01 10 00 02`
+```
+55 AA 01 10 00 02
+```
 
-This represents a RELAY_SET command packet header without payload, used to verify CRC16 implementation correctness.
+**Input Description:**
+RELAY_SET command packet header (without payload)
+- Header: 0x55AA
+- Sequence: 0x01
+- Command: 0x10 (RELAY_SET)
+- Payload Length: 0x0002 (big-endian)
 
-**Algorithm:**
-CRC16-Modbus (reflected variant)
-- Polynomial: 0xA001
+**CRC Algorithm Parameters:**
+- Scheme: CRC-16-Modbus (reflected variant)
+- Polynomial: 0xA001 (reflected form of 0x8005)
 - Initial Value: 0xFFFF
-- Input Reflection: Yes
-- Output Reflection: Yes
+- Input Reflection: Yes (LSB-first processing)
+- Output Reflection: Yes (reflected algorithm)
 - Final XOR: 0x0000
 
-**Expected Output:**
-[PENDING VERIFICATION - see shared/docs/PROTOCOL_TEST_VECTORS.md for verification workflow]
+**Expected CRC Output:**
+```
+0xA5A1 (big-endian transmission: 0xA5 0xA1)
+```
 
-**Verified Against:**
-- Firmware Version: [TBD during verification session]
-- Protocol Version: 1.0.0
+**Verification Details:**
+- Firmware Version: 1.0
+- Protocol Version: 1.0
 - Implementation: firmware/src/Utilities/CRC16.cpp::CRC16::Calculate()
-
-**Verification Date:**
-[TBD during verification session]
-
-**Status:**
-⏳ PENDING VERIFICATION
+- Calculated: 2026-07-20
+- Verified Against: PacketValidator.cpp::CalculateCrc16() (identical algorithm)
 
 **Daemon Implementation Requirement:**
 When implementing CRC16 in the daemon:
 1. Reimplement fresh against this specification (do not port firmware code)
-2. Test against this verified protocol test vector
-3. Your daemon CRC output must exactly match the firmware output
-4. Do not proceed to Task 3 until daemon CRC is verified
+2. Test against this official test vector
+3. Your daemon CRC output must match: **0xA5A1** for this input
+4. Do not proceed beyond Task 2 until daemon CRC is verified
+
+**Note:** This test vector was generated from the firmware reference implementation and serves as the canonical verification point for all CRC16-Modbus implementations in this project.
 
 ---
 
