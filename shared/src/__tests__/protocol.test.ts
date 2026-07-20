@@ -1,9 +1,9 @@
 import {
   ProtocolConstants,
   ProtocolLimits,
-  ProtocolTiming,
-  ProtocolFeatureFlag,
-  ProtocolFeatures,
+  PacketLimits,
+  HardwareLimits,
+  FeatureFlag,
   ResponseBit,
   CommandCode,
   ErrorCode,

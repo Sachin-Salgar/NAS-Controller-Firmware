@@ -13,8 +13,11 @@ export const ProtocolConstants = {
 } as const;
 
 // ============================================================================
-// PROTOCOL LIMITS (Packet-Related)
+// PROTOCOL LIMITS (DEPRECATED)
 // ============================================================================
+// @deprecated Use PacketLimits and HardwareLimits instead.
+// This wrapper is kept for backward compatibility during Phase 1 only.
+// Will be removed in the next protocol version (v1.1+).
 // Constraints on packet structure - inherent to protocol format
 // These do not change with hardware variations
 export const ProtocolLimits = {
@@ -60,91 +63,22 @@ export const PacketLimits = {
 // PROTOCOL FEATURE FLAGS (BITMASK VALUES)
 // ============================================================================
 // Capabilities that firmware may or may not support
-// Firmware reports these in GET_CAPABILITIES response as a bitmask
-// Example: firmware returns 0x003F means features 0, 1, 2, 3, 4, 5 are present
-// Daemon can decode with: if (capabilities & 0x0001) { ... }
+// Firmware reports these in GET_CAPABILITIES response as a single bitmask
+// Example: firmware returns 0x000D (binary 1101) means features 0, 2, 3 are present
+// Daemon decodes with bitwise AND: if (capabilities & FeatureFlag.TEMPERATURE_SENSOR) { ... }
 //
-// Each feature is represented as a power of 2 (0x0001, 0x0002, 0x0004, etc.)
-// Allows firmware to return a single bitmask combining multiple features
-export const ProtocolFeatureFlag = {
-  PWM_FAN_CONTROL: "pwm_fan_control",
-  RGB_LED: "rgb_led",
-  TEMPERATURE_SENSOR: "temperature_sensor",
-  EVENT_LOG: "event_log",
-  CONFIGURATION_PERSISTENCE: "configuration_persistence",
-  REAL_TIME_CLOCK: "real_time_clock",
-  FIRMWARE_UPDATE: "firmware_update",
-  NETWORK_INTERFACE: "network_interface",
-} as const;
-
-// Bitmask values for protocol layer communication
-export const FeatureFlag = {
-  PWM_FAN_CONTROL: 0x0001,
-  RGB_LED: 0x0002,
-  TEMPERATURE_SENSOR: 0x0004,
-  EVENT_LOG: 0x0008,
-  CONFIGURATION_PERSISTENCE: 0x0010,
-  REAL_TIME_CLOCK: 0x0020,
-  FIRMWARE_UPDATE: 0x0040,
-  NETWORK_INTERFACE: 0x0080,
-} as const;
-
-export const ProtocolFeatures = {
-  // Minimum features required for MVP (0x001F = 0b00011111)
-  CORE: [
-    ProtocolFeatureFlag.PWM_FAN_CONTROL,
-    ProtocolFeatureFlag.RGB_LED,
-    ProtocolFeatureFlag.TEMPERATURE_SENSOR,
-    ProtocolFeatureFlag.EVENT_LOG,
-    ProtocolFeatureFlag.CONFIGURATION_PERSISTENCE,
-  ] as const,
-  // All known features
-  EXTENDED: [
-    ProtocolFeatureFlag.PWM_FAN_CONTROL,
-    ProtocolFeatureFlag.RGB_LED,
-    ProtocolFeatureFlag.TEMPERATURE_SENSOR,
-    ProtocolFeatureFlag.EVENT_LOG,
-    ProtocolFeatureFlag.CONFIGURATION_PERSISTENCE,
-    ProtocolFeatureFlag.REAL_TIME_CLOCK,
-    ProtocolFeatureFlag.FIRMWARE_UPDATE,
-    ProtocolFeatureFlag.NETWORK_INTERFACE,
-  ] as const,
-} as const;
-
-export const FeatureSet = {
-  // Minimum features required for MVP (0x001F = 0b00011111)
-  CORE: FeatureFlag.PWM_FAN_CONTROL |
-        FeatureFlag.RGB_LED |
-        FeatureFlag.TEMPERATURE_SENSOR |
-        FeatureFlag.EVENT_LOG |
-        FeatureFlag.CONFIGURATION_PERSISTENCE,
-  // All known features
-  ALL: FeatureFlag.PWM_FAN_CONTROL |
-       FeatureFlag.RGB_LED |
-       FeatureFlag.TEMPERATURE_SENSOR |
-       FeatureFlag.EVENT_LOG |
-       FeatureFlag.CONFIGURATION_PERSISTENCE |
-       FeatureFlag.REAL_TIME_CLOCK |
-       FeatureFlag.FIRMWARE_UPDATE |
-       FeatureFlag.NETWORK_INTERFACE,
-} as const;
-
-// ============================================================================
-// PROTOCOL TIMING
-// ============================================================================
-// Timeout and retry values for command execution
-// These are daemon policy values (may be tuned for reliability)
-// Defined in shared for reference; daemon uses these to configure retry logic
-export const ProtocolTiming = {
-  AckTimeout: 100,           // Firmware must acknowledge within 100ms
-  ResponseTimeout: 500,      // Firmware must respond within 500ms
-  CommandTimeout: 1000,      // Total timeout per command (with retries)
-  RetryBaseDelay: 0,         // Retry immediately (no initial backoff)
-  RetryDelayIncrement: 100,  // Add 100ms between retry attempts
-  MaxRetryAttempts: 3,       // Up to 3 total attempts (original + 2 retries)
-  ReconnectInitialDelay: 1000,  // First reconnect after 1 second
-  ReconnectMaxDelay: 30000,     // Cap reconnect delay at 30 seconds
-} as const;
+// Each feature is represented as a power of 2 (0x0001, 0x0002, 0x0004, 0x0008, etc.)
+// Firmware can combine multiple features: 0x0001 | 0x0004 | 0x0008 = 0x000D
+export enum FeatureFlag {
+  PWM_FAN_CONTROL = 0x0001,
+  RGB_LED = 0x0002,
+  TEMPERATURE_SENSOR = 0x0004,
+  EVENT_LOG = 0x0008,
+  CONFIGURATION_PERSISTENCE = 0x0010,
+  REAL_TIME_CLOCK = 0x0020,
+  FIRMWARE_UPDATE = 0x0040,
+  NETWORK_INTERFACE = 0x0080,
+}
 
 // ============================================================================
 // RESPONSE CODE BITMASKS
