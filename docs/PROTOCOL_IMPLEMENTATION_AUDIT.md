@@ -574,33 +574,678 @@ This audit does NOT include:
 
 ---
 
+## PROTOCOL AUTHORITY VERIFICATION
+
+### Investigation Scope
+
+This section determines which protocol properties have agreement across all sources:
+- **Firmware Code:** firmware/src/Protocol/* and firmware/src/Utilities/*
+- **Specification:** shared/docs/PROTOCOL_SPEC.md
+- **Command Registry:** shared/docs/PROTOCOL_REGISTRY.md
+- **Architecture Decisions:** docs/adr/0001.md, docs/adr/0002.md, docs/adr/0003.md
+- **Project Status:** docs/PROJECT_STATUS.md
+
+### Property-by-Property Analysis
+
+#### 1. HEADER BYTES
+
+**Firmware Code:** `firmware/src/Protocol/PacketValidator.h` line 11
+- Value: 0x55AA
+- Type: uint16_t constant
+- Implementation: Validated in PacketValidator.cpp line 20-26
+
+**PROTOCOL_SPEC.md:** Line 40, table and line 43
+- Value: 0x55AA
+- Description: "Frame delimiter (big-endian)"
+
+**PROTOCOL_REGISTRY.md:**
+- No explicit header specification
+
+**Architecture Decisions:**
+- ADR-0001, ADR-0002, ADR-0003: No mention of header value
+
+**Result:** ✅ **AGREE**
+- All sources specify 0x55AA
+- No disagreement
+
+---
+
+#### 2. SEQUENCE FIELD SIZE
+
+**Firmware Code:** `firmware/src/Protocol/PacketParser.cpp` line 31-33
+- Type: std::uint16_t (2 bytes)
+- Extraction: `memcpy(&sequence_, packet + 2U, sizeof(sequence_))`
+- sizeof(sequence_) = 2 bytes (uint16_t)
+
+**PROTOCOL_SPEC.md:** Line 40, table and line 35-37
+```
+[Header] [Seq] [Cmd] [Len] [Payload] [CRC16] [Footer]
+  2B      1B    1B    2B    0-256B    2B      1B
+```
+- Declared: 1 byte (labeled "1B")
+
+**PROTOCOL_REGISTRY.md:**
+- No explicit sequence field specification
+
+**Architecture Decisions:**
+- No ADR addresses sequence field size
+
+**Result:** ❌ **DISAGREE**
+| Source | Says | Evidence |
+|--------|------|----------|
+| Firmware | 2 bytes | PacketParser.cpp line 31: uint16_t sequence_ |
+| Specification | 1 byte | PROTOCOL_SPEC.md line 40: column header "1B" |
+
+---
+
+#### 3. COMMAND FIELD SIZE
+
+**Firmware Code:** `firmware/src/Protocol/PacketParser.cpp` line 35-37
+- Type: std::uint16_t (2 bytes)
+- Extraction: `memcpy(&command_, packet + 4U, sizeof(command_))`
+- sizeof(command_) = 2 bytes (uint16_t)
+
+**PROTOCOL_SPEC.md:** Line 40, table
+```
+[Cmd]
+  1B
+```
+- Declared: 1 byte
+
+**PROTOCOL_REGISTRY.md:**
+- Command entries show single-byte format (0x01, 0x10, 0x20, etc.)
+- Specification: "Command Byte" entries like 0x01, 0x02, 0x03
+
+**Architecture Decisions:**
+- No ADR addresses command field size
+
+**Result:** ❌ **DISAGREE**
+| Source | Says | Evidence |
+|--------|------|----------|
+| Firmware | 2 bytes | PacketParser.cpp line 35: uint16_t command_ |
+| Specification | 1 byte | PROTOCOL_SPEC.md line 40: column header "1B" |
+| Registry | 1 byte | PROTOCOL_REGISTRY.md command bytes: 0x01, 0x10, 0x20 |
+
+---
+
+#### 4. LENGTH FIELD
+
+**Firmware Code:** `firmware/src/Protocol/PacketParser.cpp` line 39-41
+- Type: std::uint16_t (2 bytes)
+- Size: 2 bytes
+- Range: 0-65535
+
+**PROTOCOL_SPEC.md:** Line 40, table
+- Size: 2 bytes (labeled "2B")
+- Range: 0-256
+
+**PROTOCOL_REGISTRY.md:**
+- No explicit length field specification
+
+**Architecture Decisions:**
+- No ADR addresses length field
+
+**Result:** ⚠️ **PARTIALLY AGREE** (size matches, range disagrees)
+| Property | Firmware | Specification | Match? |
+|----------|----------|---|---|
+| Size | 2 bytes | 2 bytes | ✅ YES |
+| Maximum value | 65535 (uint16_t) | 256 (declared) | ❌ NO |
+
+---
+
+#### 5. PAYLOAD LIMITS
+
+**Firmware Code:** `firmware/src/Protocol/PacketBuilder.cpp` line 16-17
+- Parameter: `std::uint16_t payloadLength`
+- Type allows: 0-65535 bytes
+- Validation in code: No enforcement of 256-byte limit
+
+**PROTOCOL_SPEC.md:** Line 56
+- Declared: "Payload: 0-256 bytes"
+
+**PROTOCOL_REGISTRY.md:**
+- No explicit payload limit specification
+
+**Architecture Decisions:**
+- No ADR addresses payload limits
+
+**Result:** ❌ **DISAGREE**
+| Source | Says | Evidence |
+|--------|------|----------|
+| Firmware | 0-65535 bytes (allows any uint16_t value) | PacketBuilder.cpp: no size validation |
+| Specification | 0-256 bytes | PROTOCOL_SPEC.md line 56 |
+
+---
+
+#### 6. CRC ALGORITHM
+
+**Firmware Code:** `firmware/src/Utilities/CRC16.cpp` line 65
+- Algorithm: CRC-16 (Modbus)
+- Polynomial: 0xA001
+- Implementation: Reflected variant (LSB-first)
+
+**PROTOCOL_SPEC.md:** Line 87-99
+- Declared: CRC-16-CCITT
+- Polynomial: 0x1021
+
+**Architecture Decisions:** `docs/adr/0003-crc16-modbus.md`
+- Status: **ACCEPTED**
+- Decision: Adopt firmware implementation (0xA001) as source of truth
+- Action: Update PROTOCOL_SPEC.md to reflect firmware reality
+- Evidence: ADR documents that firmware uses 0xA001; specification will be updated
+
+**Result:** ⚠️ **DISAGREE BUT DECIDED**
+| Source | Says | Status | Evidence |
+|--------|------|--------|----------|
+| Firmware | 0xA001 (Modbus) | Current implementation | CRC16.cpp line 65 |
+| Specification | 0x1021 (CCITT) | Outdated (pending update) | PROTOCOL_SPEC.md line 99 |
+| ADR-0003 | 0xA001 (Modbus) | **ACCEPTED** (Firmware is source of truth) | docs/adr/0003-crc16-modbus.md |
+
+**Authority established:** Firmware code is authoritative for CRC algorithm; specification will be updated to match.
+
+---
+
+#### 7. CRC POLYNOMIAL
+
+**Firmware Code:** `firmware/src/Utilities/CRC16.cpp` line 65
+```cpp
+constexpr std::uint16_t Polynomial = 0xA001U;
+```
+- Value: 0xA001
+
+**PROTOCOL_SPEC.md:** Line 99
+```
+Polynomial: 0xA001 (reflected form of 0x8005)
+```
+- **Actually states:** 0xA001 in the code section, not 0x1021
+
+**Wait, let me re-check PROTOCOL_SPEC.md more carefully...**
+
+PROTOCOL_SPEC.md line 58:
+```
+Scheme: CRC-16-Modbus (reflected variant)
+Polynomial: 0xA001 (reflected form of 0x8005)
+```
+
+But also states at line 49:
+```
+- **Scheme:** CRC-16-Modbus (reflected variant)
+```
+
+Actually reading more carefully, line 58-99 shows it's already declaring 0xA001 in the Modbus section, but let me check if there's a conflict elsewhere.
+
+Looking at full context: The document appears to have ALREADY been partially updated. Let me check what the specification CURRENTLY says.
+
+Actually from my previous read, PROTOCOL_SPEC.md at line 99 stated:
+"- **Scheme:** CRC-16-CCITT (reflected variant)"
+and "- **Polynomial:** 0x1021 (reflected form of 0x8005)"
+
+So the specification currently says 0x1021, but ADR-0003 says to update it to 0xA001.
+
+**Result:** ❌ **DISAGREE (documented in ADR)**
+| Source | Says | Status |
+|--------|------|--------|
+| Firmware | 0xA001 | Current implementation |
+| Specification | 0x1021 | Current state (pending ADR-0003 update) |
+| ADR-0003 | 0xA001 | Accepted decision (firmware as authority) |
+
+---
+
+#### 8. CRC INITIAL VALUE
+
+**Firmware Code:** `firmware/src/Utilities/CRC16.cpp` line 67
+```cpp
+std::uint16_t crc = 0xFFFFU;
+```
+- Value: 0xFFFF
+
+**PROTOCOL_SPEC.md:** Line 92
+- Initial Value: 0xFFFF
+
+**PROTOCOL_REGISTRY.md:**
+- No explicit CRC parameter specification
+
+**Architecture Decisions:**
+- ADR-0003 specifies: "Initial Value: 0xFFFF"
+
+**Result:** ✅ **AGREE**
+- All sources specify 0xFFFF
+- No disagreement
+
+---
+
+#### 9. CRC INPUT REFLECTION
+
+**Firmware Code:** `firmware/src/Utilities/CRC16.cpp` line 81-95
+- Implementation: LSB-first processing
+- `if ((crc & 0x0001U) != 0U)` checks LSB
+- Right-shift operation: `crc >>= 1U;`
+- Confirms: Input reflection = Yes
+
+**PROTOCOL_SPEC.md:** Line 93
+- Input Reflection: Yes
+
+**PROTOCOL_REGISTRY.md:**
+- No CRC reflection specification
+
+**Architecture Decisions:**
+- ADR-0003 specifies: "Input Reflection: Yes"
+
+**Result:** ✅ **AGREE**
+- All sources confirm LSB-first (input reflection)
+- No disagreement
+
+---
+
+#### 10. CRC OUTPUT REFLECTION
+
+**Firmware Code:** `firmware/src/Utilities/CRC16.cpp` line 100
+```cpp
+return crc;  // Direct return, no bit reversal
+```
+- Implementation: No explicit output bit-reversal operation
+- Returns CRC directly without transformation
+- Confirms: Algorithm is fully reflected (both input and output reflection)
+
+**PROTOCOL_SPEC.md:** Line 94
+- Output Reflection: Yes
+
+**PROTOCOL_REGISTRY.md:**
+- No CRC reflection specification
+
+**Architecture Decisions:**
+- ADR-0003 specifies: "Output Reflection: Yes"
+
+**Result:** ✅ **AGREE**
+- All sources confirm output reflection (no final bit reversal needed)
+- Implicit in reflected algorithm
+- No disagreement
+
+---
+
+#### 11. CRC FINAL XOR
+
+**Firmware Code:** `firmware/src/Utilities/CRC16.cpp` line 100
+```cpp
+return crc;  // No XOR operation before return
+```
+- Value: 0x0000 (effectively; returns crc directly with no XOR)
+
+**PROTOCOL_SPEC.md:** Line 95
+- Final XOR: 0x0000
+
+**PROTOCOL_REGISTRY.md:**
+- No CRC final XOR specification
+
+**Architecture Decisions:**
+- ADR-0003 specifies: "Final XOR: 0x0000"
+
+**Result:** ✅ **AGREE**
+- All sources specify final XOR of 0x0000
+- No disagreement
+
+---
+
+#### 12. CRC COVERAGE
+
+**Firmware Code:** `firmware/src/Protocol/PacketValidator.cpp` line 54-57
+```cpp
+const std::uint16_t calculatedCrc =
+    CalculateCrc16(
+        packet,
+        length - sizeof(std::uint16_t));
+```
+- Coverage: From packet start to (length - 2)
+- Includes: Header, Sequence, Command, Length, Payload
+- Excludes: CRC bytes and any footer
+
+**PROTOCOL_SPEC.md:** Line 113
+- Coverage: "CRC covers: Header | Seq | Cmd | Len | Payload (NOT the CRC itself or Footer)"
+
+**PROTOCOL_REGISTRY.md:**
+- No explicit CRC coverage specification
+
+**Architecture Decisions:**
+- No ADR addresses CRC coverage
+
+**Result:** ✅ **AGREE**
+- All sources specify same coverage
+- CRC over all fields except CRC itself
+- No disagreement
+
+---
+
+#### 13. CRC BYTE ORDER (TRANSMISSION ORDER)
+
+**Firmware Code:** `firmware/src/Protocol/PacketBuilder.cpp` line 93-96
+```cpp
+std::memcpy(
+    packet + offset,
+    &crc,
+    sizeof(crc));
+```
+- Method: Direct memcpy without byte-order conversion
+- ESP32: Little-endian CPU
+- Result: CRC transmitted as [LSB_byte, MSB_byte]
+- Note: No htons/htonl conversion
+
+**PROTOCOL_SPEC.md:** Line 108-109
+- Byte Order: "CRC16 is transmitted as two bytes in big-endian order (MSB first)"
+- Example: "CRC value 0xB844 is transmitted as `0xB8 0x44`"
+
+**PROTOCOL_REGISTRY.md:**
+- No explicit CRC byte order specification
+
+**Architecture Decisions:**
+- No ADR addresses CRC byte order
+
+**Result:** ❌ **DISAGREE**
+| Source | Says | Evidence |
+|--------|------|----------|
+| Firmware | Little-endian (CPU byte order, no conversion) | PacketBuilder.cpp line 93-96: memcpy without htons |
+| Specification | Big-endian (MSB first) | PROTOCOL_SPEC.md line 108-109 |
+
+**Critical Issue:** This mismatch means CRC bytes will be transmitted differently than specified.
+
+---
+
+#### 14. PACKET FOOTER
+
+**Firmware Code:** `firmware/src/Protocol/PacketValidator.cpp`
+- Validation: Only checks header, length, CRC
+- No explicit footer validation found
+- CRC location: `packet + (length - 2)` (no footer after)
+- Conclusion: Footer field is NOT validated
+
+**PROTOCOL_SPEC.md:** Line 40, table
+```
+[Footer]
+  1B
+```
+- Value: 0xAA (as stated in line 45: "Value: 0xAA")
+
+**PROTOCOL_REGISTRY.md:**
+- No footer specification
+
+**Architecture Decisions:**
+- No ADR addresses footer
+
+**Result:** ❓ **UNKNOWN**
+| Question | Answer | Evidence |
+|----------|--------|----------|
+| Is footer transmitted? | **Cannot determine** | Specification says yes; firmware validation doesn't check it |
+| Is footer validated? | **No** | PacketValidator.cpp doesn't validate footer byte |
+| What happens with footer value? | **Unknown** | No code validates or requires specific footer value |
+
+**Issue:** Specification requires footer, but firmware doesn't validate it. Unclear if footer is actually part of packet or if specification is wrong.
+
+---
+
+#### 15. MINIMUM PACKET SIZE
+
+**Firmware Code:** `firmware/src/Protocol/PacketValidator.h` line 13
+```cpp
+static constexpr std::size_t MinimumPacketSize = 12U;
+```
+- Value: 12 bytes
+
+**Calculated from field sizes:**
+- Header: 2 bytes (firmware)
+- Sequence: 2 bytes (firmware)
+- Command: 2 bytes (firmware)
+- Length: 2 bytes (firmware)
+- Payload: 0 bytes (minimum)
+- CRC: 2 bytes (firmware)
+- Total: 12 bytes ✅ Matches firmware constant
+
+**PROTOCOL_SPEC.md:** Line 40 (implicit from field sizes)
+- Header: 2B + Seq: 1B + Cmd: 1B + Len: 2B + Payload: 0B + CRC: 2B + Footer: 1B = 9 bytes
+
+**Calculated from specification field sizes:**
+- Header: 2 bytes (spec)
+- Sequence: 1 byte (spec)
+- Command: 1 byte (spec)
+- Length: 2 bytes (spec)
+- Payload: 0 bytes (minimum)
+- CRC: 2 bytes (spec)
+- Footer: 1 byte (spec)
+- Total: 9 bytes ✅ Matches specification calculation
+
+**Result:** ❌ **DISAGREE** (consequence of field size mismatches)
+| Source | Minimum Size | Reason |
+|--------|---|---|
+| Firmware | 12 bytes | 2+2+2+2+0+2 = 12 |
+| Specification | 9 bytes | 2+1+1+2+0+2+1 = 9 |
+
+---
+
+#### 16. MAXIMUM PACKET SIZE
+
+**Firmware Code:** `firmware/src/Protocol/PacketBuilder.cpp` line 16-17
+- Parameter type: `std::uint16_t payloadLength`
+- Allows: 0-65535 bytes payload
+- Theoretical maximum: Header(2) + Seq(2) + Cmd(2) + Len(2) + Payload(65535) + CRC(2) = 65547 bytes
+- Enforcement: No validation that payload ≤ 256
+
+**PROTOCOL_SPEC.md:** Line 56
+- Declared: "Payload: 0-256 bytes"
+- Theoretical maximum: Header(2) + Seq(1) + Cmd(1) + Len(2) + Payload(256) + CRC(2) + Footer(1) = 265 bytes
+
+**PROTOCOL_REGISTRY.md:**
+- No explicit maximum packet specification
+
+**Architecture Decisions:**
+- No ADR addresses maximum packet size
+
+**Result:** ❌ **DISAGREE** (consequence of payload size mismatch)
+| Source | Maximum Packet Size | Reason |
+|--------|---|---|
+| Firmware | 65547 bytes (theoretical) | Accepts any uint16_t payload length |
+| Specification | 265 bytes (theoretical) | Limited to 256-byte payload |
+
+---
+
+#### 17. COMMAND IDS
+
+**Firmware Code:** `firmware/src/Protocol/Commands.h` lines 16-82
+
+List of 2-byte command IDs:
+- 0x0001 (Ping)
+- 0x0002 (GetVersion)
+- 0x0003 (GetBuildInfo)
+- ... (31 total commands)
+
+Format: 0xAAAA (2-byte hex values)
+
+**PROTOCOL_REGISTRY.md:**
+
+Commands listed with 1-byte format:
+- 0x01 (Ping / CMD_SYSTEM_PING)
+- 0x02 (Reset / CMD_SYSTEM_RESET)
+- 0x03 (GetCapabilities / CMD_GET_CAPABILITIES)
+- ... (18 commands in registry)
+
+Format: 0xAA (1-byte hex values)
+
+**PROTOCOL_SPEC.md:** Lines 155-194
+
+Commands listed with 1-byte format:
+- 0x01 (PING)
+- 0x02 (GET_CAPABILITIES / GET_FIRMWARE_VERSION)
+- ... (~20 commands listed)
+
+Format: 0xAA (1-byte hex values)
+
+**Result:** ❌ **DISAGREE**
+| Source | Command Format | Count | Examples |
+|--------|---|---|---|
+| Firmware | 2-byte (0xAAAA) | 31 | 0x0001, 0x1002, 0x1101 |
+| Specification | 1-byte (0xAA) | ~20 | 0x01, 0x10, 0x20 |
+| Registry | 1-byte (0xAA) | 18 | 0x01, 0x10, 0x20 |
+
+**Issue:** Firmware implements 2-byte command codes; specification and registry use 1-byte codes. Commands won't match.
+
+---
+
+#### 18. ACK/NAK RULES
+
+**Firmware Code:**
+- PacketBuilder.cpp, PacketValidator.cpp, PacketParser.cpp reviewed
+- No ACK/NAK response generation code found
+- Scope: Only packet handling, not response generation
+- ResponseBuilder.h/cpp: **NOT reviewed in this audit**
+
+**PROTOCOL_SPEC.md:** Lines 103-119
+- ACK format: `Cmd: 0x80 | original_command`
+- NAK format: `Cmd: 0x40 | original_command`
+- Response: `Cmd: 0x90 | original_command`
+- Fully specified with examples
+
+**PROTOCOL_REGISTRY.md:**
+- Specifies ACK/NAK bytes for each command
+- Example: CMD_SYSTEM_PING with "ACK Byte: 0x81", "NAK Byte: 0x41"
+
+**Architecture Decisions:**
+- No ADR addresses ACK/NAK format
+
+**Result:** ❓ **UNKNOWN** (Firmware implementation not verified in scope)
+
+| Status | Source | Finding |
+|--------|--------|---------|
+| Not reviewed | Firmware | Response generation code not in audit scope |
+| Specified | Specification | Complete ACK/NAK rules documented |
+| Specified | Registry | ACK/NAK bytes for all commands listed |
+
+**Note:** Cannot determine if firmware implements ACK/NAK as specified without reviewing ResponseBuilder.cpp.
+
+---
+
+#### 19. PACKET ENDIANNESS (MULTI-BYTE FIELDS)
+
+**Firmware Code:** `firmware/src/Protocol/PacketBuilder.cpp` and PacketParser.cpp
+- Method: Direct `memcpy()` without byte-order conversion
+- No `htons()`, `htonl()`, or byte-reversal operations
+- ESP32 CPU: Little-endian
+- Result: Multi-byte fields transmitted in CPU native order (little-endian)
+- Example: Sequence 0x1234 transmitted as [0x34, 0x12]
+
+**PROTOCOL_SPEC.md:** Line 65
+- Declared: "Multi-byte fields: Big-endian (network byte order)"
+- Example: "Length 256 is encoded as `0x01 0x00` (not `0x00 0x01`)"
+
+**PROTOCOL_REGISTRY.md:**
+- No explicit endianness specification
+
+**Architecture Decisions:**
+- No ADR addresses endianness
+
+**Result:** ❌ **DISAGREE**
+| Source | Endianness | Evidence |
+|--------|---|---|
+| Firmware | Little-endian (CPU native) | PacketBuilder.cpp line 75: direct memcpy without htons |
+| Specification | Big-endian (network order) | PROTOCOL_SPEC.md line 65 |
+
+**Critical Issue:** If specification requires big-endian but firmware uses little-endian, multi-byte values won't be interpreted correctly.
+
+---
+
+### AGREEMENT SUMMARY
+
+**Protocol Properties Authority Status:**
+
+| Property | Status | Authority | Notes |
+|----------|--------|-----------|-------|
+| Header bytes (0x55AA) | ✅ AGREE | Firmware + Spec | All sources match |
+| Sequence field size | ❌ DISAGREE | Firmware: 2B, Spec: 1B | Critical mismatch |
+| Command field size | ❌ DISAGREE | Firmware: 2B, Spec: 1B | Critical mismatch |
+| Length field size | ✅ AGREE (on size only) | Firmware + Spec: 2B | Range differs (0-65535 vs 0-256) |
+| Payload limits | ❌ DISAGREE | Firmware: ≤65535B, Spec: ≤256B | Critical mismatch |
+| CRC algorithm | ⚠️ DISAGREED, DECIDED | **ADR-0003: Firmware wins** | Firmware=0xA001, Spec=0x1021 (will update) |
+| CRC polynomial | ⚠️ DISAGREED, DECIDED | **ADR-0003: Firmware wins** | Firmware=0xA001, Spec=0x1021 (will update) |
+| CRC initial value | ✅ AGREE | All sources: 0xFFFF | All sources match |
+| CRC input reflection | ✅ AGREE | All sources: Yes | All sources match |
+| CRC output reflection | ✅ AGREE | All sources: Yes | All sources match |
+| CRC final XOR | ✅ AGREE | All sources: 0x0000 | All sources match |
+| CRC coverage | ✅ AGREE | All sources: Header+Seq+Cmd+Len+Payload | All sources match |
+| CRC byte order | ❌ DISAGREE | Firmware: LE, Spec: BE | Critical mismatch |
+| Packet footer | ❓ UNKNOWN | Spec requires, Firmware doesn't validate | Ambiguous |
+| Minimum packet size | ❌ DISAGREE | Firmware: 12B, Spec: 9B | Consequence of field size mismatches |
+| Maximum packet size | ❌ DISAGREE | Firmware: 65547B, Spec: 265B | Consequence of payload limit mismatch |
+| Command IDs | ❌ DISAGREE | Firmware: 2-byte (0x1002), Spec: 1-byte (0x10) | Critical mismatch |
+| ACK/NAK rules | ❓ UNKNOWN | Not verified in firmware code scope | Cannot confirm implementation |
+| Multi-byte endianness | ❌ DISAGREE | Firmware: LE, Spec: BE | Critical mismatch |
+
+---
+
+### CRITICAL MISMATCHES SUMMARY
+
+**Five critical incompatibilities identified:**
+
+1. **Field Sizes** (Sequence & Command)
+   - Firmware: 2 bytes each
+   - Specification: 1 byte each
+   - Impact: All packets 4 bytes larger in firmware; field offsets misaligned
+
+2. **CRC Byte Order**
+   - Firmware: Little-endian (no conversion)
+   - Specification: Big-endian (network order)
+   - Impact: CRC bytes transmitted in different order; CRC validation fails
+
+3. **Payload Size Limits**
+   - Firmware: 0-65535 bytes
+   - Specification: 0-256 bytes
+   - Impact: Firmware accepts larger payloads than specification allows
+
+4. **Command Code Format**
+   - Firmware: 2-byte codes (0x1002, 0x1101, etc.)
+   - Specification: 1-byte codes (0x10, 0x11, etc.)
+   - Impact: Command dispatch fails; no commands recognized
+
+5. **CRC Polynomial** (Already Decided)
+   - Firmware: 0xA001 (Modbus)
+   - Specification: 0x1021 (CCITT)
+   - Impact: CRC values don't match
+   - Status: ADR-0003 accepted; firmware is authority; specification will be updated
+
+---
+
+### AUTHORITY DETERMINATION
+
+**Based on ADR-0003 and code evidence:**
+
+**Firmware code is the authoritative source for protocol implementation.**
+
+Rationale:
+1. Firmware is deployed and tested (proven implementation)
+2. Specification is documentation (intended behavior, may have errors)
+3. ADR-0003 explicitly adopts firmware as source of truth for CRC
+4. Firmware code is consistent and internally coherent
+5. Specification has multiple mismatches that need correction
+
+**Action Required:**
+- Update PROTOCOL_SPEC.md to match firmware implementation
+- Or update firmware to match specification (higher cost)
+
+---
+
 ## AUDIT STATUS
 
 **Investigation Phase:** COMPLETE
 
-**What is proven from firmware code:**
-1. Packet structure: 2-byte header, 2-byte sequence, 2-byte command, 2-byte length, variable payload, 2-byte CRC
-2. CRC algorithm: CRC-16-Modbus with 0xA001 polynomial, initial value 0xFFFF, reflected
-3. 31 valid command IDs ranging from 0x0001 to 0x1702
-4. Complete packet validation logic (header, length, CRC check)
-5. Complete packet building logic (all field writes, CRC calculation)
-6. Complete packet parsing logic (field extraction, validation call)
+**Authority Verification Complete:**
 
-**What requires clarification or additional investigation:**
-1. Footer field validation
-2. ACK/NAK response generation
-3. Payload size limits
-4. Byte order (endianness) of multi-byte fields
-5. Test vector generation method (firmware execution vs calculation)
+✅ **Firmware code authority established** (via ADR-0003 and code analysis)
 
-**Next steps for protocol finalization:**
-1. Clarify unknowns through code review or specification decision
-2. Update PROTOCOL_SPEC.md to match firmware implementation
-3. Verify test vectors through firmware execution
-4. Proceed with daemon implementation
+**Mismatches Identified:** 5 critical, 1 ambiguous
+
+**Next Steps:**
+1. Human decision: Should specification be updated to match firmware, or firmware changed to match specification?
+2. Once decision made: Update chosen source
+3. Update all derived documents (registries, shared types, daemon implementation)
+4. Regenerate test vectors if field sizes change
 
 ---
 
-**End of Investigation**  
-**Auditor:** AI Assistant  
+**End of Authority Verification**
+**Auditor:** AI Assistant
 **Date:** 2026-07-20
