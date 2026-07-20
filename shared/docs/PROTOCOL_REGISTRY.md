@@ -12,7 +12,7 @@ This is the single source of truth for all firmware commands. Each command appea
 
 ## System Commands
 
-### Ping
+### PING
 
 | Property | Value |
 |----------|-------|
@@ -30,7 +30,7 @@ This is the single source of truth for all firmware commands. Each command appea
 
 ---
 
-### GetVersion
+### GET_VERSION
 
 | Property | Value |
 |----------|-------|
@@ -43,11 +43,10 @@ This is the single source of truth for all firmware commands. Each command appea
 | **Firmware Support** | v1.0+ |
 | **Protocol Version** | 1.0 |
 | **Status** | ✅ Implemented in firmware |
-| **Notes** | Original registry documented GET_CAPABILITIES at 0x03; firmware command structure differs |
 
 ---
 
-### GetBuildInfo
+### GET_BUILD_INFO
 
 | Property | Value |
 |----------|-------|
@@ -63,7 +62,7 @@ This is the single source of truth for all firmware commands. Each command appea
 
 ---
 
-### GetSystemStatus
+### GET_SYSTEM_STATUS
 
 | Property | Value |
 |----------|-------|
@@ -79,7 +78,7 @@ This is the single source of truth for all firmware commands. Each command appea
 
 ---
 
-### Restart
+### RESET
 
 | Property | Value |
 |----------|-------|
@@ -99,7 +98,7 @@ This is the single source of truth for all firmware commands. Each command appea
 
 ## Relay Commands
 
-### RelayGet
+### RELAY_GET
 
 | Property | Value |
 |----------|-------|
@@ -117,7 +116,7 @@ This is the single source of truth for all firmware commands. Each command appea
 
 ---
 
-### RelaySet
+### RELAY_SET
 
 | Property | Value |
 |----------|-------|
@@ -135,7 +134,7 @@ This is the single source of truth for all firmware commands. Each command appea
 
 ---
 
-### RelayToggle
+### RELAY_TOGGLE
 
 | Property | Value |
 |----------|-------|
@@ -154,7 +153,7 @@ This is the single source of truth for all firmware commands. Each command appea
 
 ## Fan Commands
 
-### FanGet
+### FAN_GET
 
 | Property | Value |
 |----------|-------|
@@ -173,7 +172,7 @@ This is the single source of truth for all firmware commands. Each command appea
 
 ---
 
-### FanSetSpeed
+### FAN_SET_SPEED
 
 | Property | Value |
 |----------|-------|
@@ -191,7 +190,7 @@ This is the single source of truth for all firmware commands. Each command appea
 
 ---
 
-### FanSetMode
+### FAN_SET_MODE
 
 | Property | Value |
 |----------|-------|
@@ -211,7 +210,7 @@ This is the single source of truth for all firmware commands. Each command appea
 
 ## Temperature Commands
 
-### TemperatureGet
+### TEMPERATURE_GET
 
 | Property | Value |
 |----------|-------|
@@ -229,7 +228,7 @@ This is the single source of truth for all firmware commands. Each command appea
 
 ---
 
-### TemperatureGetAll
+### TEMPERATURE_GET_ALL
 
 | Property | Value |
 |----------|-------|
@@ -247,7 +246,7 @@ This is the single source of truth for all firmware commands. Each command appea
 
 ## LED Commands
 
-### LedGet
+### LED_GET
 
 | Property | Value |
 |----------|-------|
@@ -263,7 +262,7 @@ This is the single source of truth for all firmware commands. Each command appea
 
 ---
 
-### LedSetColor
+### LED_SET_COLOR
 
 | Property | Value |
 |----------|-------|
@@ -281,7 +280,7 @@ This is the single source of truth for all firmware commands. Each command appea
 
 ---
 
-### LedSetMode
+### LED_SET_MODE
 
 | Property | Value |
 |----------|-------|
@@ -299,7 +298,7 @@ This is the single source of truth for all firmware commands. Each command appea
 
 ---
 
-### LedOff
+### LED_OFF
 
 | Property | Value |
 |----------|-------|
@@ -317,7 +316,7 @@ This is the single source of truth for all firmware commands. Each command appea
 
 ## Drive Commands
 
-### DriveGet
+### DRIVE_GET
 
 | Property | Value |
 |----------|-------|
@@ -333,12 +332,12 @@ This is the single source of truth for all firmware commands. Each command appea
 
 ---
 
-### DriveGetAll
+### DRIVE_GET_ALL
 
 | Property | Value |
 |----------|-------|
 | **Command ID** | 0x1402 |
-| **Purpose** | Get state of all hardware in one command |
+| **Purpose** | Get state of all drives |
 | **Request Payload** | (none) |
 | **Response Payload** | Implementation-defined (not verifiable from Commands.h) |
 | **Error Codes** | None |
@@ -351,7 +350,7 @@ This is the single source of truth for all firmware commands. Each command appea
 
 ---
 
-### DrivePowerOn
+### DRIVE_POWER_ON
 
 | Property | Value |
 |----------|-------|
@@ -367,7 +366,7 @@ This is the single source of truth for all firmware commands. Each command appea
 
 ---
 
-### DrivePowerOff
+### DRIVE_POWER_OFF
 
 | Property | Value |
 |----------|-------|
@@ -385,7 +384,7 @@ This is the single source of truth for all firmware commands. Each command appea
 
 ## Configuration Commands
 
-### ConfigurationLoad
+### CONFIG_LOAD
 
 | Property | Value |
 |----------|-------|
@@ -403,7 +402,7 @@ This is the single source of truth for all firmware commands. Each command appea
 
 ---
 
-### ConfigurationSave
+### CONFIG_SAVE
 
 | Property | Value |
 |----------|-------|
@@ -421,7 +420,7 @@ This is the single source of truth for all firmware commands. Each command appea
 
 ---
 
-### ConfigurationReset
+### CONFIG_RESET
 
 | Property | Value |
 |----------|-------|
@@ -439,7 +438,7 @@ This is the single source of truth for all firmware commands. Each command appea
 
 ## Statistics Commands
 
-### StatisticsGet
+### STATISTICS_GET
 
 | Property | Value |
 |----------|-------|
@@ -455,7 +454,7 @@ This is the single source of truth for all firmware commands. Each command appea
 
 ---
 
-### StatisticsReset
+### STATISTICS_RESET
 
 | Property | Value |
 |----------|-------|
@@ -473,7 +472,7 @@ This is the single source of truth for all firmware commands. Each command appea
 
 ## Event Commands
 
-### EventRead
+### EVENT_READ
 
 | Property | Value |
 |----------|-------|
@@ -490,7 +489,7 @@ This is the single source of truth for all firmware commands. Each command appea
 
 ---
 
-### EventClear
+### EVENT_CLEAR
 
 | Property | Value |
 |----------|-------|
@@ -506,38 +505,53 @@ This is the single source of truth for all firmware commands. Each command appea
 
 ---
 
+## Commands Present in Previous Registry but Not Found in Commands.h
+
+The following commands appeared in the original registry but are not listed in `firmware/src/Protocol/Commands.h`:
+
+- CMD_GET_ALL_STATUS (previously 0x20)
+- CMD_TEMP_READ (previously 0x40)
+- CMD_LED_SET_BRIGHTNESS (previously 0x51)
+- CMD_CONFIG_BEGIN (previously 0x62)
+- CMD_CONFIG_COMMIT (previously 0x63)
+- CMD_GET_EVENT_LOG (previously 0x70)
+
+**Note:** Firmware Commands.h does not provide sufficient evidence to determine whether these commands are deprecated, internal, obsolete, or implemented elsewhere. Only the commands explicitly listed in Commands.h are confirmed as implemented.
+
+---
+
 ## Command Summary Table
 
 | Command | ID | Purpose | Status |
 |---------|-----|---------|--------|
-| Ping | 0x0001 | Connection verify | ✅ |
-| GetVersion | 0x0002 | Firmware version | ✅ |
-| GetBuildInfo | 0x0003 | Build info | ✅ |
-| GetSystemStatus | 0x0004 | System status | ✅ |
-| Restart | 0x0005 | Soft restart | ✅ |
-| RelayGet | 0x1001 | Read relay state | ✅ |
-| RelaySet | 0x1002 | Set relay state | ✅ |
-| RelayToggle | 0x1003 | Toggle relay | ✅ |
-| FanGet | 0x1101 | Read fan speed | ✅ |
-| FanSetSpeed | 0x1102 | Set fan speed | ✅ |
-| FanSetMode | 0x1103 | Set fan mode | ✅ |
-| TemperatureGet | 0x1201 | Read temperature | ✅ |
-| TemperatureGetAll | 0x1202 | Read all temperatures | ✅ |
-| LedGet | 0x1301 | Read LED state | ✅ |
-| LedSetColor | 0x1302 | Set LED color | ✅ |
-| LedSetMode | 0x1303 | Set LED mode | ✅ |
-| LedOff | 0x1304 | Turn LED off | ✅ |
-| DriveGet | 0x1401 | Read drive info | ✅ |
-| DriveGetAll | 0x1402 | Read all drives | ✅ |
-| DrivePowerOn | 0x1403 | Power on drive | ✅ |
-| DrivePowerOff | 0x1404 | Power off drive | ✅ |
-| ConfigurationLoad | 0x1501 | Load config | ✅ |
-| ConfigurationSave | 0x1502 | Save config | ✅ |
-| ConfigurationReset | 0x1503 | Reset config | ✅ |
-| StatisticsGet | 0x1601 | Read statistics | ✅ |
-| StatisticsReset | 0x1602 | Reset statistics | ✅ |
-| EventRead | 0x1701 | Read events | ✅ |
-| EventClear | 0x1702 | Clear events | ✅ |
+| PING | 0x0001 | Connection verify | ✅ |
+| GET_VERSION | 0x0002 | Firmware version | ✅ |
+| GET_BUILD_INFO | 0x0003 | Build info | ✅ |
+| GET_SYSTEM_STATUS | 0x0004 | System status | ✅ |
+| RESET | 0x0005 | Soft restart | ✅ |
+| RELAY_GET | 0x1001 | Read relay state | ✅ |
+| RELAY_SET | 0x1002 | Set relay state | ✅ |
+| RELAY_TOGGLE | 0x1003 | Toggle relay | ✅ |
+| FAN_GET | 0x1101 | Read fan speed | ✅ |
+| FAN_SET_SPEED | 0x1102 | Set fan speed | ✅ |
+| FAN_SET_MODE | 0x1103 | Set fan mode | ✅ |
+| TEMPERATURE_GET | 0x1201 | Read temperature | ✅ |
+| TEMPERATURE_GET_ALL | 0x1202 | Read all temperatures | ✅ |
+| LED_GET | 0x1301 | Read LED state | ✅ |
+| LED_SET_COLOR | 0x1302 | Set LED color | ✅ |
+| LED_SET_MODE | 0x1303 | Set LED mode | ✅ |
+| LED_OFF | 0x1304 | Turn LED off | ✅ |
+| DRIVE_GET | 0x1401 | Read drive info | ✅ |
+| DRIVE_GET_ALL | 0x1402 | Read all drives | ✅ |
+| DRIVE_POWER_ON | 0x1403 | Power on drive | ✅ |
+| DRIVE_POWER_OFF | 0x1404 | Power off drive | ✅ |
+| CONFIG_LOAD | 0x1501 | Load config | ✅ |
+| CONFIG_SAVE | 0x1502 | Save config | ✅ |
+| CONFIG_RESET | 0x1503 | Reset config | ✅ |
+| STATISTICS_GET | 0x1601 | Read statistics | ✅ |
+| STATISTICS_RESET | 0x1602 | Reset statistics | ✅ |
+| EVENT_READ | 0x1701 | Read events | ✅ |
+| EVENT_CLEAR | 0x1702 | Clear events | ✅ |
 
 ---
 
