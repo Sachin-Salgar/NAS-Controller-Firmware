@@ -1,25 +1,24 @@
-// CRC16-CCITT implementation for NAS Controller Protocol
+// CRC16-Modbus implementation for NAS Controller Protocol
 // Protocol specification: PROTOCOL_SPEC.md
+// Firmware reference: firmware/src/Utilities/CRC16.cpp
 
-// CRC16-CCITT Algorithm Parameters
-// These values are defined in the protocol specification and must match firmware
-const CRC_POLYNOMIAL = 0x1021;
-const CRC_INITIAL_VALUE = 0xffff;
-const CRC_FINAL_XOR = 0x0000;
-
-// Bit mask for checking the most significant bit (MSB)
-const CRC_MSB_MASK = 0x8000;
+// CRC16-Modbus Algorithm Parameters
+// These values MUST match firmware exactly and are defined in PROTOCOL_SPEC.md
+const CRC_POLYNOMIAL = 0xA001;
+const CRC_INITIAL_VALUE = 0xFFFF;
 
 /**
- * Calculate CRC16-CCITT checksum for given data.
+ * Calculate CRC16-Modbus checksum for given data.
  *
- * This implementation matches the firmware CRC16-CCITT calculation exactly.
+ * This implementation matches the firmware CRC16::Calculate() exactly.
  * Algorithm:
- * - Polynomial: 0x1021
+ * - Polynomial: 0xA001 (reversed/reflected form)
  * - Initial value: 0xFFFF
  * - Final XOR: 0x0000
- * - Input reflection: No
- * - Output reflection: No
+ * - Input reflection: Yes (LSB first)
+ * - Output reflection: Yes (LSB first)
+ *
+ * The algorithm processes data LSB-first (reflected), matching the Modbus standard.
  *
  * @param data - Data to calculate CRC for
  * @param initialValue - Optional initial CRC value (defaults to 0xFFFF for new calculation)
@@ -50,21 +49,19 @@ export function crc16(
 
   let crc = initialValue;
 
-  for (let i = 0; i < data.length; i++) {
-    const byte = data[i];
+  for (let index = 0; index < data.length; index++) {
+    // XOR byte into LSB (reflected form)
+    crc ^= data[index];
 
-    // XOR byte into MSB of CRC
-    crc ^= byte << 8;
-
-    // Process 8 bits
-    for (let j = 0; j < 8; j++) {
-      // Check if MSB is set
-      if ((crc & CRC_MSB_MASK) !== 0) {
-        // Shift left and XOR with polynomial
-        crc = ((crc << 1) ^ CRC_POLYNOMIAL) & 0xffff;
+    // Process 8 bits (LSB first, reflected form)
+    for (let bit = 0; bit < 8; bit++) {
+      if ((crc & 0x0001) !== 0) {
+        // LSB is 1: shift and XOR with polynomial
+        crc >>= 1;
+        crc ^= CRC_POLYNOMIAL;
       } else {
-        // Shift left only
-        crc = (crc << 1) & 0xffff;
+        // LSB is 0: just shift
+        crc >>= 1;
       }
     }
   }

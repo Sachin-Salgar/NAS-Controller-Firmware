@@ -589,19 +589,22 @@ A task is not complete until all elements are in place and verified to match exa
 
 A protocol test vector is considered **verified** only when it is produced by:
 
-1. **Firmware execution:** The actual firmware reference implementation (or a minimal test harness compiling the exact production source files), AND
-2. **Wire capture:** The transmitted packet bytes are captured from actual USB/serial communication (not inferred from code)
+1. **Firmware execution:** The actual firmware reference implementation (or a minimal test harness compiling the exact production source files) must be executed to generate CRC values and packet outputs, AND
+2. **Captured packet bytes:** The complete transmitted packet bytes must be captured from actual USB/serial communication (not inferred from code or calculated mathematically)
 
 **Prohibited:**
 - Manual calculation of CRC values
 - Theoretical derivation of protocol behavior
 - Assumptions based on CPU architecture alone
 - Inferred byte order without packet capture
+- Generated CRC values without running firmware code
 
 **Required:**
-- Execution of actual firmware code
-- Recording of actual transmitted bytes
-- Documentation of verification method and date
+- Execution of actual firmware code (CRC16::Calculate() or equivalent)
+- Recording of actual transmitted bytes from wire capture
+- Documentation of verification method (firmware harness, capture device, date)
+- Complete packet bytes frozen in test vector JSON
+- Byte order confirmed via actual transmission, not assumption
 
 ### Why
 
