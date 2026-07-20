@@ -66,6 +66,21 @@ Then refer to component-specific docs as needed.
 
 ---
 
+## 🔒 Frozen Layers - DO NOT MODIFY
+
+These components are complete and frozen. Changes require Architecture Decision Records (ADRs).
+
+| Layer | Status | What's Locked | What Can Change |
+|-------|--------|---------------|-----------------|
+| **Documentation** | 🔒 Frozen | Reading order, hierarchy, PROJECT_RULES.md | Addition of new docs, updates for clarity |
+| **Shared Contracts** | 🔒 Frozen | Packet structure, command codes, enums | New commands (at end of ranges), backward-compatible fields |
+| **Architecture** | 🔒 Frozen | Module boundaries, layer separation, ADR-0001, ADR-0002 | Implementation details, optimization, tooling |
+| **Implementation Order** | 🔒 Frozen | Build sequence (CRC → Transport → Core → API → UI) | Effort estimates as actual work progresses |
+
+**If you need to change anything in these layers, create an ADR first.**
+
+---
+
 ## 🏗️ Architecture Status
 
 ### Design Version
