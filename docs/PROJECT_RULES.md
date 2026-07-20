@@ -342,6 +342,54 @@ If you're not hitting these, investigate. If you are, don't optimize further.
 
 ---
 
+## Rule 11: Protocol First Rule
+
+### The Rule
+
+Every protocol modification MUST follow this order:
+
+1. **PROTOCOL_SPEC.md** - Define the new command, packet structure, or error code
+2. **PROTOCOL_REGISTRY.md** - Register the command with full specification
+3. **shared/** - Add new types, constants, or enums
+4. **daemon/** - Implement encoder, decoder, controller, handler
+5. **firmware/** - Implement command handler, response generation
+6. **frontend/** - Add UI component, WebSocket binding
+
+**Never modify implementation before updating the protocol specification.**
+Documentation is the source of truth.
+
+### Why
+
+- Prevents misalignment between layers
+- Makes code reviews easier (compare code to spec)
+- Enables async development (firmware can build off spec alone)
+- Easy to catch architecture mistakes early
+- Provides reference for future contributors
+
+### Example: Adding Temperature Threshold Command
+
+```
+1. PROTOCOL_SPEC.md:
+   Define CMD_TEMP_SET_THRESHOLD packet format
+
+2. PROTOCOL_REGISTRY.md:
+   Register with command code, payload format, error codes
+
+3. shared/src/protocol.ts:
+   Add TemperatureSetThresholdRequest type
+
+4. daemon/src/core/controllers/temperature.ts:
+   Implement handler
+
+5. firmware/src/commands/temperature.cpp:
+   Implement device logic
+
+6. frontend/src/hooks/useTemperature.ts:
+   Add WebSocket binding
+```
+
+---
+
 ## Enforcing the Rules
 
 ### Code Review
@@ -374,6 +422,44 @@ Sometimes rules seem to conflict. Here's the priority:
 4. **Other rules** - Lower priority. But still important.
 
 If you think you found a conflict, ask. Don't bypass a rule.
+
+---
+
+## Rule 12: Documentation Hierarchy
+
+### Authority Order (Highest to Lowest)
+
+1. **PROTOCOL_SPEC.md** - Binary protocol definition (highest authority)
+2. **PROTOCOL_REGISTRY.md** - Command registry
+3. **PROJECT_RULES.md** - Core project principles
+4. **CODING_STANDARDS.md** - Code style and naming
+5. **IMPLEMENTATION_ORDER.md** - Build sequence
+6. **Architecture Decision Records** - Technical decisions
+7. **Implementation Code** - Actual implementation (must match docs)
+
+### What This Means
+
+- If implementation conflicts with PROTOCOL_SPEC.md, implementation is wrong
+- If code conflicts with PROJECT_RULES.md, code must be fixed
+- If code conflicts with CODING_STANDARDS.md, code must be reformatted
+- Documentation is always the source of truth
+- Never implement before documenting
+
+### Example
+
+❌ **Wrong:**
+```
+Firmware implements RELAY_SET command without updating PROTOCOL_SPEC.md
+```
+
+✅ **Right:**
+```
+1. Update PROTOCOL_SPEC.md with new command
+2. Register in PROTOCOL_REGISTRY.md
+3. Update shared/src/protocol.ts
+4. Implement in firmware
+5. Code review verifies implementation matches spec
+```
 
 ---
 

@@ -13,15 +13,26 @@ export const ProtocolConstants = {
 } as const;
 
 // ============================================================================
-// PACKET LIMITS
+// PROTOCOL LIMITS (DEPRECATED)
 // ============================================================================
+// @deprecated Use PacketLimits and HardwareLimits instead.
+// This wrapper is kept for backward compatibility during Phase 1 only.
+// Will be removed in the next protocol version (v1.1+).
 // Constraints on packet structure - inherent to protocol format
-export const PacketLimits = {
+// These do not change with hardware variations
+export const ProtocolLimits = {
   MaxPacketSize: 256,
   MaxPayloadSize: 256,
   MaxSequenceNumber: 0xff,  // 0x00-0xFF (256 values)
   MaxCommandCode: 0xff,
   MaxErrorCode: 0x0a,
+  // Hardware limits (moved here for backward compatibility)
+  // Will be split into HardwareLimits in future versions
+  MaxRelays: 16,
+  MaxFans: 8,
+  MaxLEDs: 4,
+  MaxTemperatureSensors: 8,
+  MaxDrives: 16,
 } as const;
 
 // ============================================================================
@@ -37,40 +48,37 @@ export const HardwareLimits = {
 } as const;
 
 // ============================================================================
-// PROTOCOL FEATURE FLAGS (BITMASKS)
+// PACKET LIMITS (Pure Protocol)
 // ============================================================================
-// Capabilities that firmware may or may not support
-// Firmware reports these in GET_CAPABILITIES response as a bitmask
-// Example: firmware returns 0x003F means features 0, 1, 2, 3, 4, 5 are present
-// Daemon can decode with: if (capabilities & FEATURE_PWM_FAN) { ... }
-export const FeatureFlag = {
-  PWM_FAN_CONTROL: 0x0001,
-  RGB_LED: 0x0002,
-  TEMPERATURE_SENSOR: 0x0004,
-  EVENT_LOG: 0x0008,
-  CONFIGURATION_PERSISTENCE: 0x0010,
-  REAL_TIME_CLOCK: 0x0020,
-  FIRMWARE_UPDATE: 0x0040,
-  NETWORK_INTERFACE: 0x0080,
+// Constraints on packet structure only - inherent to protocol format
+export const PacketLimits = {
+  MaxPacketSize: 256,
+  MaxPayloadSize: 256,
+  MaxSequenceNumber: 0xff,  // 0x00-0xFF (256 values)
+  MaxCommandCode: 0xff,
+  MaxErrorCode: 0x0a,
 } as const;
 
-export const FeatureSet = {
-  // Minimum features required for MVP (0x001F = 0b00011111)
-  CORE: FeatureFlag.PWM_FAN_CONTROL |
-        FeatureFlag.RGB_LED |
-        FeatureFlag.TEMPERATURE_SENSOR |
-        FeatureFlag.EVENT_LOG |
-        FeatureFlag.CONFIGURATION_PERSISTENCE,
-  // All known features
-  ALL: FeatureFlag.PWM_FAN_CONTROL |
-       FeatureFlag.RGB_LED |
-       FeatureFlag.TEMPERATURE_SENSOR |
-       FeatureFlag.EVENT_LOG |
-       FeatureFlag.CONFIGURATION_PERSISTENCE |
-       FeatureFlag.REAL_TIME_CLOCK |
-       FeatureFlag.FIRMWARE_UPDATE |
-       FeatureFlag.NETWORK_INTERFACE,
-} as const;
+// ============================================================================
+// PROTOCOL FEATURE FLAGS (BITMASK VALUES)
+// ============================================================================
+// Capabilities that firmware may or may not support
+// Firmware reports these in GET_CAPABILITIES response as a single bitmask
+// Example: firmware returns 0x000D (binary 1101) means features 0, 2, 3 are present
+// Daemon decodes with bitwise AND: if (capabilities & FeatureFlag.TEMPERATURE_SENSOR) { ... }
+//
+// Each feature is represented as a power of 2 (0x0001, 0x0002, 0x0004, 0x0008, etc.)
+// Firmware can combine multiple features: 0x0001 | 0x0004 | 0x0008 = 0x000D
+export enum FeatureFlag {
+  PWM_FAN_CONTROL = 0x0001,
+  RGB_LED = 0x0002,
+  TEMPERATURE_SENSOR = 0x0004,
+  EVENT_LOG = 0x0008,
+  CONFIGURATION_PERSISTENCE = 0x0010,
+  REAL_TIME_CLOCK = 0x0020,
+  FIRMWARE_UPDATE = 0x0040,
+  NETWORK_INTERFACE = 0x0080,
+}
 
 // ============================================================================
 // RESPONSE CODE BITMASKS

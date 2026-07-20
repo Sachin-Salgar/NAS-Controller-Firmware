@@ -3,7 +3,20 @@
 **Document Version:** 1.0
 **Purpose:** Navigation guide for all project documentation
 **Status:** Current
-**Last Updated:** 2026-07-19
+**Last Updated:** 2026-07-20
+**Project Status:** Architecture reviewed, shared package frozen, Phase 1 Task 2 (CRC16) next
+
+---
+
+## 📋 Current Project Status
+
+- ✅ **Architecture:** Complete and reviewed (frozen v1.0)
+- ✅ **Shared Package:** Frozen with protocol contracts
+- ✅ **Documentation:** Complete
+- 🔄 **Phase 1 MVP:** Protocol → Transport → Core → API → UI
+- ⏭️ **Next:** CRC16 implementation in daemon/src/core/protocol/
+
+**For new Builder AI sessions:** Read [README.md](./README.md) first, then all documents below in order.
 
 ---
 
@@ -107,6 +120,7 @@
 
 ---
 
-**Last Updated:** 2026-07-19
+**Last Updated:** 2026-07-20
 **Status:** Complete
 **Purpose:** Single source of truth for all project documentation
+**Session Info:** Updated with new rules and frozen status - July 20, 2026

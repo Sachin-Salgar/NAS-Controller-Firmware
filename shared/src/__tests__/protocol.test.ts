@@ -1,9 +1,9 @@
 import {
   ProtocolConstants,
   ProtocolLimits,
-  ProtocolTiming,
-  ProtocolFeatureFlag,
-  ProtocolFeatures,
+  PacketLimits,
+  HardwareLimits,
+  FeatureFlag,
   ResponseBit,
   CommandCode,
   ErrorCode,
@@ -250,7 +250,7 @@ describe("EventType Enumeration", () => {
 
 describe("Packet Structure Types", () => {
   test("PacketHeader interface", () => {
-    const header: PacketHeader = { magic: ProtocolInfo.Header };
+    const header: PacketHeader = { magic: ProtocolConstants.Header };
     expect(header.magic).toBe(0x55aa);
   });
 
@@ -267,7 +267,7 @@ describe("Packet Structure Types", () => {
   test("PacketFooter interface", () => {
     const footer: PacketFooter = {
       crc16: 0xabcd,
-      terminator: ProtocolInfo.Footer,
+      terminator: ProtocolConstants.Footer,
     };
     expect(footer.crc16).toBe(0xabcd);
     expect(footer.terminator).toBe(0xaa);
@@ -275,7 +275,7 @@ describe("Packet Structure Types", () => {
 
   test("Packet interface", () => {
     const packet: Packet = {
-      header: { magic: ProtocolInfo.Header },
+      header: { magic: ProtocolConstants.Header },
       metadata: {
         sequence: 1,
         command: CommandCode.SYSTEM_PING,
@@ -284,7 +284,7 @@ describe("Packet Structure Types", () => {
       payload: new Uint8Array(0),
       footer: {
         crc16: 0x0000,
-        terminator: ProtocolInfo.Footer,
+        terminator: ProtocolConstants.Footer,
       },
     };
     expect(packet.metadata.sequence).toBe(1);
@@ -550,7 +550,7 @@ describe("Contract Consistency", () => {
 
   test("packet structure is consistent", () => {
     const packet: Packet = {
-      header: { magic: ProtocolInfo.Header },
+      header: { magic: ProtocolConstants.Header },
       metadata: {
         sequence: 0,
         command: CommandCode.SYSTEM_PING,
@@ -559,12 +559,12 @@ describe("Contract Consistency", () => {
       payload: new Uint8Array(0),
       footer: {
         crc16: 0x0000,
-        terminator: ProtocolInfo.Footer,
+        terminator: ProtocolConstants.Footer,
       },
     };
 
-    expect(packet.header.magic).toBe(ProtocolInfo.Header);
-    expect(packet.footer.terminator).toBe(ProtocolInfo.Footer);
+    expect(packet.header.magic).toBe(ProtocolConstants.Header);
+    expect(packet.footer.terminator).toBe(ProtocolConstants.Footer);
   });
 
   test("error codes are in valid range", () => {
