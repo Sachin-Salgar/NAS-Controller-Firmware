@@ -576,35 +576,73 @@ Protocol Specification (PROTOCOL_SPEC.md)
         ↓
 Firmware Reference Implementation
         ↓
-Daemon Implementation
+Test Vectors (verified via firmware execution)
         ↓
-Test Vectors (verified against actual firmware)
+Daemon Implementation
         ↓
 Integration Test
 ```
 
-A task is not complete until all six elements are in place and verified to match exactly.
+A task is not complete until all elements are in place and verified to match exactly.
+
+### Definition of "Verified Test Vector"
+
+A protocol test vector is considered **verified** only when it is produced by:
+
+1. **Firmware execution:** The actual firmware reference implementation (or a minimal test harness compiling the exact production source files), AND
+2. **Wire capture:** The transmitted packet bytes are captured from actual USB/serial communication (not inferred from code)
+
+**Prohibited:**
+- Manual calculation of CRC values
+- Theoretical derivation of protocol behavior
+- Assumptions based on CPU architecture alone
+- Inferred byte order without packet capture
+
+**Required:**
+- Execution of actual firmware code
+- Recording of actual transmitted bytes
+- Documentation of verification method and date
 
 ### Why
 
 Mismatches between specification, firmware, and daemon can remain undetected until late development when they're most expensive to fix. This rule catches inconsistencies at Phase 1 when cost is minimal.
+
+Additionally, CPU architecture and code structure don't always determine protocol behavior (e.g., a little-endian CPU can still transmit big-endian protocol). Only actual execution reveals the truth.
 
 ### What This Means
 
 ✅ **Do:**
 - Create/update ADR documenting the decision and rationale
 - Update PROTOCOL_SPEC.md with exact specification
-- Verify firmware implements the specification (audit the code)
+- Verify firmware implements the specification (code audit)
+- **Execute firmware code** to generate test vector (not calculate manually)
+- **Capture actual transmitted bytes** to confirm byte order
 - Implement daemon against the specification
-- **Verify test vector against actual firmware** (not just spec)
 - Write integration tests that use the verified vector
+- Document verification method (harness/capture date)
 - Only then mark task complete
 
 ❌ **Don't:**
-- Propose a test vector without verifying it against firmware
+- Manually calculate a CRC and call it "verified"
+- Assume byte order from CPU endianness alone
+- Propose a test vector without firmware execution
 - Assume specification matches implementation without auditing code
-- Mark task complete without verified test vectors
-- Proceed to next task until all six elements are locked in
+- Mark task complete without verified test vectors produced via firmware execution
+- Proceed to next task until all elements are locked in
+
+### Seven Parameters Must Be Frozen
+
+For CRC protocols specifically, all seven must be verified and documented:
+
+1. **Algorithm** - CRC-16-Modbus (or equivalent)
+2. **Polynomial** - 0xA001
+3. **Initial Value** - 0xFFFF
+4. **Input Reflection** - Yes/No
+5. **Output Reflection** - Yes/No
+6. **Final XOR** - 0x0000
+7. **Transmission Byte Order** - [MSB, LSB] or [LSB, MSB] (verified via packet capture)
+
+All seven must appear explicitly in PROTOCOL_SPEC.md.
 
 ### Example: Adding a New Command
 

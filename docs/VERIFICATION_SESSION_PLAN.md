@@ -28,7 +28,7 @@ This document defines the exact steps to verify CRC16-Modbus protocol parameters
 
 ## What Must Be Verified
 
-Six parameters completely define the CRC16 protocol:
+Seven parameters completely define the CRC16 protocol:
 
 ### 1. Polynomial ✅ CONFIRMED
 - Value: 0xA001
@@ -55,11 +55,29 @@ Six parameters completely define the CRC16 protocol:
 - Evidence: firmware/src/Utilities/CRC16.cpp returns `crc` directly (line 100)
 - Status: FROZEN
 
-### 6. CRC Byte Order ⏳ **PENDING VERIFICATION**
-- Question: When firmware transmits a 16-bit CRC, does it send MSB first or LSB first?
-- Evidence location: firmware/src/Protocol/PacketBuilder.cpp lines 93-96
-- Current finding: `std::memcpy(&crc, ...)` on little-endian system (ESP32 ARM)
-- **Needs confirmation:** Actual packet capture or tracing
+### 6. CRC Coverage ⏳ **PENDING VERIFICATION**
+- Question: Which bytes are included in the CRC calculation?
+- Current evidence: firmware/src/Protocol/PacketBuilder.cpp line 89-91 calls `CalculateCrc16(packet, offset)` where `offset` is position after Payload
+- Indicates: Header + Sequence + Command + Length + Payload (NOT CRC, NOT Footer)
+- **Must explicitly verify:** Confirm the exact byte range included in calculation
+- **Documentation:** Must be explicit in PROTOCOL_SPEC.md (e.g., "CRC covers bytes 0-N")
+
+### 7. CRC Transmission Byte Order ⏳ **PENDING VERIFICATION**
+- **Critical distinction:** CPU endianness ≠ Protocol byte order
+  - ESP32 is little-endian (stores uint16_t LSB-first in memory)
+  - But protocol may transmit MSB-first or LSB-first (firmware decides)
+- Relevant code: firmware/src/Protocol/PacketBuilder.cpp lines 93-96
+  ```cpp
+  std::memcpy(packet + offset, &crc, sizeof(crc));
+  ```
+  - This copies 2 bytes in memory order (little-endian for ESP32)
+  - **But this is NOT the protocol definition—only the implementation detail**
+- **What to verify:** Capture actual packet bytes from wire
+  - Run firmware with test input `55 AA 01 10 00 02`
+  - Transmit over USB
+  - Capture: `[crc_byte_1, crc_byte_2]` as they appear on wire
+  - Record: Is it `[LSB, MSB]` or `[MSB, LSB]`?
+- **Documentation:** Must document as "transmitted as [X, Y] byte order" in PROTOCOL_SPEC.md
 
 ---
 
@@ -107,38 +125,110 @@ Firmware execution date: YYYY-MM-DD
 Firmware commit hash: (if possible)
 ```
 
-### Step 2: Confirm Byte Order
+### Step 2: Verify CRC Coverage
 
-**Question:** In PacketBuilder, how are the CRC bytes transmitted?
+**Question:** Exactly which bytes are included in the CRC calculation?
 
-**Code to check:** firmware/src/Protocol/PacketBuilder.cpp lines 93-96
+**Code to check:**
+- firmware/src/Protocol/PacketBuilder.cpp lines 44-91 (packet construction flow)
+- firmware/src/Protocol/PacketBuilder.cpp lines 88-91 (CRC calculation call)
+- firmware/src/Protocol/PacketValidator.cpp lines 66-69 (CRC verification extent)
+
+**Current evidence suggests:**
 ```cpp
-std::memcpy(
-    packet + offset,
-    &crc,
-    sizeof(crc));
+const std::uint16_t crc =
+    CalculateCrc16(
+        packet,          // Start of packet (pointer to byte 0)
+        offset);         // Length parameter (bytes 0 through offset-1)
 ```
 
-**Analysis:**
-- ESP32 is **little-endian** (ARM Cortex-M4)
-- `memcpy` from `&crc` (a uint16_t) copies bytes in memory order
-- On little-endian: LSB is at lower address, MSB at higher address
-- So memcpy copies `[LSB, MSB]` (little-endian byte order)
+Where `offset` is the byte position after the Payload has been written.
 
-**But confirm by:** 
-- Read the actual packet from a real transfer
-- Verify byte order matches expectation
+**Packet structure for verification:**
+```
+Byte 0-1:  Header (0x55AA)
+Byte 2:    Sequence
+Byte 3:    Command
+Byte 4-5:  Length (big-endian)
+Byte 6+:   Payload (variable length)
+Byte N:    CRC Low (or High, depending on byte order)
+Byte N+1:  CRC High (or Low)
+Byte N+2:  Footer (0xAA)
+```
+
+**Questions to answer explicitly:**
+1. Is CRC calculated from byte 0 (Header) or byte 2 (Sequence)?
+2. Does CRC include the Length field bytes?
+3. Is Payload always included in CRC (even if zero-length)?
+4. Are CRC and Footer bytes included in CRC calculation?
+
+**Verification method:**
+- For test input `55 AA 01 10 00 02` (6 bytes):
+  - If CRC is calculated over all 6 bytes → CRC covers [Header, Seq, Cmd, Len]
+  - If CRC is calculated over first 4 bytes → CRC covers [Header, Seq, Cmd]
+  - Trace firmware execution or examine byte range in actual calculation
+
+**Expected answer (to confirm):**
+- **Start:** Byte 0 (Header)
+- **End:** Last byte of Payload (or last Length byte if Payload is empty)
+- **Includes:** Header + Sequence + Command + Length + Payload
+- **Excludes:** CRC bytes (2) and Footer (1)
 
 **Record:**
 ```
-CRC Byte Order: [LSB, MSB] or [MSB, LSB]?
-Evidence: [actual packet capture or code trace]
-Confirmed: Yes/No
+CRC Coverage:
+- Start Byte: 0 (Header)
+- End Byte: [N]
+- Byte Range: 0 to N (inclusive)
+- Includes: Header, Sequence, Command, Length, Payload
+- Excludes: CRC, Footer
+- Verified Against: PacketBuilder.cpp line 89-91 and actual packet
+- Confirmed: Yes/No
 ```
 
-### Step 3: Document Official Test Vector
+### Step 3: Confirm Transmission Byte Order
 
-Once firmware execution produces the CRC value, document it as:
+**Critical point:** Protocol byte order is defined by **what bytes appear on the wire**, NOT by CPU endianness.
+
+**Question:** When firmware transmits the calculated CRC, in what order do the bytes appear?
+
+**Important distinction:**
+- ESP32 CPU is little-endian (stores 0xA5A1 in memory as `[0xA1, 0xA5]`)
+- But the protocol may transmit as `[0xA1, 0xA5]` (little-endian) or `[0xA5, 0xA1]` (big-endian)
+- CPU endianness influences the code, but **only the wire bytes define the protocol**
+
+**Code inspection (insufficient alone):**
+```cpp
+std::memcpy(packet + offset, &crc, sizeof(crc));
+```
+- On little-endian CPU, this copies memory order: `[LSB, MSB]`
+- But this is implementation detail, not protocol definition
+
+**Verification method (required):**
+1. Execute firmware with test input `55 AA 01 10 00 02`
+2. Capture the actual USB packet bytes
+3. Identify the 2 CRC bytes at position [offset]
+4. Record their order exactly as they appear on wire
+
+**Example:**
+```
+If CRC calculation yields 0xA5A1:
+  Wire might transmit as: [0xA5, 0xA1]  (big-endian / MSB-first)
+  Or wire might transmit as: [0xA1, 0xA5]  (little-endian / LSB-first)
+```
+
+**Record:**
+```
+CRC value calculated: 0x____ (hex)
+Transmitted byte 1: 0x__ (first byte on wire)
+Transmitted byte 2: 0x__ (second byte on wire)
+Byte order: [MSB, LSB] or [LSB, MSB]
+Confirmed by: [packet capture or wire trace]
+```
+
+### Step 4: Document Official Test Vector
+
+Once firmware execution produces the CRC value and byte order is confirmed, document it as:
 
 ```markdown
 ## Official Test Vector (Verified 2026-07-20)
@@ -146,34 +236,47 @@ Once firmware execution produces the CRC value, document it as:
 **Input Bytes (hex):**
 55 AA 01 10 00 02
 
-**Expected CRC Output:**
-[VALUE FROM FIRMWARE EXECUTION]
+**Input Description:**
+RELAY_SET command header
+- Header: 0x55AA (bytes 0-1)
+- Sequence: 0x01 (byte 2)
+- Command: 0x10 (byte 3)
+- Length: 0x0002 (bytes 4-5)
+- Payload: (empty)
 
-**Transmitted as:**
-[BYTE 1] [BYTE 2] (in actual transmission order)
-
-**Algorithm:**
+**CRC Calculation:**
+- Algorithm: CRC-16-Modbus (reflected)
 - Polynomial: 0xA001
-- Initial: 0xFFFF
+- Initial Value: 0xFFFF
 - Input Reflection: Yes
 - Output Reflection: Yes
 - Final XOR: 0x0000
-- Byte Order: [Confirmed order]
+- **Coverage:** Bytes 0-5 (Header through Length, no Payload)
 
-**Verification:**
+**CRC Output from Firmware:**
+- Calculated value: 0x____ (hex)
+- Transmitted byte order: [Byte1, Byte2] = [0x__, 0x__]
+- Order: [MSB, LSB] or [LSB, MSB]
+
+**Verification Details:**
 - Generated by: firmware/src/Utilities/CRC16.cpp::Calculate()
-- Date: 2026-07-20
-- Method: [Harness/Packet Capture/Unit Test]
+- Verified by: [Harness execution / Packet capture / Unit test]
+- Date: [Verification date]
+- Method: Actual firmware execution (not calculated)
 - Status: ✅ VERIFIED
 ```
 
-### Step 4: Freeze Protocol
+### Step 5: Freeze Protocol
 
-Once vector is verified:
-1. Update PROTOCOL_SPEC.md with official test vector
-2. Mark as "VERIFIED" (not "PENDING")
-3. Update PROJECT_STATUS.md
-4. Declare Task 2 inputs FROZEN
+Once all seven parameters are verified and documented:
+1. Update PROTOCOL_SPEC.md with:
+   - All seven CRC parameters explicitly documented
+   - Official test vector with firmware-verified CRC
+   - Exact byte range for CRC coverage
+   - Confirmed transmission byte order
+2. Mark test vector as "VERIFIED" (not "PENDING")
+3. Update PROJECT_STATUS.md: Mark Task 2 as "FROZEN"
+4. Update PROJECT_RULES.md: Link Rule 14 compliance
 
 ---
 
@@ -181,12 +284,24 @@ Once vector is verified:
 
 Verification is complete when:
 
-- [ ] CRC value generated by executing actual firmware code
-- [ ] Byte order confirmed from PacketBuilder or packet capture
-- [ ] All six parameters locked and frozen
+- [ ] CRC value generated by executing actual firmware code (not manual calculation)
+- [ ] Transmitted bytes captured from actual USB/serial communication
+- [ ] CRC coverage verified (exact byte range documented)
+- [ ] Byte order confirmed from packet capture (not CPU assumption)
+- [ ] All seven parameters locked and frozen:
+  - [ ] Algorithm (CRC16-Modbus)
+  - [ ] Polynomial (0xA001)
+  - [ ] Initial Value (0xFFFF)
+  - [ ] Input Reflection (Yes)
+  - [ ] Output Reflection (Yes)
+  - [ ] Final XOR (0x0000)
+  - [ ] **Transmission Byte Order (verified via packet capture)**
+- [ ] CRC Coverage explicitly documented (byte range)
 - [ ] Official test vector documented in PROTOCOL_SPEC.md
+- [ ] Test vector shows firmware execution method and date
 - [ ] PROTOCOL_SPEC.md marks vector as VERIFIED (not PENDING)
 - [ ] PROJECT_STATUS.md confirms Task 2 inputs are FROZEN
+- [ ] PROJECT_RULES.md Rule 14 verified as followed
 - [ ] No more protocol changes until next major version
 
 ---
