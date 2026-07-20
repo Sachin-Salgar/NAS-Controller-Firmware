@@ -43,19 +43,18 @@ Define the binary communication protocol between the Host Daemon (Node.js + Type
 ## Frame Format
 
 ```
-[Header] [Seq] [Cmd] [Len] [Payload] [CRC16] [Footer]
-  2B      1B    1B    2B    0-256B    2B      1B
+[Header] [Seq] [Cmd] [Len] [Payload] [CRC16]
+  2B      2B    2B    2B    0-256B    2B
 ```
 
 | Field | Bytes | Value | Purpose |
 |-------|-------|-------|---------|
-| **Header** | 2 | 0x55AA | Frame delimiter (big-endian) |
-| **Seq** | 1 | 0x00-0xFF | Sequence number (rolls over) |
-| **Cmd** | 1 | See below | Command byte |
-| **Len** | 2 | 0-256 | Payload length (big-endian) |
+| **Header** | 2 | 0x55AA | Frame delimiter |
+| **Seq** | 2 | 0x0000-0xFFFF | Sequence number |
+| **Cmd** | 2 | See below | Command identifier |
+| **Len** | 2 | 0-256 | Payload length |
 | **Payload** | 0-256 | Varies | Command-specific data |
-| **CRC16** | 2 | See CRC section | CCITT-16 (covers Header through Payload) |
-| **Footer** | 1 | 0xAA | Frame terminator |
+| **CRC16** | 2 | See CRC section | CRC-16-Modbus (covers Header through Payload) |
 
 ### Example: Turn On Relay 1
 
@@ -66,13 +65,12 @@ Cmd:    0x10          ← RELAY_SET command
 Len:    0x00 0x02     ← Payload is 2 bytes
 Payload: 0x01 0x01    ← Relay ID: 1, State: ON (0x01)
 CRC16:  0xXX 0xXX     ← Calculated CRC (see CRC section)
-Footer: 0xAA          ← Frame end
 ```
 
 ## Byte Order
 
-- **Multi-byte fields:** Big-endian (network byte order)
-- **Example:** Length 256 is encoded as `0x01 0x00` (not `0x00 0x01`)
+- **Multi-byte fields:** Implementation-defined (see firmware serialization for exact encoding)
+- **Encoded by:** PacketBuilder.cpp memcpy operations
 
 ---
 
@@ -83,10 +81,10 @@ Footer: 0xAA          ← Frame end
 | Type | Size | Range | Notes |
 |------|------|-------|-------|
 | u8 | 1 byte | 0-255 | Unsigned byte |
-| u16 | 2 bytes | 0-65535 | Big-endian |
-| u32 | 4 bytes | 0-4294967295 | Big-endian |
+| u16 | 2 bytes | 0-65535 | Unsigned short |
+| u32 | 4 bytes | 0-4294967295 | Unsigned int |
 | i8 | 1 byte | -128 to 127 | Signed byte |
-| i16 | 2 bytes | -32768 to 32767 | Big-endian, signed |
+| i16 | 2 bytes | -32768 to 32767 | Signed short |
 | String | N | Varies | UTF-8, null-terminated |
 | Array | N×M | Varies | Fixed-size or length-prefixed |
 
@@ -402,7 +400,7 @@ When daemon connects to firmware:
 ```
 1. Send PING (Cmd=0x01)
    ↓ (Confirm responsive)
-   
+
 2. Send GET_CAPABILITIES (Cmd=0x02)
    ↓ Response includes:
    - Drive count
@@ -412,13 +410,13 @@ When daemon connects to firmware:
    - Temperature sensor count
    - Supported commands (bitmap)
    - Firmware version
-   
+
 3. Send CONFIG_GET (Cmd=0x50)
    ↓ Response: Full configuration object
-   
+
 4. Send STATUS_GET_ALL (Cmd=0x60)
    ↓ Response: All hardware status
-   
+
 5. UI Ready (subscribe to state changes)
 ```
 

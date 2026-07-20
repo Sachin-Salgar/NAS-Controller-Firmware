@@ -1,6 +1,6 @@
 Document Version: 1.0  
 Project Version: 1.0  
-Last Updated: 2026-07-19  
+Last Updated: 2026-07-20  
 Owner: NAS Controller  
 Status: Frozen
 
@@ -12,13 +12,11 @@ This is the single source of truth for all firmware commands. Each command appea
 
 ## System Commands
 
-### CMD_SYSTEM_PING
+### PING
 
 | Property | Value |
 |----------|-------|
-| **Command Byte** | 0x01 |
-| **ACK Byte** | 0x81 |
-| **NAK Byte** | 0x41 |
+| **Command ID** | 0x0001 |
 | **Purpose** | Verify firmware is alive and responsive |
 | **Request Payload** | (none) |
 | **Response Payload** | (none) - ACK only |
@@ -32,13 +30,59 @@ This is the single source of truth for all firmware commands. Each command appea
 
 ---
 
-### CMD_SYSTEM_RESET
+### GET_VERSION
 
 | Property | Value |
 |----------|-------|
-| **Command Byte** | 0x02 |
-| **ACK Byte** | 0x82 |
-| **NAK Byte** | 0x42 |
+| **Command ID** | 0x0002 |
+| **Purpose** | Get firmware version |
+| **Request Payload** | (none) |
+| **Response Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Error Codes** | None |
+| **Timeout** | 1000ms |
+| **Firmware Support** | v1.0+ |
+| **Protocol Version** | 1.0 |
+| **Status** | ✅ Implemented in firmware |
+
+---
+
+### GET_BUILD_INFO
+
+| Property | Value |
+|----------|-------|
+| **Command ID** | 0x0003 |
+| **Purpose** | Get build information |
+| **Request Payload** | (none) |
+| **Response Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Error Codes** | None |
+| **Timeout** | 1000ms |
+| **Firmware Support** | v1.0+ |
+| **Protocol Version** | 1.0 |
+| **Status** | ✅ Implemented in firmware |
+
+---
+
+### GET_SYSTEM_STATUS
+
+| Property | Value |
+|----------|-------|
+| **Command ID** | 0x0004 |
+| **Purpose** | Get system status |
+| **Request Payload** | (none) |
+| **Response Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Error Codes** | None |
+| **Timeout** | 1000ms |
+| **Firmware Support** | v1.0+ |
+| **Protocol Version** | 1.0 |
+| **Status** | ✅ Implemented in firmware |
+
+---
+
+### RESET
+
+| Property | Value |
+|----------|-------|
+| **Command ID** | 0x0005 |
 | **Purpose** | Soft reset firmware (restart without power cycle) |
 | **Request Payload** | (none) |
 | **Response Payload** | (none) - ACK before reset |
@@ -52,56 +96,13 @@ This is the single source of truth for all firmware commands. Each command appea
 
 ---
 
-### CMD_GET_CAPABILITIES
-
-| Property | Value |
-|----------|-------|
-| **Command Byte** | 0x03 |
-| **ACK Byte** | 0x83 |
-| **NAK Byte** | 0x43 |
-| **Purpose** | Report firmware capabilities and hardware configuration |
-| **Request Payload** | (none) |
-| **Response Payload** | See protocol_spec.md for format |
-| **Response Fields** | Protocol version, Config version, Relay count, Fan count, LED count, Temp sensor count, Drive count |
-| **Error Codes** | None |
-| **Timeout** | 1000ms |
-| **Firmware Support** | v1.0+ |
-| **Protocol Version** | 1.0 |
-| **Usage** | Startup capability discovery, UI adaptation |
-| **Status** | ✅ Implemented in firmware |
-| **Notes** | First command after PING during startup sequence |
-
----
-
 ## Relay Commands
 
-### CMD_RELAY_SET
+### RELAY_GET
 
 | Property | Value |
 |----------|-------|
-| **Command Byte** | 0x10 |
-| **ACK Byte** | 0x90 |
-| **NAK Byte** | 0x50 |
-| **Purpose** | Set relay state (ON or OFF) |
-| **Request Payload** | relay_id (1 byte), state (1 byte: 0x00=OFF, 0x01=ON) |
-| **Response Payload** | (none) - ACK only |
-| **Error Codes** | 0x01: Invalid relay ID, 0x02: Invalid state value |
-| **Timeout** | 1000ms |
-| **Firmware Support** | v1.0+ |
-| **Protocol Version** | 1.0 |
-| **Usage** | User clicks relay button in UI |
-| **Status** | ✅ Implemented in firmware |
-| **Example** | `0x55 0xAA 0x01 0x10 0x02 0x00 0x01 [CRC16]` → Relay 0 ON |
-
----
-
-### CMD_RELAY_GET
-
-| Property | Value |
-|----------|-------|
-| **Command Byte** | 0x11 |
-| **ACK Byte** | 0x91 |
-| **NAK Byte** | 0x51 |
+| **Command ID** | 0x1001 |
 | **Purpose** | Get state of a single relay |
 | **Request Payload** | relay_id (1 byte) |
 | **Response Payload** | relay_id (1 byte), state (1 byte: 0x00=OFF, 0x01=ON) |
@@ -111,59 +112,52 @@ This is the single source of truth for all firmware commands. Each command appea
 | **Protocol Version** | 1.0 |
 | **Usage** | Read current relay state (polling or on-demand) |
 | **Status** | ✅ Implemented in firmware |
-| **Notes** | Use CMD_GET_ALL_STATUS for bulk read of all relays |
+| **Notes** | Payload structure not verifiable from Commands.h |
 
 ---
 
-### CMD_GET_ALL_STATUS
+### RELAY_SET
 
 | Property | Value |
 |----------|-------|
-| **Command Byte** | 0x20 |
-| **ACK Byte** | 0xA0 |
-| **NAK Byte** | 0x60 |
-| **Purpose** | Get state of all hardware in one command |
-| **Request Payload** | (none) |
-| **Response Payload** | See protocol_spec.md: relay states, fan speeds, temperatures, drive status |
-| **Error Codes** | None |
+| **Command ID** | 0x1002 |
+| **Purpose** | Set relay state (ON or OFF) |
+| **Request Payload** | relay_id (1 byte), state (1 byte: 0x00=OFF, 0x01=ON) |
+| **Response Payload** | (none) - ACK only |
+| **Error Codes** | 0x01: Invalid relay ID, 0x02: Invalid state value |
 | **Timeout** | 1000ms |
 | **Firmware Support** | v1.0+ |
 | **Protocol Version** | 1.0 |
-| **Usage** | Startup state resync, periodic polling, after reconnection |
+| **Usage** | User clicks relay button in UI |
 | **Status** | ✅ Implemented in firmware |
-| **Notes** | Large response; consider rate-limiting polling to once per second |
+| **Notes** | Payload structure not verifiable from Commands.h |
+
+---
+
+### RELAY_TOGGLE
+
+| Property | Value |
+|----------|-------|
+| **Command ID** | 0x1003 |
+| **Purpose** | Toggle relay state |
+| **Request Payload** | relay_id (1 byte) |
+| **Response Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Error Codes** | Implementation-defined (not verifiable from Commands.h) |
+| **Timeout** | 1000ms |
+| **Firmware Support** | v1.0+ |
+| **Protocol Version** | 1.0 |
+| **Status** | ✅ Implemented in firmware |
+| **Notes** | Command exists in firmware; detailed behavior not verifiable from Commands.h |
 
 ---
 
 ## Fan Commands
 
-### CMD_FAN_SET_SPEED
+### FAN_GET
 
 | Property | Value |
 |----------|-------|
-| **Command Byte** | 0x30 |
-| **ACK Byte** | 0xB0 |
-| **NAK Byte** | 0x70 |
-| **Purpose** | Set fan speed (PWM) |
-| **Request Payload** | fan_id (1 byte), speed (1 byte: 0-100) |
-| **Response Payload** | (none) - ACK only |
-| **Error Codes** | 0x01: Invalid fan ID, 0x02: Out of range (speed > 100) |
-| **Timeout** | 1000ms |
-| **Firmware Support** | v1.0+ |
-| **Protocol Version** | 1.0 |
-| **Usage** | User adjusts fan speed slider |
-| **Status** | ✅ Implemented in firmware |
-| **Notes** | 0 = OFF, 100 = Full speed, PWM updates immediately |
-
----
-
-### CMD_FAN_GET
-
-| Property | Value |
-|----------|-------|
-| **Command Byte** | 0x31 |
-| **ACK Byte** | 0xB1 |
-| **NAK Byte** | 0x71 |
+| **Command ID** | 0x1101 |
 | **Purpose** | Get current fan speed |
 | **Request Payload** | fan_id (1 byte) |
 | **Response Payload** | fan_id (1 byte), speed (1 byte: 0-100), status (1 byte) |
@@ -174,16 +168,33 @@ This is the single source of truth for all firmware commands. Each command appea
 | **Protocol Version** | 1.0 |
 | **Usage** | Read current fan speed |
 | **Status** | ✅ Implemented in firmware |
+| **Notes** | Payload structure not verifiable from Commands.h |
 
 ---
 
-### CMD_FAN_SET_MODE
+### FAN_SET_SPEED
 
 | Property | Value |
 |----------|-------|
-| **Command Byte** | 0x32 |
-| **ACK Byte** | 0xB2 |
-| **NAK Byte** | 0x72 |
+| **Command ID** | 0x1102 |
+| **Purpose** | Set fan speed (PWM) |
+| **Request Payload** | fan_id (1 byte), speed (1 byte: 0-100) |
+| **Response Payload** | (none) - ACK only |
+| **Error Codes** | 0x01: Invalid fan ID, 0x02: Out of range (speed > 100) |
+| **Timeout** | 1000ms |
+| **Firmware Support** | v1.0+ |
+| **Protocol Version** | 1.0 |
+| **Usage** | User adjusts fan speed slider |
+| **Status** | ✅ Implemented in firmware |
+| **Notes** | 0 = OFF, 100 = Full speed, PWM updates immediately. Payload structure not verifiable from Commands.h |
+
+---
+
+### FAN_SET_MODE
+
+| Property | Value |
+|----------|-------|
+| **Command ID** | 0x1103 |
 | **Purpose** | Set fan operating mode |
 | **Request Payload** | fan_id (1 byte), mode (1 byte: 0x00=Manual, 0x01=Auto, 0x02=Off) |
 | **Response Payload** | (none) - ACK only |
@@ -193,19 +204,17 @@ This is the single source of truth for all firmware commands. Each command appea
 | **Protocol Version** | 1.0 |
 | **Usage** | Switch between manual/auto/off modes |
 | **Status** | ✅ Implemented in firmware |
-| **Notes** | In Auto mode, firmware controls speed based on temperature thresholds |
+| **Notes** | In Auto mode, firmware controls speed based on temperature thresholds. Payload structure not verifiable from Commands.h |
 
 ---
 
 ## Temperature Commands
 
-### CMD_TEMP_READ
+### TEMPERATURE_GET
 
 | Property | Value |
 |----------|-------|
-| **Command Byte** | 0x40 |
-| **ACK Byte** | 0xC0 |
-| **NAK Byte** | 0x80 |
+| **Command ID** | 0x1201 |
 | **Purpose** | Read single temperature sensor |
 | **Request Payload** | sensor_id (1 byte) |
 | **Response Payload** | sensor_id (1 byte), temperature (2 bytes: int16, in 1/100°C, -4000 to 12700 = -40°C to 127°C) |
@@ -215,19 +224,49 @@ This is the single source of truth for all firmware commands. Each command appea
 | **Protocol Version** | 1.0 |
 | **Usage** | Read current temperature |
 | **Status** | ✅ Implemented in firmware |
-| **Example** | Read sensor 0: `0x55 0xAA 0x01 0x40 0x01 0x00 [CRC16]` → Response: 25.00°C |
+| **Notes** | Payload structure not verifiable from Commands.h |
+
+---
+
+### TEMPERATURE_GET_ALL
+
+| Property | Value |
+|----------|-------|
+| **Command ID** | 0x1202 |
+| **Purpose** | Read all temperature sensors |
+| **Request Payload** | (none) |
+| **Response Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Error Codes** | None |
+| **Timeout** | 1000ms |
+| **Firmware Support** | v1.0+ |
+| **Protocol Version** | 1.0 |
+| **Status** | ✅ Implemented in firmware |
 
 ---
 
 ## LED Commands
 
-### CMD_LED_SET_COLOR
+### LED_GET
 
 | Property | Value |
 |----------|-------|
-| **Command Byte** | 0x50 |
-| **ACK Byte** | 0xD0 |
-| **NAK Byte** | 0x90 |
+| **Command ID** | 0x1301 |
+| **Purpose** | Get LED state |
+| **Request Payload** | (none) |
+| **Response Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Error Codes** | None |
+| **Timeout** | 1000ms |
+| **Firmware Support** | v1.0+ |
+| **Protocol Version** | 1.0 |
+| **Status** | ✅ Implemented in firmware |
+
+---
+
+### LED_SET_COLOR
+
+| Property | Value |
+|----------|-------|
+| **Command ID** | 0x1302 |
 | **Purpose** | Set LED color (RGB) |
 | **Request Payload** | red (1 byte), green (1 byte), blue (1 byte) |
 | **Response Payload** | (none) - ACK only |
@@ -237,36 +276,15 @@ This is the single source of truth for all firmware commands. Each command appea
 | **Protocol Version** | 1.0 |
 | **Usage** | User selects color in UI color picker |
 | **Status** | ✅ Implemented in firmware |
-| **Notes** | Values 0-255 per channel |
+| **Notes** | Values 0-255 per channel. Payload structure not verifiable from Commands.h |
 
 ---
 
-### CMD_LED_SET_BRIGHTNESS
+### LED_SET_MODE
 
 | Property | Value |
 |----------|-------|
-| **Command Byte** | 0x51 |
-| **ACK Byte** | 0xD1 |
-| **NAK Byte** | 0x91 |
-| **Purpose** | Set LED brightness |
-| **Request Payload** | brightness (1 byte: 0-100) |
-| **Response Payload** | (none) - ACK only |
-| **Error Codes** | 0x01: Out of range (brightness > 100) |
-| **Timeout** | 1000ms |
-| **Firmware Support** | v1.0+ |
-| **Protocol Version** | 1.0 |
-| **Usage** | User adjusts brightness slider |
-| **Status** | ✅ Implemented in firmware |
-
----
-
-### CMD_LED_SET_ANIMATION
-
-| Property | Value |
-|----------|-------|
-| **Command Byte** | 0x52 |
-| **ACK Byte** | 0xD2 |
-| **NAK Byte** | 0x92 |
+| **Command ID** | 0x1303 |
 | **Purpose** | Select LED animation sequence |
 | **Request Payload** | animation_id (1 byte: 0x00=Boot, 0x01=Idle, 0x02=Error, 0x03=Shutdown, 0x04=Custom) |
 | **Response Payload** | (none) - ACK only |
@@ -276,21 +294,104 @@ This is the single source of truth for all firmware commands. Each command appea
 | **Protocol Version** | 1.0 |
 | **Usage** | User selects animation in UI dropdown |
 | **Status** | ✅ Implemented in firmware |
+| **Notes** | Payload structure not verifiable from Commands.h |
+
+---
+
+### LED_OFF
+
+| Property | Value |
+|----------|-------|
+| **Command ID** | 0x1304 |
+| **Purpose** | Turn LED off |
+| **Request Payload** | (none) |
+| **Response Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Error Codes** | None |
+| **Timeout** | 1000ms |
+| **Firmware Support** | v1.0+ |
+| **Protocol Version** | 1.0 |
+| **Status** | ✅ Implemented in firmware |
+
+---
+
+## Drive Commands
+
+### DRIVE_GET
+
+| Property | Value |
+|----------|-------|
+| **Command ID** | 0x1401 |
+| **Purpose** | Get drive information |
+| **Request Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Response Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Error Codes** | Implementation-defined (not verifiable from Commands.h) |
+| **Timeout** | 1000ms |
+| **Firmware Support** | v1.0+ |
+| **Protocol Version** | 1.0 |
+| **Status** | ✅ Implemented in firmware |
+
+---
+
+### DRIVE_GET_ALL
+
+| Property | Value |
+|----------|-------|
+| **Command ID** | 0x1402 |
+| **Purpose** | Get state of all drives |
+| **Request Payload** | (none) |
+| **Response Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Error Codes** | None |
+| **Timeout** | 1000ms |
+| **Firmware Support** | v1.0+ |
+| **Protocol Version** | 1.0 |
+| **Usage** | Bulk state read, periodic polling, after reconnection |
+| **Status** | ✅ Implemented in firmware |
+| **Notes** | Large response; consider rate-limiting polling to once per second |
+
+---
+
+### DRIVE_POWER_ON
+
+| Property | Value |
+|----------|-------|
+| **Command ID** | 0x1403 |
+| **Purpose** | Power on drive |
+| **Request Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Response Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Error Codes** | Implementation-defined (not verifiable from Commands.h) |
+| **Timeout** | 1000ms |
+| **Firmware Support** | v1.0+ |
+| **Protocol Version** | 1.0 |
+| **Status** | ✅ Implemented in firmware |
+
+---
+
+### DRIVE_POWER_OFF
+
+| Property | Value |
+|----------|-------|
+| **Command ID** | 0x1404 |
+| **Purpose** | Power off drive |
+| **Request Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Response Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Error Codes** | Implementation-defined (not verifiable from Commands.h) |
+| **Timeout** | 1000ms |
+| **Firmware Support** | v1.0+ |
+| **Protocol Version** | 1.0 |
+| **Status** | ✅ Implemented in firmware |
 
 ---
 
 ## Configuration Commands
 
-### CMD_CONFIG_GET
+### CONFIG_LOAD
 
 | Property | Value |
 |----------|-------|
-| **Command Byte** | 0x60 |
-| **ACK Byte** | 0xE0 |
-| **NAK Byte** | 0xA0 |
+| **Command ID** | 0x1501 |
 | **Purpose** | Read all configuration from firmware |
 | **Request Payload** | (none) |
-| **Response Payload** | Config version (1 byte), hardware counts, thresholds, curves (see protocol_spec.md) |
+| **Response Payload** | Implementation-defined (not verifiable from Commands.h) |
 | **Error Codes** | None |
 | **Timeout** | 1000ms |
 | **Firmware Support** | v1.0+ |
@@ -301,79 +402,85 @@ This is the single source of truth for all firmware commands. Each command appea
 
 ---
 
-### CMD_CONFIG_SET
+### CONFIG_SAVE
 
 | Property | Value |
 |----------|-------|
-| **Command Byte** | 0x61 |
-| **ACK Byte** | 0xE1 |
-| **NAK Byte** | 0xA1 |
-| **Purpose** | Write configuration to firmware (sent in transaction) |
-| **Request Payload** | Config version, fields being updated (see protocol_spec.md) |
+| **Command ID** | 0x1502 |
+| **Purpose** | Write configuration to firmware |
+| **Request Payload** | Implementation-defined (not verifiable from Commands.h) |
 | **Response Payload** | (none) - ACK only |
-| **Error Codes** | 0x01: Invalid config version, 0x02: Validation error, 0x03: EEPROM write error |
+| **Error Codes** | Implementation-defined (not verifiable from Commands.h) |
 | **Timeout** | 1000ms |
 | **Firmware Support** | v1.0+ |
 | **Protocol Version** | 1.0 |
-| **Usage** | Save configuration from editor (part of transaction) |
+| **Usage** | Save configuration from editor |
 | **Status** | ✅ Implemented in firmware |
-| **Notes** | Must be preceded by CONFIG_BEGIN and followed by CONFIG_COMMIT |
+| **Notes** | Original registry documented transaction-based behavior (BEGIN/SET/COMMIT); firmware command structure differs |
 
 ---
 
-### CMD_CONFIG_BEGIN
+### CONFIG_RESET
 
 | Property | Value |
 |----------|-------|
-| **Command Byte** | 0x62 |
-| **ACK Byte** | 0xE2 |
-| **NAK Byte** | 0xA2 |
-| **Purpose** | Begin configuration transaction |
+| **Command ID** | 0x1503 |
+| **Purpose** | Reset configuration to defaults |
 | **Request Payload** | (none) |
-| **Response Payload** | (none) - ACK only |
+| **Response Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Error Codes** | Implementation-defined (not verifiable from Commands.h) |
+| **Timeout** | 1000ms |
+| **Firmware Support** | v1.0+ |
+| **Protocol Version** | 1.0 |
+| **Status** | ✅ Implemented in firmware |
+
+---
+
+## Statistics Commands
+
+### STATISTICS_GET
+
+| Property | Value |
+|----------|-------|
+| **Command ID** | 0x1601 |
+| **Purpose** | Get statistics |
+| **Request Payload** | (none) |
+| **Response Payload** | Implementation-defined (not verifiable from Commands.h) |
 | **Error Codes** | None |
 | **Timeout** | 1000ms |
 | **Firmware Support** | v1.0+ |
 | **Protocol Version** | 1.0 |
-| **Usage** | Start atomic config change |
 | **Status** | ✅ Implemented in firmware |
-| **Notes** | Firmware locks configuration for exclusive access |
 
 ---
 
-### CMD_CONFIG_COMMIT
+### STATISTICS_RESET
 
 | Property | Value |
 |----------|-------|
-| **Command Byte** | 0x63 |
-| **ACK Byte** | 0xE3 |
-| **NAK Byte** | 0xA3 |
-| **Purpose** | Commit configuration transaction to EEPROM |
+| **Command ID** | 0x1602 |
+| **Purpose** | Reset statistics |
 | **Request Payload** | (none) |
-| **Response Payload** | (none) - ACK only |
-| **Error Codes** | 0x01: EEPROM write error, 0x02: Config invalid |
+| **Response Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Error Codes** | Implementation-defined (not verifiable from Commands.h) |
 | **Timeout** | 1000ms |
 | **Firmware Support** | v1.0+ |
 | **Protocol Version** | 1.0 |
-| **Usage** | Finalize atomic config change |
 | **Status** | ✅ Implemented in firmware |
-| **Notes** | If fails, transaction rolls back; must retry BEGIN → SET → COMMIT |
 
 ---
 
-## Event & Statistics Commands
+## Event Commands
 
-### CMD_GET_EVENT_LOG
+### EVENT_READ
 
 | Property | Value |
 |----------|-------|
-| **Command Byte** | 0x70 |
-| **ACK Byte** | 0xF0 |
-| **NAK Byte** | 0xB0 |
+| **Command ID** | 0x1701 |
 | **Purpose** | Read event log entries |
-| **Request Payload** | start_index (2 bytes), count (1 byte) |
-| **Response Payload** | Entries with timestamps and event data (see protocol_spec.md) |
-| **Error Codes** | 0x01: Invalid index |
+| **Request Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Response Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Error Codes** | Implementation-defined (not verifiable from Commands.h) |
 | **Timeout** | 1000ms |
 | **Firmware Support** | v1.0+ |
 | **Protocol Version** | 1.0 |
@@ -382,31 +489,73 @@ This is the single source of truth for all firmware commands. Each command appea
 
 ---
 
+### EVENT_CLEAR
+
+| Property | Value |
+|----------|-------|
+| **Command ID** | 0x1702 |
+| **Purpose** | Clear event log |
+| **Request Payload** | (none) |
+| **Response Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Error Codes** | Implementation-defined (not verifiable from Commands.h) |
+| **Timeout** | 1000ms |
+| **Firmware Support** | v1.0+ |
+| **Protocol Version** | 1.0 |
+| **Status** | ✅ Implemented in firmware |
+
+---
+
+## Commands Present in Previous Registry but Not Found in Commands.h
+
+The following commands appeared in the original registry but are not listed in `firmware/src/Protocol/Commands.h`:
+
+- CMD_GET_ALL_STATUS (previously 0x20)
+- CMD_TEMP_READ (previously 0x40)
+- CMD_LED_SET_BRIGHTNESS (previously 0x51)
+- CMD_CONFIG_BEGIN (previously 0x62)
+- CMD_CONFIG_COMMIT (previously 0x63)
+- CMD_GET_EVENT_LOG (previously 0x70)
+
+**Note:** Firmware Commands.h does not provide sufficient evidence to determine whether these commands are deprecated, internal, obsolete, or implemented elsewhere. Only the commands explicitly listed in Commands.h are confirmed as implemented.
+
+---
+
 ## Command Summary Table
 
-| Command | Byte | Purpose | Status |
-|---------|------|---------|--------|
-| PING | 0x01 | Connection verify | ✅ |
-| RESET | 0x02 | Soft reset | ✅ |
-| GET_CAPABILITIES | 0x03 | Firmware info | ✅ |
-| RELAY_SET | 0x10 | Turn relay on/off | ✅ |
-| RELAY_GET | 0x11 | Read relay state | ✅ |
-| GET_ALL_STATUS | 0x20 | Bulk state read | ✅ |
-| FAN_SET_SPEED | 0x30 | Set fan PWM | ✅ |
-| FAN_GET | 0x31 | Read fan speed | ✅ |
-| FAN_SET_MODE | 0x32 | Select fan mode | ✅ |
-| TEMP_READ | 0x40 | Read temperature | ✅ |
-| LED_SET_COLOR | 0x50 | Set LED color | ✅ |
-| LED_SET_BRIGHTNESS | 0x51 | Set LED brightness | ✅ |
-| LED_SET_ANIMATION | 0x52 | Select animation | ✅ |
-| CONFIG_GET | 0x60 | Read config | ✅ |
-| CONFIG_SET | 0x61 | Write config | ✅ |
-| CONFIG_BEGIN | 0x62 | Start transaction | ✅ |
-| CONFIG_COMMIT | 0x63 | Commit transaction | ✅ |
-| GET_EVENT_LOG | 0x70 | Read events | ✅ |
+| Command | ID | Purpose | Status |
+|---------|-----|---------|--------|
+| PING | 0x0001 | Connection verify | ✅ |
+| GET_VERSION | 0x0002 | Firmware version | ✅ |
+| GET_BUILD_INFO | 0x0003 | Build info | ✅ |
+| GET_SYSTEM_STATUS | 0x0004 | System status | ✅ |
+| RESET | 0x0005 | Soft restart | ✅ |
+| RELAY_GET | 0x1001 | Read relay state | ✅ |
+| RELAY_SET | 0x1002 | Set relay state | ✅ |
+| RELAY_TOGGLE | 0x1003 | Toggle relay | ✅ |
+| FAN_GET | 0x1101 | Read fan speed | ✅ |
+| FAN_SET_SPEED | 0x1102 | Set fan speed | ✅ |
+| FAN_SET_MODE | 0x1103 | Set fan mode | ✅ |
+| TEMPERATURE_GET | 0x1201 | Read temperature | ✅ |
+| TEMPERATURE_GET_ALL | 0x1202 | Read all temperatures | ✅ |
+| LED_GET | 0x1301 | Read LED state | ✅ |
+| LED_SET_COLOR | 0x1302 | Set LED color | ✅ |
+| LED_SET_MODE | 0x1303 | Set LED mode | ✅ |
+| LED_OFF | 0x1304 | Turn LED off | ✅ |
+| DRIVE_GET | 0x1401 | Read drive info | ✅ |
+| DRIVE_GET_ALL | 0x1402 | Read all drives | ✅ |
+| DRIVE_POWER_ON | 0x1403 | Power on drive | ✅ |
+| DRIVE_POWER_OFF | 0x1404 | Power off drive | ✅ |
+| CONFIG_LOAD | 0x1501 | Load config | ✅ |
+| CONFIG_SAVE | 0x1502 | Save config | ✅ |
+| CONFIG_RESET | 0x1503 | Reset config | ✅ |
+| STATISTICS_GET | 0x1601 | Read statistics | ✅ |
+| STATISTICS_RESET | 0x1602 | Reset statistics | ✅ |
+| EVENT_READ | 0x1701 | Read events | ✅ |
+| EVENT_CLEAR | 0x1702 | Clear events | ✅ |
 
 ---
 
 **Purpose:** Single source of truth for all protocol commands  
 **Status:** Frozen v1.0 (additions require protocol versioning)  
-**Maintenance:** Update command entries as firmware evolves
+**Maintenance:** Update command entries as firmware evolves  
+**Source:** `firmware/src/Protocol/Commands.h`
