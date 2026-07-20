@@ -288,31 +288,39 @@ cd frontend && npm run dev (in another terminal)
 
 ## 🔍 Verification History
 
-### CRC16-Modbus Verification Session (2026-07-20)
+### CRC16-Modbus Verification Session (2026-07-20) - PARTIAL
 
-**Task 2 Verification Status:** ✅ **VERIFIED**
+**Task 2 Verification Status:** ⏳ **90% COMPLETE - AWAITING FIRMWARE EXECUTION**
 
 | Item | Status | Details |
 |------|--------|---------|
 | **Document Consistency** | ✅ PASS | All docs reference CRC16-Modbus (0xA001) |
 | **Firmware Implementation** | ✅ PASS | CRC16.cpp, PacketBuilder.cpp, PacketValidator.cpp identical |
 | **Algorithm Parameters** | ✅ PASS | Polynomial 0xA001, Init 0xFFFF, Reflected, No final XOR |
-| **Official Test Vector** | ✅ VERIFIED | Input: `55 AA 01 10 00 02` → CRC: `0xA5A1` |
-| **Firmware Version** | 1.0 | Utilities/CRC16.cpp and Protocol/PacketValidator.cpp verified |
-| **Protocol Version** | 1.0 | PROTOCOL_SPEC.md updated with verified vector |
-| **Verification Date** | 2026-07-20 | All verification completed |
+| **CRC Byte Order** | ⏳ PENDING | PacketBuilder.cpp transmission order needs confirmation |
+| **Official Test Vector** | ⏳ PENDING | Must execute firmware to generate (not calculated manually) |
+| **Firmware Version** | 1.0 | Utilities/CRC16.cpp and Protocol/PacketValidator.cpp reviewed |
+| **Protocol Version** | 1.0 | PROTOCOL_SPEC.md prepared for verified vector |
+| **Verification Date** | 2026-07-20 | Document and code review completed |
 
-**Task 2 Status:** ✅ **VERIFIED - NOT IMPLEMENTED**
-- Inputs are locked and frozen
+**Task 2 Status:** ✅ **DOCUMENT & CODE REVIEW COMPLETE**
+- ❌ NOT YET FROZEN (test vector requires firmware execution)
+- Architecture alignment confirmed
 - ADR-0003 documents decision
-- PROTOCOL_SPEC.md updated with official test vector
-- Daemon CRC reimplementation ready to begin
+- PROTOCOL_SPEC.md structure ready for official vector
+- Daemon CRC reimplementation blocked until vector is verified
 
-**Next Steps (Next Session):**
-1. Delete old daemon CRC implementation (daemon/src/core/protocol/crc16.ts)
-2. Reimplement CRC16-Modbus from scratch against verified test vector
-3. Complete Task 2 implementation
-4. Proceed to Task 3: Packet Encoder
+**Critical Next Step (Final Verification Session):**
+1. **Execute firmware CRC** - Run actual code with test input `55 AA 01 10 00 02`
+2. **Confirm byte order** - Check PacketBuilder.cpp lines 93-96 for transmission order
+3. **Record actual CRC output** - Not theoretical calculation
+4. **Freeze protocol** - Update PROTOCOL_SPEC.md with firmware-verified vector
+5. **Then implement daemon** - Reimplement CRC16-Modbus against verified vector
+
+**Why Frozen Initially, Then Unfrozen:**
+Rule 14 violation: Test vector was manually calculated, not firmware-executed. Per Rule 14:
+> "Never use calculated/theoretical vectors"
+Only firmware execution qualifies as verification.
 
 ---
 
@@ -371,17 +379,19 @@ cd frontend && npm run dev (in another terminal)
 
 ## 📝 Session History
 
-### 2026-07-20 - Verification Session (CURRENT)
-- ✅ **TASK 1:** Document consistency verified - all docs reference CRC16-Modbus
-- ✅ **TASK 2:** Firmware implementation verified - CRC16.cpp, PacketBuilder.cpp, PacketValidator.cpp identical
-- ✅ **TASK 3:** Official test vector generated from firmware
-  - Input: `55 AA 01 10 00 02`
-  - Expected CRC: `0xA5A1`
-  - Verified against: firmware/src/Utilities/CRC16.cpp
-- ✅ **TASK 4:** PROTOCOL_SPEC.md updated with official test vector
-- ✅ **TASK 5:** Daemon CRC status verified (exists, must be deleted)
-- ✅ **TASK 6:** PROJECT_STATUS.md updated with verification results
-- ⏭️ **TASK 7:** Task 2 inputs frozen (proceeding)
+### 2026-07-20 - Verification Session (PARTIAL - CORRECTED)
+- ✅ **TASK 1:** Document consistency verified - all docs reference CRC16-Modbus (0xA001)
+- ✅ **TASK 2:** Firmware implementation verified - CRC16.cpp, PacketBuilder.cpp, PacketValidator.cpp use identical algorithm
+- ✅ **TASK 5:** Daemon CRC status verified (exists as CRC16-CCITT, must be deleted before reimplementation)
+- ⏳ **TASK 3 (CORRECTED):** Test vector NOT YET VERIFIED
+  - ❌ Initial manual calculation violated Rule 14
+  - ⏳ Awaiting firmware execution to generate actual CRC value
+  - Input bytes ready: `55 AA 01 10 00 02`
+  - Expected: Firmware execution (not theoretical derivation)
+- ⏳ **TASK 4 (PENDING):** PROTOCOL_SPEC.md ready but awaiting verified vector
+- ⏳ **TASK 6 (PARTIAL):** PROJECT_STATUS.md updated with partial results
+- ⏳ **TASK 7 (BLOCKED):** Task 2 inputs NOT YET FROZEN (pending firmware execution)
+- 📋 **Created:** VERIFICATION_SESSION_PLAN.md - detailed plan for final verification
 
 ### 2026-07-20 - CRC16-Modbus Protocol Alignment (Previous)
 - ✅ Investigation report completed: firmware uses CRC16-Modbus throughout (0xA001 polynomial)
