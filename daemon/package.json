@@ -1,0 +1,31 @@
+{
+  "name": "@nas-controller/daemon",
+  "version": "1.0.0",
+  "description": "Host daemon for NAS Controller",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "nas",
+    "controller",
+    "daemon",
+    "protocol"
+  ],
+  "author": "NAS Controller Team",
+  "license": "MIT",
+  "dependencies": {
+    "@nas-controller/shared": "../shared"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.0",
+    "@types/node": "^20.0.0",
+    "jest": "^29.5.0",
+    "ts-jest": "^29.1.0",
+    "typescript": "^5.0.0"
+  }
+}
