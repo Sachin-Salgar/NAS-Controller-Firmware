@@ -3,7 +3,7 @@ Project Version: 1.0
 Last Updated: 2026-07-20
 Owner: NAS Controller
 Status: Frozen
-Session Updated: 2026-07-20 - Architecture review complete, shared frozen, CRC16 is Phase 1 Task 2
+Session Updated: 2026-07-20 - CRC16-Modbus alignment (ADR-0010) approved, PROTOCOL_SPEC.md updated
 
 # Strict Implementation Order - Phase 1 MVP
 
@@ -26,12 +26,13 @@ Session Updated: 2026-07-20 - Architecture review complete, shared frozen, CRC16
 - ProtocolTiming confirmed as daemon responsibility (not protocol contract)
 
 ### What's Next ⏭️
-**Phase 1 Task 2: CRC16 Implementation**
+**Phase 1 Task 2 (Reimplementation): CRC16 Implementation**
 - Location: `daemon/src/core/protocol/crc16.ts`
 - Tests: `daemon/src/core/protocol/__tests__/crc16.test.ts`
-- Verify CRC16-CCITT matches firmware calculations
+- Reimplement CRC16-Modbus against updated PROTOCOL_SPEC.md
+- Algorithm: CRC16-Modbus (0xA001 reflected polynomial)
 - Use test vectors from PROTOCOL_SPEC.md
-- **Do NOT start this task in this session**
+- Previous CCITT implementation should be replaced with Modbus variant
 
 ### For New Sessions 📖
 Start by reading:
@@ -90,13 +91,14 @@ Start by reading:
    - **Dependency:** None
    - **Acceptance:** All types are exported and importable
 
-2. ✔ **Implement CRC16 algorithm** (daemon/src/core/protocol/)
-   - CRC-16-CCITT implementation
-   - Test vectors from PROTOCOL_SPEC.md
-   - **Effort:** 1 day
+2. 🔄 **Reimplement CRC16 algorithm** (daemon/src/core/protocol/)
+   - CRC-16-Modbus implementation (was CRC-16-CCITT)
+   - Algorithm: reflected variant (0xA001 polynomial, input/output reflection enabled)
+   - Test vectors from PROTOCOL_SPEC.md (test vector: 55 AA 01 10 00 02 → CRC 0xB8 0x44)
+   - **Effort:** 1 day (reimplementation, not new development)
    - **Test:** Unit tests (100% coverage, test vectors)
-   - **Dependency:** shared types
-   - **Acceptance:** CRC16 matches firmware calculations exactly
+   - **Dependency:** shared types + updated PROTOCOL_SPEC.md
+   - **Acceptance:** CRC16-Modbus matches firmware calculations exactly
 
 3. ✔ **Implement packet encoder** (daemon/src/core/protocol/)
    - Command → binary packet conversion

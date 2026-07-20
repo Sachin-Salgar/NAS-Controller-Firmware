@@ -286,8 +286,8 @@ Cmd 257: Seq=0x00 (rolls over)
 
 ## Algorithm
 
-- **Scheme:** CRC-16-Modbus
-- **Polynomial:** 0xA001
+- **Scheme:** CRC-16-Modbus (reflected variant)
+- **Polynomial:** 0xA001 (reflected form of 0x8005)
 - **Initial Value:** 0xFFFF
 - **Input Reflection:** Yes
 - **Output Reflection:** Yes
@@ -296,6 +296,11 @@ Cmd 257: Seq=0x00 (rolls over)
 ## Coverage
 
 CRC covers: `Header | Seq | Cmd | Len | Payload` (NOT the CRC itself or Footer)
+
+## Byte Order
+
+- CRC16 is transmitted as two bytes in big-endian order (MSB first)
+- Example: CRC value 0xB844 is transmitted as `0xB8 0x44`
 
 ## Detailed Description
 
@@ -331,16 +336,25 @@ For verification, calculate CRC16-Modbus for this data:
 **Input (hex):** `55 AA 01 10 00 02`
 **Expected CRC16 (hex):** `0xB8 0x44`
 
-This represents a RELAY_SET command packet header without payload CRC.
+This represents a RELAY_SET command packet header without payload.
+
+Calculation steps:
+1. Start with CRC = 0xFFFF
+2. Process each byte through the Modbus algorithm (LSB-first polynomial 0xA001)
+3. Result should be 0xB844
 
 ## Verification Against Firmware
 
-The CRC16-Modbus algorithm implemented here matches the firmware reference implementation in `firmware/src/Protocol/PacketValidator.cpp` exactly.
+The CRC16-Modbus algorithm specified here is verified against the firmware reference implementation in `firmware/src/Protocol/PacketValidator.cpp`.
 
-To verify daemon implementation:
-1. Calculate CRC16 using daemon code
-2. Compare against firmware calculation
-3. Both must produce identical results for all inputs
+The firmware implements the identical algorithm:
+- Polynomial 0xA001
+- Input/output reflection enabled
+- Initial value 0xFFFF
+- No final XOR
+
+**Daemon Implementation Requirement:**
+When implementing CRC16 in the daemon, reimplement fresh against this specification (do not port firmware code). Validate your implementation against the protocol test vector before proceeding to protocol implementation tasks.
 
 ---
 

@@ -2,9 +2,9 @@
 
 **Document Version:** 1.0
 **Project Version:** 1.0
-**Status:** Phase 1 - CRC16-CCITT Complete, Packet Encoder Next
+**Status:** Phase 1 - CRC16-Modbus Alignment Complete, Packet Encoder Next
 **Last Updated:** 2026-07-20
-**Last Session:** CRC16-CCITT implementation complete  
+**Last Session:** CRC16-Modbus protocol alignment (ADR-0010) approved  
 
 ---
 
@@ -15,7 +15,7 @@
 | **Planning Phase** | ✅ Complete | Architecture v1.0 frozen |
 | **Architecture Review** | ✅ Complete | Reviewed and approved |
 | **Shared Package** | ✅ Complete | Frozen (protocol contracts only) |
-| **CRC16-CCITT (Task 2)** | ✅ Complete | All tests passing, 37/37 |
+| **CRC16-Modbus Alignment (Task 2)** | ✅ Complete | ADR-0010 approved, protocol spec updated |
 | **Implementation Phase** | 🔄 In Progress | Phase 1 Task 3 - Packet Encoder Next |
 | **Documentation** | ✅ Complete | Hierarchy established, synchronized |
 
@@ -28,7 +28,7 @@
 - **Location:** `daemon/src/core/protocol/packet-encoder.ts`
 - **Tests:** `daemon/src/core/protocol/__tests__/packet-encoder.test.ts`
 - **Deliverable:** Binary packet generation with CRC calculation
-- **Dependencies:** Task 2 (CRC16-CCITT) ✅ Complete
+- **Dependencies:** Task 2 (CRC16-Modbus Alignment) ✅ Complete
 - **Estimated Effort:** 1 day
 
 Task 3 is ready to start in the next session.
@@ -58,7 +58,7 @@ Then refer to component-specific docs as needed.
 | # | Task | Deliverable | Status | Notes |
 |---|------|-------------|--------|-------|
 | **Task 1** | Create Shared Types & Protocol Library | Protocol contracts frozen | ✅ Done | All types, constants, enums defined |
-| **Task 2** | CRC16-CCITT Implementation | CRC16 algorithm + tests | ✅ Done | 37/37 tests passing, 100% code coverage |
+| **Task 2** | CRC16-Modbus Alignment | Protocol alignment + spec update | ✅ Done | ADR-0010 created, PROTOCOL_SPEC.md updated |
 | **Task 3** | Packet Encoder | Binary packet generation | ⏭️ Next | Depends on Task 2 |
 | **Task 4** | Packet Decoder | Binary packet parsing | 📋 Planned | Depends on Task 3 |
 | **Task 5** | ACK/NAK Handler | Response classification | 📋 Planned | Depends on Task 4 |
@@ -332,18 +332,17 @@ cd frontend && npm run dev (in another terminal)
 
 ## 📝 Session History
 
-### 2026-07-20 - CRC16-CCITT Implementation (Current)
-- ✅ Created daemon project structure (package.json, tsconfig.json, jest.config.js)
-- ✅ Implemented CRC16-CCITT algorithm (`daemon/src/core/protocol/crc16.ts`)
-- ✅ Comprehensive test suite (37 tests, 100% code coverage)
-- ✅ Tests cover: empty buffer, single byte, multiple bytes, edge cases, incremental calculation, protocol patterns
-- ✅ Algorithm parameters match firmware specification exactly:
-  - Polynomial: 0x1021
+### 2026-07-20 - CRC16-Modbus Protocol Alignment (Current)
+- ✅ Investigation report completed: firmware uses CRC16-Modbus throughout (0xA001 polynomial)
+- ✅ Created ADR-0010 documenting the alignment decision (firmware impl → protocol spec)
+- ✅ Updated PROTOCOL_SPEC.md CRC16 section to specify CRC16-Modbus
+  - Polynomial: 0xA001 (reflected)
   - Initial value: 0xFFFF
+  - Input/Output reflection: Yes
   - Final XOR: 0x0000
-  - Input/Output reflection: No
-- ✅ All tests passing: PASS src/core/protocol/__tests__/crc16.test.ts
-- ⏭️ Next: Phase 1 Task 3 - Packet Encoder implementation
+- ✅ Added implementation notes and test vector verification
+- ✅ PROTOCOL_REGISTRY.md requires no updates (no algorithm references)
+- ⏭️ Next: Phase 1 Task 2 Reimplementation - Reimplement CRC16 daemon library against new spec
 
 ### 2026-07-20 (Earlier) - Architecture Review & Final Cleanup
 - ✅ Architecture reviewed and frozen (v1.0)

@@ -1,6 +1,6 @@
 # Project Rules
 
-**10 core rules that guide every implementation decision.**
+**14 core rules that guide every implementation decision.**
 
 These rules are non-negotiable. When in doubt, check here.
 
@@ -563,6 +563,82 @@ Why this choice?
 
 ---
 
+## Rule 14: Implementation Verification
+
+### The Rule
+
+Before any protocol implementation is declared complete, all three must agree:
+
+1. **Protocol Specification** (`shared/docs/PROTOCOL_SPEC.md`)
+2. **Firmware Reference Implementation** (firmware source code)
+3. **Protocol Test Vectors** (known good inputs/outputs)
+
+A task is not complete until all three match exactly.
+
+### Why
+
+Mismatches between specification, firmware, and daemon can remain undetected until late development when they're most expensive to fix. This rule catches inconsistencies at Phase 1 when cost is minimal.
+
+### What This Means
+
+✅ **Do:**
+- For new commands: define in PROTOCOL_SPEC.md first
+- Implement in firmware
+- Create test vectors for the command
+- Implement in daemon and validate against test vectors
+- Only then mark task complete
+
+❌ **Don't:**
+- Implement in firmware without updating spec first
+- Assume daemon implementation is correct without verifying against test vectors
+- Mark task complete without verifying all three match
+
+### Example: Adding a New Command
+
+```
+1. Edit PROTOCOL_SPEC.md
+   - Define command byte
+   - Define payload format
+   - Add example and test vector
+
+2. Implement in firmware
+   - Add command handler
+   - Implement packet generation/validation
+
+3. Create test vector
+   - Input: raw bytes
+   - Expected output: known good response
+
+4. Implement in daemon
+   - Encoder: command → packet
+   - Decoder: packet → response
+   - Test against protocol vector
+
+5. Mark complete
+   - All three (spec, firmware, daemon) agree
+   - Test vectors pass
+   - Code review approved
+```
+
+### Verification Checklist
+
+Before marking any protocol task complete:
+
+- [ ] Change documented in PROTOCOL_SPEC.md?
+- [ ] Change implemented in firmware?
+- [ ] Test vector added to PROTOCOL_SPEC.md?
+- [ ] Daemon implementation validates against vector?
+- [ ] Code passes all tests?
+- [ ] Spec and firmware agree (byte-for-byte)?
+
+### Enforcement
+
+- **Code review:** "Where's the test vector?"
+- **Task completion:** Task not closed until verification complete
+- **Specification freeze:** Can't change protocol without updating docs
+
+---
+
 ## Summary
 
 | Rule | Essence | Enforced By |
@@ -580,18 +656,19 @@ Why this choice?
 | 11. Protocol First | Documentation is source of truth | Code review, spec review |
 | 12. Documentation Hierarchy | Clear authority order | Code review |
 | 13. Architecture Freeze | Changes require ADR | Stakeholder review |
+| 14. Implementation Verification | Spec/firmware/tests align | Code review, test vectors |
 
 ---
 
 ## Reading These Rules
 
 **First time?**
-- Read all 10 rules
+- Read all 14 rules
 - Notice which ones apply to your component
 - Re-read those
 
 **Before coding?**
-- Skim all 10 rules (30 seconds)
+- Skim all 14 rules (30-45 seconds)
 - Focus on the ones your feature touches
 
 **In code review?**
