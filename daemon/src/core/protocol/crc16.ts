@@ -11,7 +11,8 @@ const CRC_FINAL_XOR = 0x0000;
 /**
  * Calculate CRC16-Modbus checksum for given data.
  *
- * This implementation matches the firmware CRC16::Calculate() exactly.
+ * This implementation matches the documented firmware algorithm
+ * (firmware/src/Utilities/CRC16.cpp::CRC16::Calculate).
  *
  * Algorithm Parameters (from PROTOCOL_SPEC.md):
  * - Polynomial: 0xA001 (reflected form of 0x8005)
@@ -24,6 +25,9 @@ const CRC_FINAL_XOR = 0x0000;
  * - Each byte is XORed into the LSB
  * - The register is shifted right (LSB first)
  * - The polynomial is applied when the LSB is 1
+ *
+ * Note: This function implements the specified algorithm. Protocol correctness
+ * requires verification against actual firmware packets (see Rule 14).
  *
  * @param data - Byte sequence to calculate CRC for
  * @param initialValue - Optional initial CRC value (defaults to 0xFFFF)
