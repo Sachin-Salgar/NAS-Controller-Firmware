@@ -1,0 +1,116 @@
+{
+  "id": "vector_002",
+  "name": "Relay Set Command",
+  "description": "Typical relay command: Set Relay 1 to ON",
+  "protocol_version": "1.0.0",
+  "firmware_version": "1.0.0",
+  "category": "Relay",
+  "command_name": "SET RELAY",
+  "command_code": "0x0101",
+  "sequence_number": "0x0002",
+  
+  "packet_structure": {
+    "header": "0x55AA",
+    "sequence": "0x0002",
+    "command": "0x0101",
+    "length": "0x0002",
+    "payload": "relay_index=0x01 state=0x01",
+    "crc16": "0x7C43"
+  },
+  
+  "packet_bytes": [
+    "0xAA", "0x55",
+    "0x02", "0x00",
+    "0x01", "0x01",
+    "0x02", "0x00",
+    "0x01", "0x01",
+    "0x43", "0x7C"
+  ],
+  "packet_hex": "AA55020001010200 01014F7C",
+  "packet_bytes_raw": "aa550200010102000101437c",
+  
+  "packet_size": 12,
+  "payload_size": 2,
+  "payload_bytes": ["0x01", "0x01"],
+  
+  "payload_structure": {
+    "relay_index": {
+      "offset": 0,
+      "type": "uint8",
+      "value": "0x01",
+      "meaning": "Relay 1 (zero-indexed)"
+    },
+    "relay_state": {
+      "offset": 1,
+      "type": "uint8",
+      "value": "0x01",
+      "meaning": "ON (1=ON, 0=OFF)"
+    }
+  },
+  
+  "header_verification": "Header must be 0x55AA (little-endian: AA 55)",
+  "crc_verification": "CRC16-Modbus over bytes 0-9 (header through payload) = 0x7C43",
+  
+  "crc_details": {
+    "algorithm": "CRC16-Modbus",
+    "polynomial": "0xA001",
+    "initial_value": "0xFFFF",
+    "input_reflection": true,
+    "output_reflection": true,
+    "final_xor": "0x0000",
+    "crc_calculation_input": "aa550200010102000101",
+    "crc_calculation_result": "0x7C43",
+    "transmission_byte_order": "little-endian"
+  },
+  
+  "transmission_sequence": [
+    {"byte": 0, "value": "0xAA", "field": "header_lo"},
+    {"byte": 1, "value": "0x55", "field": "header_hi"},
+    {"byte": 2, "value": "0x02", "field": "sequence_lo"},
+    {"byte": 3, "value": "0x00", "field": "sequence_hi"},
+    {"byte": 4, "value": "0x01", "field": "command_lo"},
+    {"byte": 5, "value": "0x01", "field": "command_hi"},
+    {"byte": 6, "value": "0x02", "field": "length_lo"},
+    {"byte": 7, "value": "0x00", "field": "length_hi"},
+    {"byte": 8, "value": "0x01", "field": "payload_relay_index"},
+    {"byte": 9, "value": "0x01", "field": "payload_relay_state"},
+    {"byte": 10, "value": "0x43", "field": "crc_lo"},
+    {"byte": 11, "value": "0x7C", "field": "crc_hi"}
+  ],
+  
+  "expected_response": {
+    "command_code": "0x0101",
+    "sequence_number": "0x0002",
+    "result_code": "0x0000",
+    "payload": "relay_index=0x01 new_state=0x01"
+  },
+  
+  "validation_rules": [
+    "Header must equal 0x55AA",
+    "Sequence must equal 0x0002",
+    "Command must equal 0x0101 (SET RELAY)",
+    "Length must equal 0x0002 (2 payload bytes)",
+    "Total packet size must equal 12 bytes",
+    "Payload offset 0 must be relay index (0-7)",
+    "Payload offset 1 must be relay state (0 or 1)",
+    "CRC16-Modbus over first 10 bytes must equal 0x7C43"
+  ],
+  
+  "test_purposes": [
+    "Verify typical packet with 2-byte payload",
+    "Verify CRC calculation with payload",
+    "Verify command code encoding",
+    "Verify sequence number handling"
+  ],
+  
+  "notes": "This represents a typical command/control packet:\n1. 2-byte payload (common size)\n2. Demonstrates little-endian sequence in request\n3. Shows CRC calculation over header + payload\n4. Typical use case: controlling external hardware\n5. Firmware echoes sequence in response",
+  
+  "verification_method": "Generated from firmware reference implementation",
+  
+  "source_firmware": {
+    "file": "src/Utilities/CRC16.cpp + src/Protocol/PacketBuilder.cpp",
+    "function": "CRC16::Calculate() and PacketBuilder::Build()",
+    "hardware": "ESP32",
+    "date_generated": "2026-07-20"
+  }
+}

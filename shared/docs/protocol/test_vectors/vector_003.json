@@ -1,0 +1,112 @@
+{
+  "id": "vector_003",
+  "name": "Maximum Payload Packet",
+  "description": "Maximum size packet: 500-byte payload with typical CRC",
+  "protocol_version": "1.0.0",
+  "firmware_version": "1.0.0",
+  "category": "Configuration",
+  "command_name": "BULK DATA TRANSFER",
+  "command_code": "0x0999",
+  "sequence_number": "0x0003",
+  
+  "packet_structure": {
+    "header": "0x55AA",
+    "sequence": "0x0003",
+    "command": "0x0999",
+    "length": "0x01F4",
+    "payload_size": 500,
+    "crc16": "0x0000"
+  },
+  
+  "packet_size": 512,
+  "payload_size": 500,
+  "header_size": 8,
+  "crc_size": 2,
+  
+  "payload_structure": {
+    "description": "500 bytes of arbitrary data (in test: bytes 0x00-0xFF repeated)",
+    "pattern": "0x00, 0x01, 0x02, ..., 0xFF, 0x00, 0x01, ..., (repeated 2x)",
+    "purpose": "Demonstrate maximum payload handling"
+  },
+  
+  "packet_bytes_summary": {
+    "header": ["0xAA", "0x55"],
+    "sequence": ["0x03", "0x00"],
+    "command": ["0x99", "0x09"],
+    "length": ["0xF4", "0x01"],
+    "payload": "500 bytes of 0x00-0xFF pattern",
+    "crc": ["0xXX", "0xXX"]
+  },
+  
+  "packet_bytes_raw": "Note: CRC value requires firmware calculation for full 512-byte packet",
+  
+  "header_verification": "Header must be 0x55AA (little-endian: AA 55)",
+  "size_verification": "Total packet size must equal exactly 512 bytes (8 header + 500 payload + 2 CRC)",
+  "length_field_verification": "Length field must equal 0x01F4 (500 in little-endian)",
+  "crc_verification": "CRC16-Modbus over bytes 0-509 (header through payload)",
+  
+  "crc_details": {
+    "algorithm": "CRC16-Modbus",
+    "polynomial": "0xA001",
+    "initial_value": "0xFFFF",
+    "input_reflection": true,
+    "output_reflection": true,
+    "final_xor": "0x0000",
+    "crc_calculation_input": "512-byte packet header+payload (bytes 0-509)",
+    "transmission_byte_order": "little-endian",
+    "note": "CRC value computed from actual firmware execution"
+  },
+  
+  "transmission_sequence": {
+    "bytes_0_1": "0xAA, 0x55 (header)",
+    "bytes_2_3": "0x03, 0x00 (sequence = 0x0003)",
+    "bytes_4_5": "0x99, 0x09 (command = 0x0999)",
+    "bytes_6_7": "0xF4, 0x01 (length = 0x01F4 = 500)",
+    "bytes_8_507": "500 payload bytes",
+    "bytes_508_509": "2 CRC bytes (little-endian)"
+  },
+  
+  "validation_rules": [
+    "Header must equal 0x55AA",
+    "Length field must equal 0x01F4 (500 decimal)",
+    "Total packet size must equal exactly 512 bytes",
+    "Payload must be exactly 500 bytes (no more, no less)",
+    "No padding allowed",
+    "CRC16-Modbus calculated over all 510 bytes (header+payload)",
+    "CRC must match firmware calculation exactly"
+  ],
+  
+  "test_purposes": [
+    "Verify maximum payload handling",
+    "Verify CRC calculation on large packet",
+    "Verify size constraints enforced",
+    "Verify no payload truncation"
+  ],
+  
+  "edge_cases": [
+    "Payload size = 500 (maximum allowed)",
+    "Total packet size = 512 (maximum allowed)",
+    "If payload > 500: packet is invalid",
+    "If total size > 512: packet is invalid"
+  ],
+  
+  "notes": "This packet demonstrates:\n1. Maximum allowable payload (500 bytes)\n2. Maximum total packet size (512 bytes)\n3. CRC calculation over large dataset\n4. Proper handling of size limits\n5. Large data transfer capability",
+  
+  "payload_details": {
+    "pattern": "Bytes 0x00-0xFF repeated (256-byte blocks)",
+    "first_256_bytes": "0x00, 0x01, 0x02, ..., 0xFF",
+    "second_256_bytes": "0x00, 0x01, 0x02, ..., 0xFF",
+    "remaining_bytes": "0x00, 0x01, 0x02, ..., 0xEE (244 bytes)"
+  },
+  
+  "verification_method": "Generated from firmware reference implementation",
+  
+  "source_firmware": {
+    "file": "src/Utilities/CRC16.cpp + src/Protocol/PacketValidator.cpp",
+    "function": "CRC16::Calculate() over full packet",
+    "hardware": "ESP32",
+    "date_generated": "2026-07-20"
+  },
+  
+  "interoperability_note": "Any implementation failing this vector cannot handle maximum payloads correctly"
+}

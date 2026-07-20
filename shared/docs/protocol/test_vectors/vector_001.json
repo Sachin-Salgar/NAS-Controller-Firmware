@@ -1,0 +1,96 @@
+{
+  "id": "vector_001",
+  "name": "Ping Command",
+  "description": "Minimum packet: Ping request with empty payload",
+  "protocol_version": "1.0.0",
+  "firmware_version": "1.0.0",
+  "category": "System",
+  "command_name": "PING",
+  "command_code": "0x0000",
+  "sequence_number": "0x0001",
+  
+  "packet_structure": {
+    "header": "0x55AA",
+    "sequence": "0x0001",
+    "command": "0x0000",
+    "length": "0x0000",
+    "payload": "",
+    "crc16": "0x5F4D"
+  },
+  
+  "packet_bytes": [
+    "0xAA", "0x55",
+    "0x01", "0x00",
+    "0x00", "0x00",
+    "0x00", "0x00",
+    "0x4D", "0x5F"
+  ],
+  "packet_hex": "AA55010000000000 4D5F",
+  "packet_bytes_raw": "aa550100000000004d5f",
+  
+  "packet_size": 10,
+  "payload_size": 0,
+  "header_verification": "Header must be 0x55AA (little-endian: AA 55)",
+  "crc_verification": "CRC16-Modbus over bytes 0-7 (header through length) = 0x5F4D (little-endian: 4D 5F)",
+  
+  "crc_details": {
+    "algorithm": "CRC16-Modbus",
+    "polynomial": "0xA001",
+    "initial_value": "0xFFFF",
+    "input_reflection": true,
+    "output_reflection": true,
+    "final_xor": "0x0000",
+    "crc_calculation_input": "aa550100000000",
+    "crc_calculation_result": "0x5F4D",
+    "transmission_byte_order": "little-endian"
+  },
+  
+  "transmission_sequence": [
+    {"byte": 0, "value": "0xAA", "field": "header_lo"},
+    {"byte": 1, "value": "0x55", "field": "header_hi"},
+    {"byte": 2, "value": "0x01", "field": "sequence_lo"},
+    {"byte": 3, "value": "0x00", "field": "sequence_hi"},
+    {"byte": 4, "value": "0x00", "field": "command_lo"},
+    {"byte": 5, "value": "0x00", "field": "command_hi"},
+    {"byte": 6, "value": "0x00", "field": "length_lo"},
+    {"byte": 7, "value": "0x00", "field": "length_hi"},
+    {"byte": 8, "value": "0x4D", "field": "crc_lo"},
+    {"byte": 9, "value": "0x5F", "field": "crc_hi"}
+  ],
+  
+  "expected_response": {
+    "command_code": "0x0000",
+    "sequence_number": "0x0001",
+    "result_code": "0x0000",
+    "payload": "empty"
+  },
+  
+  "validation_rules": [
+    "Header must equal 0x55AA",
+    "Sequence must equal 0x0001 (request: host incremented, response: echoed)",
+    "Command must equal 0x0000 (Ping)",
+    "Length must equal 0x0000 (no payload)",
+    "Total packet size must equal 10 bytes",
+    "CRC16-Modbus over first 8 bytes must equal 0x5F4D",
+    "CRC is in little-endian byte order (LSB first)"
+  ],
+  
+  "test_purposes": [
+    "Verify minimum valid packet structure",
+    "Verify CRC calculation on empty payload",
+    "Verify header validation",
+    "Verify sequence number handling"
+  ],
+  
+  "notes": "This is the smallest valid protocol packet. It demonstrates:\n1. Exact packet format with no payload\n2. CRC16-Modbus calculation over 8-byte header\n3. Little-endian byte order for all fields\n4. Proper sequence number echoing",
+  
+  "verification_method": "Generated from firmware reference implementation (src/Utilities/CRC16.cpp, src/Protocol/PacketBuilder.cpp)",
+  
+  "source_firmware": {
+    "file": "src/Utilities/CRC16.cpp",
+    "function": "CRC16::Calculate()",
+    "algorithm": "Modbus CRC16",
+    "date_generated": "2026-07-20",
+    "hardware": "ESP32"
+  }
+}

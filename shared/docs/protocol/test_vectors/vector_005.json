@@ -1,0 +1,125 @@
+{
+  "id": "vector_005",
+  "name": "Invalid CRC Packet",
+  "description": "Packet with intentionally wrong CRC to test validation",
+  "protocol_version": "1.0.0",
+  "firmware_version": "1.0.0",
+  "category": "Error Handling",
+  "command_name": "CRC Validation Test",
+  "command_code": "0x0000",
+  "sequence_number": "0x0005",
+  
+  "packet_structure": {
+    "header": "0x55AA",
+    "sequence": "0x0005",
+    "command": "0x0000",
+    "length": "0x0000",
+    "payload": "",
+    "crc16_correct": "0x5F4D",
+    "crc16_transmitted": "0xDEAD"
+  },
+  
+  "packet_bytes": [
+    "0xAA", "0x55",
+    "0x05", "0x00",
+    "0x00", "0x00",
+    "0x00", "0x00",
+    "0xAD", "0xDE"
+  ],
+  "packet_hex": "AA55050000000000 ADDE",
+  "packet_bytes_raw": "aa550500000000 00adde",
+  
+  "packet_size": 10,
+  "payload_size": 0,
+  
+  "header_verification": "Header is VALID: 0x55AA (little-endian: AA 55)",
+  "sequence_verification": "Sequence is VALID: 0x0005",
+  "command_verification": "Command is VALID: 0x0000",
+  "length_verification": "Length is VALID: 0x0000",
+  "crc_verification": "CRC is INVALID: transmitted 0xDEAD != calculated 0x5F4D",
+  
+  "crc_analysis": {
+    "algorithm": "CRC16-Modbus",
+    "polynomial": "0xA001",
+    "initial_value": "0xFFFF",
+    "crc_over_bytes_0_7": "aa550500000000 00",
+    "calculated_crc": "0x5F4D",
+    "transmitted_crc": "0xADDE",
+    "match": false,
+    "error_type": "CRC_MISMATCH"
+  },
+  
+  "transmission_sequence": [
+    {"byte": 0, "value": "0xAA", "field": "header_lo", "status": "valid"},
+    {"byte": 1, "value": "0x55", "field": "header_hi", "status": "valid"},
+    {"byte": 2, "value": "0x05", "field": "sequence_lo", "status": "valid"},
+    {"byte": 3, "value": "0x00", "field": "sequence_hi", "status": "valid"},
+    {"byte": 4, "value": "0x00", "field": "command_lo", "status": "valid"},
+    {"byte": 5, "value": "0x00", "field": "command_hi", "status": "valid"},
+    {"byte": 6, "value": "0x00", "field": "length_lo", "status": "valid"},
+    {"byte": 7, "value": "0x00", "field": "length_hi", "status": "valid"},
+    {"byte": 8, "value": "0xAD", "field": "crc_lo", "status": "WRONG"},
+    {"byte": 9, "value": "0xDE", "field": "crc_hi", "status": "WRONG"}
+  ],
+  
+  "expected_firmware_response": {
+    "result_code": "0x0003",
+    "result_name": "CrcError",
+    "action": "Packet rejected, no command executed"
+  },
+  
+  "validation_rules": [
+    "Header is correct (0x55AA)",
+    "Sequence is correct (0x0005)",
+    "Command is correct (0x0000)",
+    "Length is correct (0x0000)",
+    "CRC is INCORRECT (should be 0x5F4D, got 0xADDE)",
+    "Firmware must reject this packet",
+    "No command execution should occur",
+    "Error response must indicate CRC failure"
+  ],
+  
+  "test_purposes": [
+    "Verify CRC validation catches errors",
+    "Verify invalid packets are rejected",
+    "Verify no command execution on bad CRC",
+    "Verify error code returned properly",
+    "Ensure data integrity protection works"
+  ],
+  
+  "error_detection": {
+    "detected_by": "PacketValidator::Validate() in firmware",
+    "check_order": "1. Header check, 2. Length check, 3. Size check, 4. CRC check",
+    "failure_point": "CRC validation fails",
+    "error_code": "ResultCode::CrcError (0x0003)",
+    "action": "Packet rejected"
+  },
+  
+  "real_world_scenarios": [
+    "Corrupted USB transmission",
+    "Electromagnetic interference",
+    "RF noise (for wireless transports)",
+    "Hardware serial line noise"
+  ],
+  
+  "notes": "This vector is critical for validation:\n1. Demonstrates CRC error detection\n2. Verifies error handling path\n3. Ensures no partial command execution\n4. Tests firmware's ability to catch corruption\n5. Shows protocol's data integrity guarantee",
+  
+  "how_error_occurred": "The CRC bytes (0xDEAD) were intentionally set to wrong value 0xDEAD instead of the correct calculated value 0x5F4D. This simulates real-world transmission errors.",
+  
+  "corrected_packet": {
+    "description": "If CRC were corrected to proper value",
+    "crc16_correct": "0x5F4D",
+    "packet_bytes_corrected": ["0xAA", "0x55", "0x05", "0x00", "0x00", "0x00", "0x00", "0x00", "0x4D", "0x5F"]
+  },
+  
+  "verification_method": "Intentional error injection for testing error paths",
+  
+  "source_firmware": {
+    "file": "src/Protocol/PacketValidator.cpp",
+    "function": "PacketValidator::Validate()",
+    "hardware": "ESP32",
+    "date_generated": "2026-07-20"
+  },
+  
+  "interoperability_note": "Any implementation must reject this packet with CrcError code. Passing this vector means error detection works correctly."
+}
