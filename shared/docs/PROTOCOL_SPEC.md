@@ -43,30 +43,28 @@ Define the binary communication protocol between the Host Daemon (Node.js + Type
 ## Frame Format
 
 ```
-[Header] [Seq] [Cmd] [Len] [Payload] [CRC16] [Footer]
-  2B      1B    1B    2B    0-256B    2B      1B
+[Header] [Seq] [Cmd] [Len] [Payload] [CRC16]
+  2B      2B    2B    2B    0-256B    2B
 ```
 
 | Field | Bytes | Value | Purpose |
 |-------|-------|-------|---------|
 | **Header** | 2 | 0x55AA | Frame delimiter (big-endian) |
-| **Seq** | 1 | 0x00-0xFF | Sequence number (rolls over) |
-| **Cmd** | 1 | See below | Command byte |
+| **Seq** | 2 | 0x0000-0xFFFF | Sequence number (big-endian) |
+| **Cmd** | 2 | See below | Command identifier (big-endian) |
 | **Len** | 2 | 0-256 | Payload length (big-endian) |
 | **Payload** | 0-256 | Varies | Command-specific data |
-| **CRC16** | 2 | See CRC section | CCITT-16 (covers Header through Payload) |
-| **Footer** | 1 | 0xAA | Frame terminator |
+| **CRC16** | 2 | See CRC section | CRC-16-Modbus (covers Header through Payload) |
 
 ### Example: Turn On Relay 1
 
 ```
 Header: 0x55 0xAA     ← Frame start
-Seq:    0x01          ← Sequence 1
-Cmd:    0x10          ← RELAY_SET command
+Seq:    0x00 0x01     ← Sequence 1 (big-endian)
+Cmd:    0x10 0x02     ← RelaySet command (0x1002, big-endian)
 Len:    0x00 0x02     ← Payload is 2 bytes
 Payload: 0x01 0x01    ← Relay ID: 1, State: ON (0x01)
 CRC16:  0xXX 0xXX     ← Calculated CRC (see CRC section)
-Footer: 0xAA          ← Frame end
 ```
 
 ## Byte Order
@@ -89,6 +87,8 @@ Footer: 0xAA          ← Frame end
 | i16 | 2 bytes | -32768 to 32767 | Big-endian, signed |
 | String | N | Varies | UTF-8, null-terminated |
 | Array | N×M | Varies | Fixed-size or length-prefixed |
+| CommandId | 2 bytes | 0x0000-0xFFFF | Big-endian command identifier |
+| SequenceNum | 2 bytes | 0x0000-0xFFFF | Big-endian sequence number |
 
 ## Timestamps
 
@@ -100,52 +100,7 @@ Footer: 0xAA          ← Frame end
 
 # ACK/NAK BEHAVIOR
 
-## Command → Response Sequence
-
-```
-Daemon sends command with Seq=N
-    ↓
-Firmware receives and validates
-    ↓
-    ├─ If valid:   Send ACK (Cmd=0x80 | original Cmd)
-    │                Perform action
-    │                Send response (Cmd=0x90 | original Cmd)
-    │
-    └─ If invalid: Send NAK (Cmd=0x40 | original Cmd)
-                    Include error code
-```
-
-### Response Codes
-
-| Cmd Bits | Meaning | Example |
-|----------|---------|---------|
-| 0x00-0x3F | Commands |  0x10 = RELAY_SET |
-| 0x40 | NAK (error) | 0x40 = NAK for command in 0x00 |
-| 0x80 | ACK (success) | 0x80 = ACK for command in 0x00 |
-| 0x90 | Response data | 0x90 = Response with data |
-
-### ACK/NAK Example
-
-**Request:**
-```
-Cmd: 0x10 (RELAY_SET)
-Seq: 0x05
-Payload: [Relay=1, State=1]
-```
-
-**ACK Response:**
-```
-Cmd: 0x80          ← ACK for RELAY_SET
-Seq: 0x05          ← Same sequence
-Payload: (empty)
-```
-
-**NAK Response (if error):**
-```
-Cmd: 0x40          ← NAK for RELAY_SET
-Seq: 0x05          ← Same sequence
-Payload: [ErrorCode=0x01]  ← See Error Codes
-```
+**Status:** Not verified from firmware source code. See completion report.
 
 ---
 
@@ -178,60 +133,78 @@ Wait 1000 ms for response
 
 # COMMAND CATEGORIES
 
-## System Commands (0x00-0x0F)
-
-| Cmd | Name | Purpose | Payload (Request) | Payload (Response) |
-|-----|------|---------|-------------------|-------------------|
-| 0x01 | PING | Connectivity check | (empty) | (empty) |
-| 0x02 | GET_CAPABILITIES | Query hardware capabilities | (empty) | See State Sync |
-| 0x03 | GET_FIRMWARE_VERSION | Firmware version | (empty) | u32 version |
-| 0x04 | RESET | Soft reset | (empty) | (empty) |
-| 0x05 | DIAGNOSTICS_ENABLE | Enable debug logging | u8 level (0-2) | (empty) |
-
-## Relay Commands (0x10-0x1F)
+## System Commands (0x0000-0x0FFF)
 
 | Cmd | Name | Purpose |
 |-----|------|---------|
-| 0x10 | RELAY_SET | Set relay state |
-| 0x11 | RELAY_GET | Get relay state |
-| 0x12 | RELAY_TOGGLE | Toggle relay |
+| 0x0001 | Ping | Connectivity check |
+| 0x0002 | GetVersion | Firmware version |
+| 0x0003 | GetBuildInfo | Build information |
+| 0x0004 | GetSystemStatus | System status |
+| 0x0005 | Restart | Soft restart |
 
-**RELAY_SET Payload:**
-```
-[u8 relay_id, u8 state (0=OFF, 1=ON)]
-```
-
-## Fan Commands (0x20-0x2F)
+## Relay Commands (0x1000-0x1FFF)
 
 | Cmd | Name | Purpose |
 |-----|------|---------|
-| 0x20 | FAN_SET_SPEED | Set fan speed (0-100%) |
-| 0x21 | FAN_GET_SPEED | Get current fan speed |
+| 0x1001 | RelayGet | Get relay state |
+| 0x1002 | RelaySet | Set relay state |
+| 0x1003 | RelayToggle | Toggle relay |
 
-## LED Commands (0x30-0x3F)
-
-| Cmd | Name | Purpose |
-|-----|------|---------|
-| 0x30 | LED_SET_MODE | Set animation mode |
-| 0x31 | LED_SET_COLOR | Set LED color |
-
-## Config Commands (0x50-0x5F)
+## Fan Commands (0x1100-0x11FF)
 
 | Cmd | Name | Purpose |
 |-----|------|---------|
-| 0x50 | CONFIG_GET | Get all config |
-| 0x51 | CONFIG_SET | Set config (transaction) |
-| 0x52 | CONFIG_BEGIN_TRANSACTION | Start atomic config change |
-| 0x53 | CONFIG_COMMIT_TRANSACTION | Commit or rollback |
+| 0x1101 | FanGet | Get fan state |
+| 0x1102 | FanSetSpeed | Set fan speed |
+| 0x1103 | FanSetMode | Set fan mode |
 
-## Status Commands (0x60-0x6F)
+## Temperature Commands (0x1200-0x12FF)
 
 | Cmd | Name | Purpose |
 |-----|------|---------|
-| 0x60 | STATUS_GET_ALL | Get all hardware status |
-| 0x61 | STATUS_GET_RELAYS | Get relay states |
-| 0x62 | STATUS_GET_TEMPS | Get temperature readings |
-| 0x63 | STATUS_GET_DRIVES | Get drive status |
+| 0x1201 | TemperatureGet | Get single temperature |
+| 0x1202 | TemperatureGetAll | Get all temperatures |
+
+## LED Commands (0x1300-0x13FF)
+
+| Cmd | Name | Purpose |
+|-----|------|---------|
+| 0x1301 | LedGet | Get LED state |
+| 0x1302 | LedSetColor | Set LED color |
+| 0x1303 | LedSetMode | Set LED mode |
+| 0x1304 | LedOff | Turn LED off |
+
+## Drive Commands (0x1400-0x14FF)
+
+| Cmd | Name | Purpose |
+|-----|------|---------|
+| 0x1401 | DriveGet | Get drive info |
+| 0x1402 | DriveGetAll | Get all drives |
+| 0x1403 | DrivePowerOn | Power on drive |
+| 0x1404 | DrivePowerOff | Power off drive |
+
+## Configuration Commands (0x1500-0x15FF)
+
+| Cmd | Name | Purpose |
+|-----|------|---------|
+| 0x1501 | ConfigurationLoad | Load configuration |
+| 0x1502 | ConfigurationSave | Save configuration |
+| 0x1503 | ConfigurationReset | Reset configuration |
+
+## Statistics Commands (0x1600-0x16FF)
+
+| Cmd | Name | Purpose |
+|-----|------|---------|
+| 0x1601 | StatisticsGet | Get statistics |
+| 0x1602 | StatisticsReset | Reset statistics |
+
+## Event Commands (0x1700-0x17FF)
+
+| Cmd | Name | Purpose |
+|-----|------|---------|
+| 0x1701 | EventRead | Read events |
+| 0x1702 | EventClear | Clear events |
 
 ---
 
@@ -263,21 +236,22 @@ u8 error_code
 
 ## Usage
 
-- **Range:** 0x00 to 0xFF (256 values)
+- **Range:** 0x0000 to 0xFFFF (65536 values)
 - **Increment:** Every command sent
-- **Rollover:** 0xFF → 0x00
+- **Rollover:** 0xFFFF → 0x0000
 - **Matching:** Response must have same Seq as request
+- **Byte Order:** Big-endian (MSB first)
 
 ## Example Sequence
 
 ```
-Cmd 1: Seq=0x00
-Cmd 2: Seq=0x01
-Cmd 3: Seq=0x02
+Cmd 1: Seq=0x0000
+Cmd 2: Seq=0x0001
+Cmd 3: Seq=0x0002
 ...
-Cmd 255: Seq=0xFE
-Cmd 256: Seq=0xFF
-Cmd 257: Seq=0x00 (rolls over)
+Cmd 65535: Seq=0xFFFE
+Cmd 65536: Seq=0xFFFF
+Cmd 65537: Seq=0x0000 (rolls over)
 ```
 
 ---
@@ -397,29 +371,15 @@ When implementing CRC16 in the daemon:
 
 ## Initial Connection Sequence
 
-When daemon connects to firmware:
+**Status:** Payload structure not verified from firmware source code.
+
+When daemon connects to firmware, command sequence is based on available commands:
 
 ```
-1. Send PING (Cmd=0x01)
+1. Send Ping (Cmd=0x0001)
    ↓ (Confirm responsive)
-   
-2. Send GET_CAPABILITIES (Cmd=0x02)
-   ↓ Response includes:
-   - Drive count
-   - Relay count
-   - Fan count
-   - LED count
-   - Temperature sensor count
-   - Supported commands (bitmap)
-   - Firmware version
-   
-3. Send CONFIG_GET (Cmd=0x50)
-   ↓ Response: Full configuration object
-   
-4. Send STATUS_GET_ALL (Cmd=0x60)
-   ↓ Response: All hardware status
-   
-5. UI Ready (subscribe to state changes)
+
+2. Subsequent commands depend on available hardware and configuration
 ```
 
 ## Reconnection Sequence
@@ -436,25 +396,16 @@ Prevent partially-applied configurations. All-or-nothing semantics.
 
 ## Sequence
 
+**Status:** Transaction semantics not verified from firmware source code.
+
+Available commands:
 ```
-Client:  CONFIG_BEGIN_TRANSACTION (Cmd=0x52)
-         ↓
-Server:  ACK (Cmd=0x80)
-         ↓
-Client:  CONFIG_SET with new values (Cmd=0x51)
-         ↓
-Server:  ACK if valid, NAK if validation fails
-         ↓
-Client:  CONFIG_COMMIT_TRANSACTION (Cmd=0x53) with commit flag
-         ↓
-Server:  ACK (committed) or NAK (rollback)
-         ↓
-Transaction complete
+- ConfigurationLoad (Cmd=0x1501)
+- ConfigurationSave (Cmd=0x1502)
+- ConfigurationReset (Cmd=0x1503)
 ```
 
-### Timeout
-
-If client doesn't commit within 10 seconds, firmware auto-rollbacks.
+Implementation details for transaction semantics: Not verified from firmware.
 
 ---
 
