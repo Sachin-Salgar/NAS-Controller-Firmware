@@ -1,5 +1,9 @@
 import {
-  ProtocolInfo,
+  ProtocolConstants,
+  ProtocolLimits,
+  ProtocolTiming,
+  ProtocolFeatureFlag,
+  ProtocolFeatures,
   ResponseBit,
   CommandCode,
   ErrorCode,
@@ -7,6 +11,7 @@ import {
   FanMode,
   LEDAnimation,
   EventType,
+  BaseEvent,
   PacketHeader,
   PacketMetadata,
   PacketFooter,
@@ -34,46 +39,92 @@ import {
   AckResponse,
   NakResponse,
   DataResponse,
+  ErrorInfo,
   Result,
   Ok,
   Err,
 } from "../protocol";
 
-describe("ProtocolInfo", () => {
-  test("protocol version is 1.0.0", () => {
-    expect(ProtocolInfo.Version).toBe("1.0.0");
-  });
-
+describe("ProtocolConstants", () => {
   test("packet header is 0x55AA", () => {
-    expect(ProtocolInfo.Header).toBe(0x55aa);
+    expect(ProtocolConstants.Header).toBe(0x55aa);
   });
 
   test("packet footer is 0xAA", () => {
-    expect(ProtocolInfo.Footer).toBe(0xaa);
+    expect(ProtocolConstants.Footer).toBe(0xaa);
   });
 
   test("CRC algorithm is CRC16-CCITT", () => {
-    expect(ProtocolInfo.CRC).toBe("CRC16-CCITT");
+    expect(ProtocolConstants.CRCAlgorithm).toBe("CRC16-CCITT");
   });
 
   test("CRC initial value is 0xFFFF", () => {
-    expect(ProtocolInfo.CRCInitialValue).toBe(0xffff);
+    expect(ProtocolConstants.CRCInitialValue).toBe(0xffff);
   });
 
   test("CRC polynomial is 0x1021", () => {
-    expect(ProtocolInfo.CRCPolynomial).toBe(0x1021);
+    expect(ProtocolConstants.CRCPolynomial).toBe(0x1021);
   });
 
+  test("config version is 1", () => {
+    expect(ProtocolConstants.ConfigVersion).toBe(1);
+  });
+});
+
+describe("ProtocolLimits", () => {
   test("max packet size is 256 bytes", () => {
-    expect(ProtocolInfo.MaxPacketSize).toBe(256);
+    expect(ProtocolLimits.MaxPacketSize).toBe(256);
+  });
+
+  test("max payload size is 256 bytes", () => {
+    expect(ProtocolLimits.MaxPayloadSize).toBe(256);
+  });
+
+  test("sequence number range", () => {
+    expect(ProtocolLimits.MaxSequenceNumber).toBe(0xff);
+  });
+
+  test("hardware limits are reasonable", () => {
+    expect(ProtocolLimits.MaxRelays).toBeGreaterThan(0);
+    expect(ProtocolLimits.MaxFans).toBeGreaterThan(0);
+    expect(ProtocolLimits.MaxTemperatureSensors).toBeGreaterThan(0);
+  });
+});
+
+describe("ProtocolTiming", () => {
+  test("ACK timeout is 100ms", () => {
+    expect(ProtocolTiming.AckTimeout).toBe(100);
   });
 
   test("command timeout is 1000ms", () => {
-    expect(ProtocolInfo.CommandTimeout).toBe(1000);
+    expect(ProtocolTiming.CommandTimeout).toBe(1000);
   });
 
   test("max retry attempts is 3", () => {
-    expect(ProtocolInfo.MaxRetryAttempts).toBe(3);
+    expect(ProtocolTiming.MaxRetryAttempts).toBe(3);
+  });
+
+  test("reconnect delays are progressive", () => {
+    expect(ProtocolTiming.ReconnectInitialDelay).toBe(1000);
+    expect(ProtocolTiming.ReconnectMaxDelay).toBeGreaterThan(
+      ProtocolTiming.ReconnectInitialDelay
+    );
+  });
+});
+
+describe("ProtocolFeatureFlags", () => {
+  test("core features are defined", () => {
+    expect(ProtocolFeatures.CORE.length).toBeGreaterThan(0);
+  });
+
+  test("extended features are defined", () => {
+    expect(ProtocolFeatures.EXTENDED.length).toBeGreaterThan(0);
+  });
+
+  test("feature flags are defined", () => {
+    expect(ProtocolFeatureFlag.PWM_FAN_CONTROL).toBe("pwm_fan_control");
+    expect(ProtocolFeatureFlag.RGB_LED).toBe("rgb_led");
+    expect(ProtocolFeatureFlag.TEMPERATURE_SENSOR).toBe("temperature_sensor");
   });
 });
 
@@ -375,6 +426,33 @@ describe("Configuration DTOs", () => {
   });
 });
 
+describe("ErrorInfo Type", () => {
+  test("ErrorInfo has required code and message", () => {
+    const error: ErrorInfo = {
+      code: "TEST_ERROR",
+      message: "This is a test error",
+    };
+    expect(error.code).toBe("TEST_ERROR");
+    expect(error.message).toBe("This is a test error");
+  });
+
+  test("ErrorInfo can have optional retryable flag", () => {
+    const retryableError: ErrorInfo = {
+      code: "TIMEOUT",
+      message: "Operation timed out",
+      retryable: true,
+    };
+    expect(retryableError.retryable).toBe(true);
+
+    const nonRetryableError: ErrorInfo = {
+      code: "INVALID_PARAM",
+      message: "Parameter invalid",
+      retryable: false,
+    };
+    expect(nonRetryableError.retryable).toBe(false);
+  });
+});
+
 describe("Result Type", () => {
   test("Ok creates a success result", () => {
     const result: Result<number> = Ok(42);
@@ -412,6 +490,18 @@ describe("Result Type", () => {
     }
     expect(errorCode).toBe("FAIL");
   });
+
+  test("Result error can be populated with retryable flag", () => {
+    const result: Result<void> = Err("TIMEOUT", "Command timeout");
+    if (!result.success) {
+      // Daemon will populate retryable based on error classification
+      const enrichedError: ErrorInfo = {
+        ...result.error,
+        retryable: true,
+      };
+      expect(enrichedError.retryable).toBe(true);
+    }
+  });
 });
 
 describe("Event Types", () => {
@@ -427,6 +517,26 @@ describe("Event Types", () => {
     const values = Object.values(EventType);
     const unique = new Set(values);
     expect(unique.size).toBe(values.length);
+  });
+});
+
+describe("BaseEvent Interface", () => {
+  test("BaseEvent has required fields", () => {
+    const event: BaseEvent = {
+      type: EventType.DEVICE_CONNECTED,
+      timestamp: Date.now(),
+    };
+    expect(event.type).toBeDefined();
+    expect(event.timestamp).toBeDefined();
+  });
+
+  test("BaseEvent can have optional source field", () => {
+    const event: BaseEvent = {
+      type: EventType.ERROR_OCCURRED,
+      timestamp: Date.now(),
+      source: "daemon",
+    };
+    expect(event.source).toBe("daemon");
   });
 });
 

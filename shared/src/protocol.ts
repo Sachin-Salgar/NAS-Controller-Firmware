@@ -1,23 +1,79 @@
 // ============================================================================
-// PROTOCOL INFORMATION
+// PROTOCOL CONSTANTS
 // ============================================================================
-// Consolidated protocol metadata - single source of truth for protocol details
-
-export const ProtocolInfo = {
-  Version: "1.0.0",
-  ConfigVersion: 1,
+// Packet format constants - these do not change
+export const ProtocolConstants = {
   Header: 0x55aa,
   Footer: 0xaa,
-  CRC: "CRC16-CCITT",
+  ConfigVersion: 1,
+  CRCAlgorithm: "CRC16-CCITT",
   CRCInitialValue: 0xffff,
   CRCPolynomial: 0x1021,
   CRCFinalXOR: 0x0000,
+} as const;
+
+// ============================================================================
+// PROTOCOL LIMITS
+// ============================================================================
+// Resource constraints - may change with hardware improvements
+export const ProtocolLimits = {
   MaxPacketSize: 256,
   MaxPayloadSize: 256,
-  ACKTimeout: 100,
-  ResponseTimeout: 500,
-  CommandTimeout: 1000,
+  MaxSequenceNumber: 0xff,  // 0x00-0xFF (256 values)
+  MaxCommandCode: 0xff,
+  MaxErrorCode: 0x0a,
+  MaxRelays: 16,
+  MaxFans: 8,
+  MaxLEDs: 4,
+  MaxTemperatureSensors: 8,
+  MaxDrives: 16,
+} as const;
+
+// ============================================================================
+// PROTOCOL TIMING
+// ============================================================================
+// Timeout and retry values - may need adjustment for reliability
+export const ProtocolTiming = {
+  AckTimeout: 100,           // ms - ACK should come quickly
+  ResponseTimeout: 500,      // ms - Data response may take longer
+  CommandTimeout: 1000,      // ms - Total timeout for command
+  RetryBaseDelay: 100,       // ms - Initial retry delay
   MaxRetryAttempts: 3,
+  ReconnectInitialDelay: 1000,   // ms - Initial reconnect wait
+  ReconnectMaxDelay: 8000,       // ms - Cap reconnect wait at 8 seconds
+} as const;
+
+// ============================================================================
+// PROTOCOL FEATURE FLAGS
+// ============================================================================
+// Capabilities that firmware may or may not support
+// Firmware reports these in GET_CAPABILITIES response
+export enum ProtocolFeatureFlag {
+  PWM_FAN_CONTROL = "pwm_fan_control",
+  RGB_LED = "rgb_led",
+  TEMPERATURE_SENSOR = "temperature_sensor",
+  REAL_TIME_CLOCK = "real_time_clock",
+  EVENT_LOG = "event_log",
+  CONFIGURATION_PERSISTENCE = "configuration_persistence",
+  FIRMWARE_UPDATE = "firmware_update",
+  NETWORK_INTERFACE = "network_interface",
+}
+
+export const ProtocolFeatures = {
+  // Standard features required for MVP
+  CORE: [
+    ProtocolFeatureFlag.PWM_FAN_CONTROL,
+    ProtocolFeatureFlag.RGB_LED,
+    ProtocolFeatureFlag.TEMPERATURE_SENSOR,
+    ProtocolFeatureFlag.EVENT_LOG,
+    ProtocolFeatureFlag.CONFIGURATION_PERSISTENCE,
+  ],
+  // Optional features
+  EXTENDED: [
+    ProtocolFeatureFlag.REAL_TIME_CLOCK,
+    ProtocolFeatureFlag.FIRMWARE_UPDATE,
+    ProtocolFeatureFlag.NETWORK_INTERFACE,
+  ],
 } as const;
 
 // ============================================================================
@@ -31,8 +87,24 @@ export const ResponseBit = {
 } as const;
 
 // ============================================================================
-// COMMAND CODES
+// COMMAND CODE RANGES AND DEFINITIONS
 // ============================================================================
+// Command codes are organized in ranges for easy expansion.
+// Each range reserves 16 codes (one hex digit for subcategory)
+//
+// 0x00-0x0F: System (reserved: future expansion)
+// 0x10-0x1F: Relay Control
+// 0x20-0x2F: Status & Monitoring
+// 0x30-0x3F: Fan Control
+// 0x40-0x4F: Temperature Sensing
+// 0x50-0x5F: LED Control
+// 0x60-0x6F: Configuration Management
+// 0x70-0x7F: Event Logging & Diagnostics
+// 0x80-0x8F: Reserved (response codes use 0x80 bit)
+// 0x90-0x9F: Reserved (response codes use 0x90 bits)
+// 0xA0-0xBF: Reserved (future: Storage/File System)
+// 0xC0-0xDF: Reserved (future: Network Functions)
+// 0xE0-0xFF: Reserved (future: Advanced Features)
 
 export const CommandCode = {
   // System Commands (0x01-0x0F)
@@ -44,7 +116,7 @@ export const CommandCode = {
   RELAY_SET: 0x10,
   RELAY_GET: 0x11,
 
-  // Status Commands (0x20-0x2F)
+  // Status & Monitoring Commands (0x20-0x2F)
   GET_ALL_STATUS: 0x20,
 
   // Fan Commands (0x30-0x3F)
@@ -415,99 +487,93 @@ export enum EventType {
   ERROR_OCCURRED = "error_occurred",
 }
 
-export interface DeviceConnectedEvent {
-  type: EventType.DEVICE_CONNECTED;
+// Base event interface - all events extend this
+export interface BaseEvent {
+  type: EventType;
   timestamp: number;
+  source?: string;  // Where the event originated (firmware, daemon, ui)
+}
+
+export interface DeviceConnectedEvent extends BaseEvent {
+  type: EventType.DEVICE_CONNECTED;
   capabilities: CapabilityInfo;
 }
 
-export interface DeviceDisconnectedEvent {
+export interface DeviceDisconnectedEvent extends BaseEvent {
   type: EventType.DEVICE_DISCONNECTED;
-  timestamp: number;
   reason: string;
 }
 
-export interface RelayStateChangedEvent {
+export interface RelayStateChangedEvent extends BaseEvent {
   type: EventType.RELAY_STATE_CHANGED;
-  timestamp: number;
   relayId: number;
   previousState: RelayState;
   newState: RelayState;
 }
 
-export interface FanSpeedChangedEvent {
+export interface FanSpeedChangedEvent extends BaseEvent {
   type: EventType.FAN_SPEED_CHANGED;
-  timestamp: number;
   fanId: number;
   previousSpeed: number;
   newSpeed: number;
 }
 
-export interface FanModeChangedEvent {
+export interface FanModeChangedEvent extends BaseEvent {
   type: EventType.FAN_MODE_CHANGED;
-  timestamp: number;
   fanId: number;
   previousMode: FanMode;
   newMode: FanMode;
 }
 
-export interface LEDColorChangedEvent {
+export interface LEDColorChangedEvent extends BaseEvent {
   type: EventType.LED_COLOR_CHANGED;
-  timestamp: number;
   ledId: number;
   red: number;
   green: number;
   blue: number;
 }
 
-export interface LEDAnimationChangedEvent {
+export interface LEDAnimationChangedEvent extends BaseEvent {
   type: EventType.LED_ANIMATION_CHANGED;
-  timestamp: number;
   ledId: number;
   animation: LEDAnimation;
 }
 
-export interface TemperatureChangedEvent {
+export interface TemperatureChangedEvent extends BaseEvent {
   type: EventType.TEMPERATURE_CHANGED;
-  timestamp: number;
   sensorId: number;
   previousTemperature: number;
   newTemperature: number;
 }
 
-export interface ConfigurationChangedEvent {
+export interface ConfigurationChangedEvent extends BaseEvent {
   type: EventType.CONFIGURATION_CHANGED;
-  timestamp: number;
   section: string;
 }
 
-export interface CommandSentEvent {
+export interface CommandSentEvent extends BaseEvent {
   type: EventType.COMMAND_SENT;
-  timestamp: number;
   sequence: number;
   command: number;
 }
 
-export interface CommandCompletedEvent {
+export interface CommandCompletedEvent extends BaseEvent {
   type: EventType.COMMAND_COMPLETED;
-  timestamp: number;
   sequence: number;
   command: number;
   duration: number;
 }
 
-export interface CommandFailedEvent {
+export interface CommandFailedEvent extends BaseEvent {
   type: EventType.COMMAND_FAILED;
-  timestamp: number;
   sequence: number;
   command: number;
   errorCode: ErrorCode;
   attempts: number;
 }
 
-export interface ErrorOccurredEvent {
+export interface ErrorOccurredEvent extends BaseEvent {
   type: EventType.ERROR_OCCURRED;
-  timestamp: number;
   errorCode: string;
   message: string;
   severity: "warning" | "error";
@@ -531,6 +597,15 @@ export type Event =
 // ============================================================================
 // RESULT TYPE FOR SUCCESS/FAILURE HANDLING
 // ============================================================================
+// Result<T> eliminates exceptions for predictable error handling.
+// Every operation returns either Success or Failure.
+// Later, daemon can add retryable flag based on error type.
+
+export interface ErrorInfo {
+  code: string;
+  message: string;
+  retryable?: boolean;  // Populated by daemon, not in shared contract
+}
 
 export type Success<T> = {
   success: true;
@@ -539,10 +614,7 @@ export type Success<T> = {
 
 export type Failure = {
   success: false;
-  error: {
-    code: string;
-    message: string;
-  };
+  error: ErrorInfo;
 };
 
 export type Result<T> = Success<T> | Failure;
