@@ -463,6 +463,106 @@ Firmware implements RELAY_SET command without updating PROTOCOL_SPEC.md
 
 ---
 
+## Rule 13: Architecture Freeze Rule
+
+### The Rule
+
+After planning is complete, architecture changes require an **Architecture Decision Record (ADR)** documenting:
+
+1. **Problem** - What issue needs solving?
+2. **Decision** - What solution was chosen?
+3. **Consequences** - What are the tradeoffs?
+4. **Alternatives** - What else was considered?
+
+No architectural refactoring is allowed without documenting these elements. This prevents uncontrolled design changes and keeps the architecture stable and intentional.
+
+### Why
+
+- Prevents architecture drift (death by a thousand cuts)
+- Forces stakeholders to evaluate tradeoffs
+- Creates audit trail of design decisions
+- Makes future changes traceable
+- Prevents repeating old mistakes
+
+### What This Means
+
+✅ **Allowed:**
+- Bug fixes within existing architecture
+- New features following established patterns
+- Performance optimizations that don't change structure
+- Internal refactoring that preserves interface
+
+❌ **Forbidden:**
+- Splitting/merging modules without ADR
+- Changing layering (e.g., frontend talking directly to firmware)
+- New architectural patterns without review
+- Moving responsibilities between components
+- Changing how state flows through system
+
+### Example: Proposed Change
+
+❌ **Wrong:**
+```
+"Let me move state management from daemon to firmware
+ to reduce network latency"
+```
+
+✅ **Right:**
+```
+1. Propose ADR-0003: Distributed State Model
+2. Document problem, decision, consequences
+3. Get stakeholder approval
+4. Update DECISIONS.md with new ADR
+5. Update IMPLEMENTATION_ORDER.md if affected
+6. Implement changes
+```
+
+### When to Create an ADR
+
+| Scenario | Action |
+|----------|--------|
+| New major feature | Might need ADR if it introduces new patterns |
+| Bug fix | No ADR needed |
+| Performance optimization | No ADR unless architecture changes |
+| Changing module boundaries | ADR required |
+| Adding new transport layer | ADR required |
+| Changing error handling strategy | ADR might be needed |
+| Adding logging or diagnostics | No ADR needed |
+
+### ADR Format
+
+Location: `docs/adr/00XX-title.md` or `[component]/docs/adr/00XX-title.md`
+
+```markdown
+# ADR-NNNN: Title
+
+## Context
+What was the problem?
+
+## Decision
+What did we choose?
+
+## Consequences
+- Positive impacts
+- Negative impacts
+- Tradeoffs
+
+## Rationale
+Why this choice?
+
+## Alternatives Considered
+- Option 1: [why not]
+- Option 2: [why not]
+```
+
+### Enforcement
+
+- **Code review:** "This violates Rule 13 - need ADR"
+- **Architecture check:** "No ADR found for this change"
+- **Stakeholder approval:** ADR must be reviewed before implementation
+
+---
+
 ## Summary
 
 | Rule | Essence | Enforced By |
@@ -477,6 +577,9 @@ Firmware implements RELAY_SET command without updating PROTOCOL_SPEC.md
 | 8. Independent testability | Fast, reliable development | Test suite passes locally |
 | 9. No global mutable state | Predictable behavior | Linter, code review |
 | 10. Correct > Fast | Quality over premature optimization | Code review, testing |
+| 11. Protocol First | Documentation is source of truth | Code review, spec review |
+| 12. Documentation Hierarchy | Clear authority order | Code review |
+| 13. Architecture Freeze | Changes require ADR | Stakeholder review |
 
 ---
 

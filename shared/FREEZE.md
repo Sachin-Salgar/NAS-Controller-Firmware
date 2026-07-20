@@ -42,22 +42,32 @@ CompatibilityVersion // Min/Max protocol versions, isCompatible()
 - CRC algorithm: CRC16-CCITT
 - CRC parameters
 
-**ProtocolLimits** - Resource constraints:
+**ProtocolLimits** - Resource constraints (DEPRECATED):
 - MaxPacketSize, MaxPayloadSize
 - MaxSequenceNumber, MaxCommandCode
 - MaxRelays, MaxFans, MaxTemperatureSensors, MaxDrives
-- (These may increase with hardware improvements)
+- (Kept for backward compatibility during Phase 1 only)
+- **Prefer:** Use PacketLimits and HardwareLimits directly
 
-**ProtocolTiming** - Timeout and retry values:
-- AckTimeout, ResponseTimeout, CommandTimeout
-- RetryBaseDelay, MaxRetryAttempts
-- ReconnectInitialDelay, ReconnectMaxDelay
-- (These may be tuned for reliability)
+**PacketLimits** - Protocol structure constraints:
+- MaxPacketSize, MaxPayloadSize
+- MaxSequenceNumber, MaxCommandCode, MaxErrorCode
+- (Inherent to protocol format, do not change)
 
-**ProtocolFeatureFlags** - Optional capabilities:
-- PWM_FAN_CONTROL, RGB_LED, TEMPERATURE_SENSOR, etc.
-- CORE features (required for MVP)
-- EXTENDED features (optional)
+**HardwareLimits** - Hardware capability constraints:
+- MaxRelays, MaxFans, MaxLEDs, MaxTemperatureSensors, MaxDrives
+- (May increase with improved hardware)
+
+**FeatureFlag** - Optional capabilities (Bitmask Enum):
+- PWM_FAN_CONTROL (0x0001)
+- RGB_LED (0x0002)
+- TEMPERATURE_SENSOR (0x0004)
+- EVENT_LOG (0x0008)
+- CONFIGURATION_PERSISTENCE (0x0010)
+- REAL_TIME_CLOCK (0x0020)
+- FIRMWARE_UPDATE (0x0040)
+- NETWORK_INTERFACE (0x0080)
+- (Firmware reports as single bitmask in GET_CAPABILITIES response)
 
 ### Command Codes (shared/src/protocol.ts)
 
@@ -192,11 +202,15 @@ daemon/
 ```
 
 **Uses from shared:**
-- ProtocolVersion, ProtocolConstants, ProtocolLimits, ProtocolTiming
-- CommandCode, ErrorCode, RelayState, FanMode, LEDAnimation, EventType
+- ProtocolVersion, ProtocolConstants, PacketLimits, HardwareLimits
+- CommandCode, ErrorCode, RelayState, FanMode, LEDAnimation, EventType, FeatureFlag
 - All packet structures, DTOs, command/response types
 - Result<T>, ErrorInfo
 - Event types
+
+**Does NOT use from shared:**
+- ProtocolTiming (timeout/retry policy is daemon responsibility, not protocol contract)
+- Any runtime behavior or helper functions
 
 ### Firmware (Already Complete)
 ```

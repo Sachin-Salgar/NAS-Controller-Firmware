@@ -17,11 +17,13 @@ Session Updated: 2026-07-20 - Architecture review complete, shared frozen, CRC16
 
 ### What's Done ✅
 - Architecture reviewed and frozen (v1.0)
-- Documentation finalized
+- Documentation finalized and synchronized
 - Shared package frozen with protocol contracts
-- New rules added: Protocol First Rule, Documentation Hierarchy
-- ProtocolTiming, PacketLimits, HardwareLimits split
-- ProtocolFeatureFlags converted to bitmask values
+- PROJECT_STATUS.md created as permanent project dashboard
+- New rules added: Protocol First Rule (11), Documentation Hierarchy (12), Architecture Freeze Rule (13)
+- ProtocolLimits deprecated (kept for backward compatibility)
+- ProtocolFeatureFlags merged to single enum with bitmask values
+- ProtocolTiming confirmed as daemon responsibility (not protocol contract)
 
 ### What's Next ⏭️
 **Phase 1 Task 2: CRC16 Implementation**
@@ -29,15 +31,16 @@ Session Updated: 2026-07-20 - Architecture review complete, shared frozen, CRC16
 - Tests: `daemon/src/core/protocol/__tests__/crc16.test.ts`
 - Verify CRC16-CCITT matches firmware calculations
 - Use test vectors from PROTOCOL_SPEC.md
+- **Do NOT start this task in this session**
 
 ### For New Sessions 📖
 Start by reading:
-1. README.md (what is this)
-2. DOCUMENTATION.md (navigation)
+1. docs/PROJECT_STATUS.md (current status and next steps) ← **START HERE**
+2. README.md (what is this)
 3. docs/PROJECT_OVERVIEW.md (architecture)
 4. docs/IMPLEMENTATION_ORDER.md (this file - build order)
 5. shared/docs/PROTOCOL_SPEC.md (protocol details)
-6. docs/PROJECT_RULES.md (governance and new Rule 11 & 12)
+6. docs/PROJECT_RULES.md (governance - all 13 rules)
 
 ---
 
