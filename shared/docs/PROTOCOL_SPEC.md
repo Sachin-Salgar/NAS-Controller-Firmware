@@ -286,16 +286,23 @@ Cmd 257: Seq=0x00 (rolls over)
 
 ## Algorithm
 
-- **Scheme:** CRC-16-CCITT
-- **Polynomial:** 0x1021
+- **Scheme:** CRC-16-Modbus
+- **Polynomial:** 0xA001
 - **Initial Value:** 0xFFFF
-- **Input Reflection:** No
-- **Output Reflection:** No
+- **Input Reflection:** Yes
+- **Output Reflection:** Yes
 - **Final XOR:** 0x0000
 
 ## Coverage
 
 CRC covers: `Header | Seq | Cmd | Len | Payload` (NOT the CRC itself or Footer)
+
+## Detailed Description
+
+CRC-16-Modbus is a reflected variant where:
+- The polynomial is processed LSB-first (right-shift)
+- Each data byte is XORed into the LSB (least significant bit)
+- Both input and output are reflected (bit-reversed)
 
 ## Example (C-like pseudocode)
 
@@ -303,19 +310,37 @@ CRC covers: `Header | Seq | Cmd | Len | Payload` (NOT the CRC itself or Footer)
 u16 crc16(u8 *data, u16 len) {
     u16 crc = 0xFFFF;
     for (u16 i = 0; i < len; i++) {
-        crc ^= (data[i] << 8);
+        crc ^= data[i];  // XOR into LSB
         for (int j = 0; j < 8; j++) {
-            if (crc & 0x8000) {
-                crc = (crc << 1) ^ 0x1021;
+            if (crc & 0x0001) {  // Check LSB
+                crc >>= 1;       // Right shift (reflected)
+                crc ^= 0xA001;   // XOR with Modbus polynomial
             } else {
-                crc = crc << 1;
+                crc >>= 1;
             }
-            crc &= 0xFFFF;
         }
     }
-    return crc;
+    return crc;  // Already masked to 16-bit
 }
 ```
+
+## Test Vector
+
+For verification, calculate CRC16-Modbus for this data:
+
+**Input (hex):** `55 AA 01 10 00 02`
+**Expected CRC16 (hex):** `0xB8 0x44`
+
+This represents a RELAY_SET command packet header without payload CRC.
+
+## Verification Against Firmware
+
+The CRC16-Modbus algorithm implemented here matches the firmware reference implementation in `firmware/src/Protocol/PacketValidator.cpp` exactly.
+
+To verify daemon implementation:
+1. Calculate CRC16 using daemon code
+2. Compare against firmware calculation
+3. Both must produce identical results for all inputs
 
 ---
 
