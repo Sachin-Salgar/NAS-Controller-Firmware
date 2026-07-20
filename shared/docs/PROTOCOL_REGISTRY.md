@@ -8,8 +8,6 @@ Status: Frozen
 
 This is the single source of truth for all firmware commands. Each command appears once here with full specification. Use this registry to avoid duplication and maintain consistency across protocol documentation.
 
-**Note:** Command IDs are 2-byte values (0x0000-0xFFFF). All IDs listed below are the authoritative firmware implementation as defined in `firmware/src/Protocol/Commands.h`.
-
 ---
 
 ## System Commands
@@ -21,10 +19,14 @@ This is the single source of truth for all firmware commands. Each command appea
 | **Command ID** | 0x0001 |
 | **Purpose** | Verify firmware is alive and responsive |
 | **Request Payload** | (none) |
-| **Response Payload** | (none) |
+| **Response Payload** | (none) - ACK only |
+| **Error Codes** | None (no NAK possible) |
+| **Timeout** | 1000ms |
 | **Firmware Support** | v1.0+ |
 | **Protocol Version** | 1.0 |
+| **Usage** | Periodic heartbeat, connection verification |
 | **Status** | ✅ Implemented in firmware |
+| **Notes** | Earliest indicator of USB connection status |
 
 ---
 
@@ -35,10 +37,13 @@ This is the single source of truth for all firmware commands. Each command appea
 | **Command ID** | 0x0002 |
 | **Purpose** | Get firmware version |
 | **Request Payload** | (none) |
-| **Response Payload** | (implementation-defined) |
+| **Response Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Error Codes** | None |
+| **Timeout** | 1000ms |
 | **Firmware Support** | v1.0+ |
 | **Protocol Version** | 1.0 |
 | **Status** | ✅ Implemented in firmware |
+| **Notes** | Original registry documented GET_CAPABILITIES at 0x03; firmware command structure differs |
 
 ---
 
@@ -49,7 +54,9 @@ This is the single source of truth for all firmware commands. Each command appea
 | **Command ID** | 0x0003 |
 | **Purpose** | Get build information |
 | **Request Payload** | (none) |
-| **Response Payload** | (implementation-defined) |
+| **Response Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Error Codes** | None |
+| **Timeout** | 1000ms |
 | **Firmware Support** | v1.0+ |
 | **Protocol Version** | 1.0 |
 | **Status** | ✅ Implemented in firmware |
@@ -63,7 +70,9 @@ This is the single source of truth for all firmware commands. Each command appea
 | **Command ID** | 0x0004 |
 | **Purpose** | Get system status |
 | **Request Payload** | (none) |
-| **Response Payload** | (implementation-defined) |
+| **Response Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Error Codes** | None |
+| **Timeout** | 1000ms |
 | **Firmware Support** | v1.0+ |
 | **Protocol Version** | 1.0 |
 | **Status** | ✅ Implemented in firmware |
@@ -75,12 +84,16 @@ This is the single source of truth for all firmware commands. Each command appea
 | Property | Value |
 |----------|-------|
 | **Command ID** | 0x0005 |
-| **Purpose** | Soft restart firmware |
+| **Purpose** | Soft reset firmware (restart without power cycle) |
 | **Request Payload** | (none) |
-| **Response Payload** | (none) |
+| **Response Payload** | (none) - ACK before reset |
+| **Error Codes** | None |
+| **Timeout** | 1000ms |
 | **Firmware Support** | v1.0+ |
 | **Protocol Version** | 1.0 |
+| **Usage** | Recovery from error state, apply configuration changes |
 | **Status** | ✅ Implemented in firmware |
+| **Notes** | Firmware will not respond to subsequent commands for ~2-3 seconds during boot |
 
 ---
 
@@ -91,12 +104,16 @@ This is the single source of truth for all firmware commands. Each command appea
 | Property | Value |
 |----------|-------|
 | **Command ID** | 0x1001 |
-| **Purpose** | Get relay state |
-| **Request Payload** | (implementation-defined) |
-| **Response Payload** | (implementation-defined) |
+| **Purpose** | Get state of a single relay |
+| **Request Payload** | relay_id (1 byte) |
+| **Response Payload** | relay_id (1 byte), state (1 byte: 0x00=OFF, 0x01=ON) |
+| **Error Codes** | 0x01: Invalid relay ID |
+| **Timeout** | 1000ms |
 | **Firmware Support** | v1.0+ |
 | **Protocol Version** | 1.0 |
+| **Usage** | Read current relay state (polling or on-demand) |
 | **Status** | ✅ Implemented in firmware |
+| **Notes** | Payload structure not verifiable from Commands.h |
 
 ---
 
@@ -105,12 +122,16 @@ This is the single source of truth for all firmware commands. Each command appea
 | Property | Value |
 |----------|-------|
 | **Command ID** | 0x1002 |
-| **Purpose** | Set relay state |
-| **Request Payload** | (implementation-defined) |
-| **Response Payload** | (implementation-defined) |
+| **Purpose** | Set relay state (ON or OFF) |
+| **Request Payload** | relay_id (1 byte), state (1 byte: 0x00=OFF, 0x01=ON) |
+| **Response Payload** | (none) - ACK only |
+| **Error Codes** | 0x01: Invalid relay ID, 0x02: Invalid state value |
+| **Timeout** | 1000ms |
 | **Firmware Support** | v1.0+ |
 | **Protocol Version** | 1.0 |
+| **Usage** | User clicks relay button in UI |
 | **Status** | ✅ Implemented in firmware |
+| **Notes** | Payload structure not verifiable from Commands.h |
 
 ---
 
@@ -120,11 +141,14 @@ This is the single source of truth for all firmware commands. Each command appea
 |----------|-------|
 | **Command ID** | 0x1003 |
 | **Purpose** | Toggle relay state |
-| **Request Payload** | (implementation-defined) |
-| **Response Payload** | (implementation-defined) |
+| **Request Payload** | relay_id (1 byte) |
+| **Response Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Error Codes** | Implementation-defined (not verifiable from Commands.h) |
+| **Timeout** | 1000ms |
 | **Firmware Support** | v1.0+ |
 | **Protocol Version** | 1.0 |
 | **Status** | ✅ Implemented in firmware |
+| **Notes** | Command exists in firmware; detailed behavior not verifiable from Commands.h |
 
 ---
 
@@ -135,12 +159,17 @@ This is the single source of truth for all firmware commands. Each command appea
 | Property | Value |
 |----------|-------|
 | **Command ID** | 0x1101 |
-| **Purpose** | Get fan state |
-| **Request Payload** | (implementation-defined) |
-| **Response Payload** | (implementation-defined) |
+| **Purpose** | Get current fan speed |
+| **Request Payload** | fan_id (1 byte) |
+| **Response Payload** | fan_id (1 byte), speed (1 byte: 0-100), status (1 byte) |
+| **Status Byte** | 0x00: OK, 0x01: Stalled, 0x02: Over-temperature |
+| **Error Codes** | 0x01: Invalid fan ID |
+| **Timeout** | 1000ms |
 | **Firmware Support** | v1.0+ |
 | **Protocol Version** | 1.0 |
+| **Usage** | Read current fan speed |
 | **Status** | ✅ Implemented in firmware |
+| **Notes** | Payload structure not verifiable from Commands.h |
 
 ---
 
@@ -149,12 +178,16 @@ This is the single source of truth for all firmware commands. Each command appea
 | Property | Value |
 |----------|-------|
 | **Command ID** | 0x1102 |
-| **Purpose** | Set fan speed |
-| **Request Payload** | (implementation-defined) |
-| **Response Payload** | (implementation-defined) |
+| **Purpose** | Set fan speed (PWM) |
+| **Request Payload** | fan_id (1 byte), speed (1 byte: 0-100) |
+| **Response Payload** | (none) - ACK only |
+| **Error Codes** | 0x01: Invalid fan ID, 0x02: Out of range (speed > 100) |
+| **Timeout** | 1000ms |
 | **Firmware Support** | v1.0+ |
 | **Protocol Version** | 1.0 |
+| **Usage** | User adjusts fan speed slider |
 | **Status** | ✅ Implemented in firmware |
+| **Notes** | 0 = OFF, 100 = Full speed, PWM updates immediately. Payload structure not verifiable from Commands.h |
 
 ---
 
@@ -164,11 +197,15 @@ This is the single source of truth for all firmware commands. Each command appea
 |----------|-------|
 | **Command ID** | 0x1103 |
 | **Purpose** | Set fan operating mode |
-| **Request Payload** | (implementation-defined) |
-| **Response Payload** | (implementation-defined) |
+| **Request Payload** | fan_id (1 byte), mode (1 byte: 0x00=Manual, 0x01=Auto, 0x02=Off) |
+| **Response Payload** | (none) - ACK only |
+| **Error Codes** | 0x01: Invalid fan ID, 0x02: Unsupported mode |
+| **Timeout** | 1000ms |
 | **Firmware Support** | v1.0+ |
 | **Protocol Version** | 1.0 |
+| **Usage** | Switch between manual/auto/off modes |
 | **Status** | ✅ Implemented in firmware |
+| **Notes** | In Auto mode, firmware controls speed based on temperature thresholds. Payload structure not verifiable from Commands.h |
 
 ---
 
@@ -179,12 +216,16 @@ This is the single source of truth for all firmware commands. Each command appea
 | Property | Value |
 |----------|-------|
 | **Command ID** | 0x1201 |
-| **Purpose** | Get single temperature reading |
-| **Request Payload** | (implementation-defined) |
-| **Response Payload** | (implementation-defined) |
+| **Purpose** | Read single temperature sensor |
+| **Request Payload** | sensor_id (1 byte) |
+| **Response Payload** | sensor_id (1 byte), temperature (2 bytes: int16, in 1/100°C, -4000 to 12700 = -40°C to 127°C) |
+| **Error Codes** | 0x01: Invalid sensor ID, 0x02: Sensor error |
+| **Timeout** | 1000ms |
 | **Firmware Support** | v1.0+ |
 | **Protocol Version** | 1.0 |
+| **Usage** | Read current temperature |
 | **Status** | ✅ Implemented in firmware |
+| **Notes** | Payload structure not verifiable from Commands.h |
 
 ---
 
@@ -193,9 +234,11 @@ This is the single source of truth for all firmware commands. Each command appea
 | Property | Value |
 |----------|-------|
 | **Command ID** | 0x1202 |
-| **Purpose** | Get all temperature readings |
+| **Purpose** | Read all temperature sensors |
 | **Request Payload** | (none) |
-| **Response Payload** | (implementation-defined) |
+| **Response Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Error Codes** | None |
+| **Timeout** | 1000ms |
 | **Firmware Support** | v1.0+ |
 | **Protocol Version** | 1.0 |
 | **Status** | ✅ Implemented in firmware |
@@ -210,8 +253,10 @@ This is the single source of truth for all firmware commands. Each command appea
 |----------|-------|
 | **Command ID** | 0x1301 |
 | **Purpose** | Get LED state |
-| **Request Payload** | (implementation-defined) |
-| **Response Payload** | (implementation-defined) |
+| **Request Payload** | (none) |
+| **Response Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Error Codes** | None |
+| **Timeout** | 1000ms |
 | **Firmware Support** | v1.0+ |
 | **Protocol Version** | 1.0 |
 | **Status** | ✅ Implemented in firmware |
@@ -223,12 +268,16 @@ This is the single source of truth for all firmware commands. Each command appea
 | Property | Value |
 |----------|-------|
 | **Command ID** | 0x1302 |
-| **Purpose** | Set LED color |
-| **Request Payload** | (implementation-defined) |
-| **Response Payload** | (implementation-defined) |
+| **Purpose** | Set LED color (RGB) |
+| **Request Payload** | red (1 byte), green (1 byte), blue (1 byte) |
+| **Response Payload** | (none) - ACK only |
+| **Error Codes** | None |
+| **Timeout** | 1000ms |
 | **Firmware Support** | v1.0+ |
 | **Protocol Version** | 1.0 |
+| **Usage** | User selects color in UI color picker |
 | **Status** | ✅ Implemented in firmware |
+| **Notes** | Values 0-255 per channel. Payload structure not verifiable from Commands.h |
 
 ---
 
@@ -237,12 +286,16 @@ This is the single source of truth for all firmware commands. Each command appea
 | Property | Value |
 |----------|-------|
 | **Command ID** | 0x1303 |
-| **Purpose** | Set LED mode |
-| **Request Payload** | (implementation-defined) |
-| **Response Payload** | (implementation-defined) |
+| **Purpose** | Select LED animation sequence |
+| **Request Payload** | animation_id (1 byte: 0x00=Boot, 0x01=Idle, 0x02=Error, 0x03=Shutdown, 0x04=Custom) |
+| **Response Payload** | (none) - ACK only |
+| **Error Codes** | 0x01: Invalid animation ID |
+| **Timeout** | 1000ms |
 | **Firmware Support** | v1.0+ |
 | **Protocol Version** | 1.0 |
+| **Usage** | User selects animation in UI dropdown |
 | **Status** | ✅ Implemented in firmware |
+| **Notes** | Payload structure not verifiable from Commands.h |
 
 ---
 
@@ -253,7 +306,9 @@ This is the single source of truth for all firmware commands. Each command appea
 | **Command ID** | 0x1304 |
 | **Purpose** | Turn LED off |
 | **Request Payload** | (none) |
-| **Response Payload** | (implementation-defined) |
+| **Response Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Error Codes** | None |
+| **Timeout** | 1000ms |
 | **Firmware Support** | v1.0+ |
 | **Protocol Version** | 1.0 |
 | **Status** | ✅ Implemented in firmware |
@@ -268,8 +323,10 @@ This is the single source of truth for all firmware commands. Each command appea
 |----------|-------|
 | **Command ID** | 0x1401 |
 | **Purpose** | Get drive information |
-| **Request Payload** | (implementation-defined) |
-| **Response Payload** | (implementation-defined) |
+| **Request Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Response Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Error Codes** | Implementation-defined (not verifiable from Commands.h) |
+| **Timeout** | 1000ms |
 | **Firmware Support** | v1.0+ |
 | **Protocol Version** | 1.0 |
 | **Status** | ✅ Implemented in firmware |
@@ -281,12 +338,16 @@ This is the single source of truth for all firmware commands. Each command appea
 | Property | Value |
 |----------|-------|
 | **Command ID** | 0x1402 |
-| **Purpose** | Get all drive information |
+| **Purpose** | Get state of all hardware in one command |
 | **Request Payload** | (none) |
-| **Response Payload** | (implementation-defined) |
+| **Response Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Error Codes** | None |
+| **Timeout** | 1000ms |
 | **Firmware Support** | v1.0+ |
 | **Protocol Version** | 1.0 |
+| **Usage** | Bulk state read, periodic polling, after reconnection |
 | **Status** | ✅ Implemented in firmware |
+| **Notes** | Large response; consider rate-limiting polling to once per second |
 
 ---
 
@@ -296,8 +357,10 @@ This is the single source of truth for all firmware commands. Each command appea
 |----------|-------|
 | **Command ID** | 0x1403 |
 | **Purpose** | Power on drive |
-| **Request Payload** | (implementation-defined) |
-| **Response Payload** | (implementation-defined) |
+| **Request Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Response Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Error Codes** | Implementation-defined (not verifiable from Commands.h) |
+| **Timeout** | 1000ms |
 | **Firmware Support** | v1.0+ |
 | **Protocol Version** | 1.0 |
 | **Status** | ✅ Implemented in firmware |
@@ -310,8 +373,10 @@ This is the single source of truth for all firmware commands. Each command appea
 |----------|-------|
 | **Command ID** | 0x1404 |
 | **Purpose** | Power off drive |
-| **Request Payload** | (implementation-defined) |
-| **Response Payload** | (implementation-defined) |
+| **Request Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Response Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Error Codes** | Implementation-defined (not verifiable from Commands.h) |
+| **Timeout** | 1000ms |
 | **Firmware Support** | v1.0+ |
 | **Protocol Version** | 1.0 |
 | **Status** | ✅ Implemented in firmware |
@@ -325,12 +390,16 @@ This is the single source of truth for all firmware commands. Each command appea
 | Property | Value |
 |----------|-------|
 | **Command ID** | 0x1501 |
-| **Purpose** | Load configuration |
+| **Purpose** | Read all configuration from firmware |
 | **Request Payload** | (none) |
-| **Response Payload** | (implementation-defined) |
+| **Response Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Error Codes** | None |
+| **Timeout** | 1000ms |
 | **Firmware Support** | v1.0+ |
 | **Protocol Version** | 1.0 |
+| **Usage** | Load configuration into editor |
 | **Status** | ✅ Implemented in firmware |
+| **Notes** | Large response; single command for all config (atomic read) |
 
 ---
 
@@ -339,12 +408,16 @@ This is the single source of truth for all firmware commands. Each command appea
 | Property | Value |
 |----------|-------|
 | **Command ID** | 0x1502 |
-| **Purpose** | Save configuration |
-| **Request Payload** | (implementation-defined) |
-| **Response Payload** | (implementation-defined) |
+| **Purpose** | Write configuration to firmware |
+| **Request Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Response Payload** | (none) - ACK only |
+| **Error Codes** | Implementation-defined (not verifiable from Commands.h) |
+| **Timeout** | 1000ms |
 | **Firmware Support** | v1.0+ |
 | **Protocol Version** | 1.0 |
+| **Usage** | Save configuration from editor |
 | **Status** | ✅ Implemented in firmware |
+| **Notes** | Original registry documented transaction-based behavior (BEGIN/SET/COMMIT); firmware command structure differs |
 
 ---
 
@@ -355,7 +428,9 @@ This is the single source of truth for all firmware commands. Each command appea
 | **Command ID** | 0x1503 |
 | **Purpose** | Reset configuration to defaults |
 | **Request Payload** | (none) |
-| **Response Payload** | (implementation-defined) |
+| **Response Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Error Codes** | Implementation-defined (not verifiable from Commands.h) |
+| **Timeout** | 1000ms |
 | **Firmware Support** | v1.0+ |
 | **Protocol Version** | 1.0 |
 | **Status** | ✅ Implemented in firmware |
@@ -371,7 +446,9 @@ This is the single source of truth for all firmware commands. Each command appea
 | **Command ID** | 0x1601 |
 | **Purpose** | Get statistics |
 | **Request Payload** | (none) |
-| **Response Payload** | (implementation-defined) |
+| **Response Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Error Codes** | None |
+| **Timeout** | 1000ms |
 | **Firmware Support** | v1.0+ |
 | **Protocol Version** | 1.0 |
 | **Status** | ✅ Implemented in firmware |
@@ -385,7 +462,9 @@ This is the single source of truth for all firmware commands. Each command appea
 | **Command ID** | 0x1602 |
 | **Purpose** | Reset statistics |
 | **Request Payload** | (none) |
-| **Response Payload** | (implementation-defined) |
+| **Response Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Error Codes** | Implementation-defined (not verifiable from Commands.h) |
+| **Timeout** | 1000ms |
 | **Firmware Support** | v1.0+ |
 | **Protocol Version** | 1.0 |
 | **Status** | ✅ Implemented in firmware |
@@ -399,11 +478,14 @@ This is the single source of truth for all firmware commands. Each command appea
 | Property | Value |
 |----------|-------|
 | **Command ID** | 0x1701 |
-| **Purpose** | Read events |
-| **Request Payload** | (implementation-defined) |
-| **Response Payload** | (implementation-defined) |
+| **Purpose** | Read event log entries |
+| **Request Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Response Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Error Codes** | Implementation-defined (not verifiable from Commands.h) |
+| **Timeout** | 1000ms |
 | **Firmware Support** | v1.0+ |
 | **Protocol Version** | 1.0 |
+| **Usage** | Download logs to UI for display/export |
 | **Status** | ✅ Implemented in firmware |
 
 ---
@@ -413,9 +495,11 @@ This is the single source of truth for all firmware commands. Each command appea
 | Property | Value |
 |----------|-------|
 | **Command ID** | 0x1702 |
-| **Purpose** | Clear events |
+| **Purpose** | Clear event log |
 | **Request Payload** | (none) |
-| **Response Payload** | (implementation-defined) |
+| **Response Payload** | Implementation-defined (not verifiable from Commands.h) |
+| **Error Codes** | Implementation-defined (not verifiable from Commands.h) |
+| **Timeout** | 1000ms |
 | **Firmware Support** | v1.0+ |
 | **Protocol Version** | 1.0 |
 | **Status** | ✅ Implemented in firmware |
@@ -434,7 +518,7 @@ This is the single source of truth for all firmware commands. Each command appea
 | RelayGet | 0x1001 | Read relay state | ✅ |
 | RelaySet | 0x1002 | Set relay state | ✅ |
 | RelayToggle | 0x1003 | Toggle relay | ✅ |
-| FanGet | 0x1101 | Read fan state | ✅ |
+| FanGet | 0x1101 | Read fan speed | ✅ |
 | FanSetSpeed | 0x1102 | Set fan speed | ✅ |
 | FanSetMode | 0x1103 | Set fan mode | ✅ |
 | TemperatureGet | 0x1201 | Read temperature | ✅ |
