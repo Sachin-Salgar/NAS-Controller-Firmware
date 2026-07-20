@@ -44,25 +44,25 @@ Define the binary communication protocol between the Host Daemon (Node.js + Type
 
 ```
 [Header] [Seq] [Cmd] [Len] [Payload] [CRC16] [Footer]
-  2B      1B    1B    2B    0-256B    2B      1B
+  2B      2B    2B    2B    0-256B    2B      1B
 ```
 
 | Field | Bytes | Value | Purpose |
 |-------|-------|-------|---------|
 | **Header** | 2 | 0x55AA | Frame delimiter (big-endian) |
-| **Seq** | 1 | 0x00-0xFF | Sequence number (rolls over) |
-| **Cmd** | 1 | See below | Command byte |
+| **Seq** | 2 | 0x0000-0xFFFF | Sequence number (rolls over) |
+| **Cmd** | 2 | See below | Command ID (2-byte) |
 | **Len** | 2 | 0-256 | Payload length (big-endian) |
 | **Payload** | 0-256 | Varies | Command-specific data |
-| **CRC16** | 2 | See CRC section | CCITT-16 (covers Header through Payload) |
+| **CRC16** | 2 | See CRC section | CRC-16-Modbus (covers Header through Payload) |
 | **Footer** | 1 | 0xAA | Frame terminator |
 
 ### Example: Turn On Relay 1
 
 ```
 Header: 0x55 0xAA     ← Frame start
-Seq:    0x01          ← Sequence 1
-Cmd:    0x10          ← RELAY_SET command
+Seq:    0x00 0x01     ← Sequence 1 (2-byte big-endian)
+Cmd:    0x10 0x02     ← RELAY_SET command (0x1002 in 2-byte big-endian)
 Len:    0x00 0x02     ← Payload is 2 bytes
 Payload: 0x01 0x01    ← Relay ID: 1, State: ON (0x01)
 CRC16:  0xXX 0xXX     ← Calculated CRC (see CRC section)
@@ -178,60 +178,83 @@ Wait 1000 ms for response
 
 # COMMAND CATEGORIES
 
-## System Commands (0x00-0x0F)
+## System Commands (0x0000-0x0FFF)
 
 | Cmd | Name | Purpose | Payload (Request) | Payload (Response) |
 |-----|------|---------|-------------------|-------------------|
-| 0x01 | PING | Connectivity check | (empty) | (empty) |
-| 0x02 | GET_CAPABILITIES | Query hardware capabilities | (empty) | See State Sync |
-| 0x03 | GET_FIRMWARE_VERSION | Firmware version | (empty) | u32 version |
-| 0x04 | RESET | Soft reset | (empty) | (empty) |
-| 0x05 | DIAGNOSTICS_ENABLE | Enable debug logging | u8 level (0-2) | (empty) |
+| 0x0001 | PING | Connectivity check | (empty) | (empty) |
+| 0x0002 | GET_VERSION | Firmware version | (empty) | u32 version |
+| 0x0003 | GET_BUILD_INFO | Build information | (empty) | String |
+| 0x0004 | GET_SYSTEM_STATUS | Query hardware status | (empty) | See State Sync |
+| 0x0005 | RESTART | Soft reset | (empty) | (empty) |
 
-## Relay Commands (0x10-0x1F)
+## Relay Commands (0x1000-0x1FFF)
 
 | Cmd | Name | Purpose |
 |-----|------|---------|
-| 0x10 | RELAY_SET | Set relay state |
-| 0x11 | RELAY_GET | Get relay state |
-| 0x12 | RELAY_TOGGLE | Toggle relay |
+| 0x1001 | RELAY_GET | Get relay state |
+| 0x1002 | RELAY_SET | Set relay state |
+| 0x1003 | RELAY_TOGGLE | Toggle relay |
 
 **RELAY_SET Payload:**
 ```
 [u8 relay_id, u8 state (0=OFF, 1=ON)]
 ```
 
-## Fan Commands (0x20-0x2F)
+## Fan Commands (0x1100-0x1FFF)
 
 | Cmd | Name | Purpose |
 |-----|------|---------|
-| 0x20 | FAN_SET_SPEED | Set fan speed (0-100%) |
-| 0x21 | FAN_GET_SPEED | Get current fan speed |
+| 0x1101 | FAN_GET | Get fan speed and status |
+| 0x1102 | FAN_SET_SPEED | Set fan speed (0-100%) |
+| 0x1103 | FAN_SET_MODE | Set fan operating mode |
 
-## LED Commands (0x30-0x3F)
-
-| Cmd | Name | Purpose |
-|-----|------|---------|
-| 0x30 | LED_SET_MODE | Set animation mode |
-| 0x31 | LED_SET_COLOR | Set LED color |
-
-## Config Commands (0x50-0x5F)
+## Temperature Commands (0x1200-0x1FFF)
 
 | Cmd | Name | Purpose |
 |-----|------|---------|
-| 0x50 | CONFIG_GET | Get all config |
-| 0x51 | CONFIG_SET | Set config (transaction) |
-| 0x52 | CONFIG_BEGIN_TRANSACTION | Start atomic config change |
-| 0x53 | CONFIG_COMMIT_TRANSACTION | Commit or rollback |
+| 0x1201 | TEMPERATURE_GET | Get single temperature sensor |
+| 0x1202 | TEMPERATURE_GET_ALL | Get all temperature readings |
 
-## Status Commands (0x60-0x6F)
+## LED Commands (0x1300-0x1FFF)
 
 | Cmd | Name | Purpose |
 |-----|------|---------|
-| 0x60 | STATUS_GET_ALL | Get all hardware status |
-| 0x61 | STATUS_GET_RELAYS | Get relay states |
-| 0x62 | STATUS_GET_TEMPS | Get temperature readings |
-| 0x63 | STATUS_GET_DRIVES | Get drive status |
+| 0x1301 | LED_GET | Get LED state |
+| 0x1302 | LED_SET_COLOR | Set LED color (RGB) |
+| 0x1303 | LED_SET_MODE | Set animation mode |
+| 0x1304 | LED_OFF | Turn off LED |
+
+## Drive Commands (0x1400-0x1FFF)
+
+| Cmd | Name | Purpose |
+|-----|------|---------|
+| 0x1401 | DRIVE_GET | Get single drive status |
+| 0x1402 | DRIVE_GET_ALL | Get all drive status |
+| 0x1403 | DRIVE_POWER_ON | Power on a drive |
+| 0x1404 | DRIVE_POWER_OFF | Power off a drive |
+
+## Configuration Commands (0x1500-0x1FFF)
+
+| Cmd | Name | Purpose |
+|-----|------|---------|
+| 0x1501 | CONFIGURATION_LOAD | Get all config |
+| 0x1502 | CONFIGURATION_SAVE | Write config (transaction) |
+| 0x1503 | CONFIGURATION_RESET | Reset to defaults |
+
+## Statistics Commands (0x1600-0x1FFF)
+
+| Cmd | Name | Purpose |
+|-----|------|---------|
+| 0x1601 | STATISTICS_GET | Get runtime statistics |
+| 0x1602 | STATISTICS_RESET | Reset statistics counters |
+
+## Event Commands (0x1700-0x1FFF)
+
+| Cmd | Name | Purpose |
+|-----|------|---------|
+| 0x1701 | EVENT_READ | Read event log entries |
+| 0x1702 | EVENT_CLEAR | Clear event log |
 
 ---
 
@@ -263,21 +286,23 @@ u8 error_code
 
 ## Usage
 
-- **Range:** 0x00 to 0xFF (256 values)
+- **Range:** 0x0000 to 0xFFFF (65536 values)
 - **Increment:** Every command sent
-- **Rollover:** 0xFF → 0x00
+- **Rollover:** 0xFFFF → 0x0000
 - **Matching:** Response must have same Seq as request
+- **Byte Order:** Big-endian (MSB first)
 
 ## Example Sequence
 
 ```
-Cmd 1: Seq=0x00
-Cmd 2: Seq=0x01
-Cmd 3: Seq=0x02
+Cmd 1: Seq=0x0001
+Cmd 2: Seq=0x0002
+Cmd 3: Seq=0x0003
 ...
-Cmd 255: Seq=0xFE
-Cmd 256: Seq=0xFF
-Cmd 257: Seq=0x00 (rolls over)
+Cmd 255: Seq=0x00FF
+Cmd 256: Seq=0x0100
+Cmd 65535: Seq=0xFFFF
+Cmd 65536: Seq=0x0000 (rolls over)
 ```
 
 ---
@@ -287,11 +312,11 @@ Cmd 257: Seq=0x00 (rolls over)
 ## Algorithm
 
 - **Scheme:** CRC-16-Modbus (reflected variant)
-- **Polynomial:** 0xA001 (reflected form of 0x8005)
+- **Polynomial:** 0xA001 (reflected form of standard 0x8005)
 - **Initial Value:** 0xFFFF
-- **Input Reflection:** Yes
-- **Output Reflection:** Yes
-- **Final XOR:** 0x0000
+- **Input Reflection:** Yes (LSB-first, data bits reflect into LSB of CRC)
+- **Output Reflection:** Yes (algorithm produces reflected result)
+- **Final XOR:** 0x0000 (no final XOR applied)
 
 ## Coverage
 
