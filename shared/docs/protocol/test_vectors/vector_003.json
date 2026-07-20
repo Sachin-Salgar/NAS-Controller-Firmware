@@ -1,0 +1,75 @@
+{
+  "id": "003",
+  "name": "Maximum Payload Packet",
+  "description": "Largest valid packet with 256-byte maximum payload. Tests CRC algorithm with maximum input.",
+  "purpose": "Boundary condition: verify algorithm correctness with maximum payload",
+  "category": "Boundary Condition",
+  "firmware_version": "1.0.0",
+  "protocol_version": "1.0.0",
+  "crc_algorithm": {
+    "scheme": "CRC-16-Modbus",
+    "polynomial": "0xA001",
+    "initial_value": "0xFFFF",
+    "input_reflection": true,
+    "output_reflection": true,
+    "final_xor": "0x0000"
+  },
+  "crc_coverage": {
+    "description": "Header through full 256-byte Payload",
+    "includes": ["Header", "Sequence", "Command", "Length", "Payload (all 256 bytes)"],
+    "excludes": ["CRC", "Footer"],
+    "start_byte": 0,
+    "end_byte": 261,
+    "byte_count": 262
+  },
+  "input": {
+    "packet_structure": {
+      "header": "0x55 0xAA",
+      "sequence": "0x03",
+      "command": "0x20",
+      "length": "0x01 0x00",
+      "payload": "256 bytes of incrementing data (0x00 through 0xFF)",
+      "footer": "0xAA"
+    },
+    "description": "Header=0x55AA, Seq=0x03, Cmd=0x20 (GET_ALL_STATUS), Len=0x0100 (256 bytes)",
+    "payload_description": "256 bytes: [0x00, 0x01, 0x02, ..., 0xFE, 0xFF]",
+    "payload_pattern": "Incrementing pattern 0x00 to 0xFF",
+    "total_crc_input_bytes": 262
+  },
+  "crc_output": {
+    "calculated_value": "[PENDING FIRMWARE VERIFICATION]",
+    "transmitted_bytes": "[PENDING FIRMWARE VERIFICATION]",
+    "byte_order": "MSB-first (big-endian)",
+    "position_in_packet": "Bytes 262-263 (after 256-byte payload, before footer)"
+  },
+  "verification": {
+    "generated_by": "firmware/src/Utilities/CRC16.cpp::Calculate()",
+    "method": "Firmware execution via test harness",
+    "verification_procedure": "Execute CRC16::Calculate([header + seq + cmd + len + payload_256bytes], 262) and record output",
+    "date": "[AWAITING FIRMWARE EXECUTION]",
+    "status": "PENDING_VERIFICATION",
+    "verified_against": "Actual firmware binary, not calculated"
+  },
+  "expected_complete_packet": {
+    "description": "Complete packet bytes including CRC and footer",
+    "structure": "Header(2) + Seq(1) + Cmd(1) + Len(2) + Payload(256) + CRC(2) + Footer(1) = 265 bytes total",
+    "total_length": 265,
+    "bytes": "[0x55, 0xAA, 0x03, 0x20, 0x01, 0x00, <256 payload bytes>, CRC_MSB, CRC_LSB, 0xAA]"
+  },
+  "real_world_scenario": {
+    "description": "Daemon requests full hardware status including all relays, fans, temps, and drive info",
+    "use_case": "GET_ALL_STATUS command returns large response with comprehensive device state"
+  },
+  "testing_notes": [
+    "Tests that CRC algorithm handles large data streams correctly",
+    "Tests that protocol layer can construct and parse maximum-size packets",
+    "Verify memory usage doesn't overflow with 256-byte payload",
+    "Integration test: firmware should accept this packet and process correctly",
+    "Performance: verify CRC computation completes within timeout window"
+  ],
+  "payload_generation": {
+    "method": "Simple incrementing pattern for reproducibility",
+    "bytes": "0x00, 0x01, 0x02, 0x03, 0x04, 0x05, ..., 0xFC, 0xFD, 0xFE, 0xFF",
+    "note": "Pattern chosen for simplicity and reproducibility. Any 256-byte sequence could be used."
+  }
+}

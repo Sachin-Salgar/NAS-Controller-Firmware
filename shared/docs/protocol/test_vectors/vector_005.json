@@ -1,0 +1,111 @@
+{
+  "id": "005",
+  "name": "Invalid Packet - CRC Failure Case",
+  "description": "Valid packet structure with intentionally corrupted CRC bytes. Tests error detection mechanism.",
+  "purpose": "Verify CRC validation correctly rejects packets with corrupted CRC",
+  "category": "Error Detection",
+  "firmware_version": "1.0.0",
+  "protocol_version": "1.0.0",
+  "crc_algorithm": {
+    "scheme": "CRC-16-Modbus",
+    "polynomial": "0xA001",
+    "initial_value": "0xFFFF",
+    "input_reflection": true,
+    "output_reflection": true,
+    "final_xor": "0x0000"
+  },
+  "crc_coverage": {
+    "description": "Header through Payload (CRC validation covers these bytes only)",
+    "includes": ["Header", "Sequence", "Command", "Length", "Payload"],
+    "excludes": ["CRC", "Footer"],
+    "start_byte": 0,
+    "end_byte": 7,
+    "byte_count": 8
+  },
+  "input": {
+    "packet_structure": {
+      "header": "0x55 0xAA",
+      "sequence": "0x05",
+      "command": "0x10",
+      "length": "0x00 0x02",
+      "payload": "0x00 0x01",
+      "crc_correct": "Would be calculated by firmware",
+      "crc_transmitted": "0xFF 0xFF (intentionally wrong)",
+      "footer": "0xAA"
+    },
+    "packet_bytes_hex": "55AA05100002000FFFAA",
+    "packet_bytes_array": ["0x55", "0xAA", "0x05", "0x10", "0x00", "0x02", "0x00", "0x01", "0xFF", "0xFF"],
+    "description": "Valid packet structure but with corrupted CRC bytes (0xFF 0xFF instead of correct value)"
+  },
+  "what_makes_it_invalid": {
+    "description": "The packet has a valid structure but the CRC bytes are intentionally wrong",
+    "validation_steps": [
+      "1. Parse packet: Header found at 0x55AA ✓",
+      "2. Extract fields: Seq=0x05, Cmd=0x10, Len=0x0002 ✓",
+      "3. Read payload: 2 bytes ✓",
+      "4. Calculate CRC over [Header | Seq | Cmd | Len | Payload]",
+      "5. Compare: Calculated CRC ≠ Received CRC (0xFF 0xFF)",
+      "6. Result: REJECT packet, send NAK with CRC_FAILED error code"
+    ]
+  },
+  "correct_crc": {
+    "calculated_value": "[PENDING FIRMWARE VERIFICATION]",
+    "note": "The correct CRC for this packet is NOT 0xFF 0xFF. This vector uses an intentionally wrong value."
+  },
+  "crc_output": {
+    "transmitted_bytes": ["0xFF", "0xFF"],
+    "note": "These are intentionally WRONG to test error detection"
+  },
+  "verification": {
+    "method": "Negative test - verify rejection behavior",
+    "firmware_procedure": [
+      "1. Execute CRC16::Calculate([0x55, 0xAA, 0x05, 0x10, 0x00, 0x02, 0x00, 0x01], 8) to get correct CRC",
+      "2. Confirm that correct CRC ≠ 0xFF 0xFF",
+      "3. Send this packet (with wrong CRC 0xFF 0xFF) to firmware",
+      "4. Verify firmware responds with NAK (Cmd=0x50), Error Code=0x04 (CRC_FAILED)"
+    ],
+    "date": "[AWAITING FIRMWARE EXECUTION]",
+    "status": "PENDING_VERIFICATION",
+    "verified_against": "Actual firmware error handling behavior"
+  },
+  "expected_firmware_response": {
+    "response_type": "NAK (Negative Acknowledgement)",
+    "response_command": "0x50",
+    "response_sequence": "0x05",
+    "response_payload": ["0x04"],
+    "error_code": "0x04 (CRC_FAILED)",
+    "description": "Firmware should reject this packet and respond with NAK + CRC_FAILED error code"
+  },
+  "testing_notes": [
+    "This is a NEGATIVE test: verify the system correctly rejects invalid CRC",
+    "Tests error handling, not normal operation",
+    "Verify daemon CRC validation works: sending this packet should fail",
+    "Verify firmware CRC validation works: firmware should NAK with error code 0x04",
+    "Integration test: daemon should handle firmware NAK response appropriately"
+  ],
+  "why_this_test_matters": {
+    "rationale": "CRC validation is the primary defense against data corruption",
+    "tests": [
+      "Firmware correctly validates CRC on received packets",
+      "Firmware rejects corrupted packets with appropriate error response",
+      "Daemon correctly handles NAK responses from firmware",
+      "System can detect and report communication errors"
+    ]
+  },
+  "what_should_happen": {
+    "correct_behavior": [
+      "Daemon sends this packet to firmware (for testing purposes)",
+      "Firmware receives packet bytes",
+      "Firmware calculates CRC over first 8 bytes",
+      "Firmware reads CRC from bytes 8-9: 0xFF 0xFF",
+      "Firmware compares: calculated ≠ 0xFF 0xFF",
+      "Firmware sends NAK response (Cmd=0x50, Seq=0x05, Error=0x04)",
+      "Daemon receives NAK and logs CRC failure"
+    ],
+    "incorrect_behavior": [
+      "Firmware processes packet despite bad CRC (BAD - data corruption vulnerability)",
+      "Firmware sends ACK instead of NAK (BAD - masked error)",
+      "Firmware crashes or hangs (BAD - error handling failure)"
+    ]
+  }
+}

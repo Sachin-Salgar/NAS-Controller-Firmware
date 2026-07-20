@@ -1,0 +1,88 @@
+{
+  "id": "004",
+  "name": "Random/Complex Payload",
+  "description": "Packet with arbitrary mix of payload bytes testing diverse data patterns. Tests CRC robustness across all byte values.",
+  "purpose": "General correctness verification: algorithm works for arbitrary payload patterns",
+  "category": "General Correctness",
+  "firmware_version": "1.0.0",
+  "protocol_version": "1.0.0",
+  "crc_algorithm": {
+    "scheme": "CRC-16-Modbus",
+    "polynomial": "0xA001",
+    "initial_value": "0xFFFF",
+    "input_reflection": true,
+    "output_reflection": true,
+    "final_xor": "0x0000"
+  },
+  "crc_coverage": {
+    "description": "Header through Payload (16-byte payload with mixed values)",
+    "includes": ["Header", "Sequence", "Command", "Length", "Payload"],
+    "excludes": ["CRC", "Footer"],
+    "start_byte": 0,
+    "end_byte": 21,
+    "byte_count": 22
+  },
+  "input": {
+    "packet_structure": {
+      "header": "0x55 0xAA",
+      "sequence": "0x04",
+      "command": "0x60",
+      "length": "0x00 0x10",
+      "payload": "16 bytes with diverse values",
+      "footer": "0xAA"
+    },
+    "packet_bytes_hex": "55AA0460001055AA55AAAA554401FF8000CC33",
+    "packet_bytes_array": ["0x55", "0xAA", "0x04", "0x60", "0x00", "0x10", "0x55", "0xAA", "0x55", "0xAA", "0xAA", "0x55", "0x44", "0x01", "0xFF", "0x80", "0x00", "0xCC", "0x33"],
+    "description": "Header=0x55AA, Seq=0x04, Cmd=0x60 (STATUS_GET_ALL), Len=0x0010, Payload=[diverse bytes]"
+  },
+  "payload_details": {
+    "payload_bytes": ["0x55", "0xAA", "0x55", "0xAA", "0xAA", "0x55", "0x44", "0x01", "0xFF", "0x80", "0x00", "0xCC", "0x33"],
+    "payload_length": 16,
+    "payload_hex": "55AA55AAAA554401FF8000CC33",
+    "pattern_description": "Mix of all zeros, all ones, frame header bytes, reserved bytes, and arbitrary values",
+    "test_coverage": [
+      "0x55, 0xAA: Frame header bytes (self-reference)",
+      "0x00: Minimum byte value",
+      "0xFF: Maximum byte value",
+      "0x80: High bit set",
+      "0x01: Low value",
+      "0x44: Mid-range value"
+    ]
+  },
+  "crc_output": {
+    "calculated_value": "[PENDING FIRMWARE VERIFICATION]",
+    "transmitted_bytes": "[PENDING FIRMWARE VERIFICATION]",
+    "byte_order": "MSB-first (big-endian)",
+    "position_in_packet": "Bytes 22-23 (after payload, before footer)"
+  },
+  "verification": {
+    "generated_by": "firmware/src/Utilities/CRC16.cpp::Calculate()",
+    "method": "Firmware execution via test harness",
+    "verification_procedure": "Execute CRC16::Calculate([0x55, 0xAA, 0x04, 0x60, 0x00, 0x10, 0x55, 0xAA, 0x55, 0xAA, 0xAA, 0x55, 0x44, 0x01, 0xFF, 0x80, 0x00, 0xCC, 0x33], 22) and record output",
+    "date": "[AWAITING FIRMWARE EXECUTION]",
+    "status": "PENDING_VERIFICATION",
+    "verified_against": "Actual firmware binary, not calculated"
+  },
+  "expected_complete_packet": {
+    "description": "Complete packet bytes including CRC and footer",
+    "structure": "Header(2) + Seq(1) + Cmd(1) + Len(2) + Payload(16) + CRC(2) + Footer(1) = 25 bytes total",
+    "total_length": 25,
+    "bytes": "[0x55, 0xAA, 0x04, 0x60, 0x00, 0x10, 0x55, 0xAA, 0x55, 0xAA, 0xAA, 0x55, 0x44, 0x01, 0xFF, 0x80, 0x00, 0xCC, 0x33, CRC_MSB, CRC_LSB, 0xAA]"
+  },
+  "testing_notes": [
+    "Tests CRC computation on packets with diverse data patterns",
+    "Includes edge cases: 0x00, 0xFF, repeated bytes, frame header bytes in payload",
+    "Verifies algorithm handles all byte values correctly",
+    "Ensures CRC is robust, not sensitive to specific patterns",
+    "Integration test: verify daemon and firmware both produce identical CRC for this vector"
+  ],
+  "why_this_pattern": {
+    "rationale": "The payload includes deliberate diversity to test edge cases",
+    "includes": [
+      "Frame header bytes (0x55, 0xAA) appearing in payload - verifies CRC processes them correctly",
+      "Boundary values (0x00 min, 0xFF max, 0x80 high bit)",
+      "Repeated patterns (multiple 0x55 and 0xAA)",
+      "Arbitrary other values (0x44, 0x01, 0xCC, 0x33)"
+    ]
+  }
+}

@@ -473,11 +473,69 @@ If future firmware versions change this protocol:
 
 ---
 
+# INTEROPERABILITY REQUIREMENT
+
+## Canonical Protocol Test Vector Compliance
+
+Any independent implementation of the NAS Controller protocol **SHALL produce identical packet bytes** for all canonical protocol test vectors.
+
+This requirement applies to:
+- ✅ Firmware reference implementation (ESP32)
+- ✅ Daemon (Node.js + TypeScript)
+- ✅ Python tools and utilities
+- ✅ Test harnesses and diagnostic tools
+- ✅ Android/iOS mobile applications
+- ✅ WebAssembly implementations
+- ✅ Any future implementation or client
+
+### What "Identical Packet Bytes" Means
+
+**NOT just identical CRC values.** Complete packet bytes must match byte-for-byte, including:
+- Header (0x55AA)
+- Sequence number
+- Command byte
+- Length field (big-endian)
+- Payload (exact byte sequence)
+- CRC16 (2 bytes, big-endian)
+- Footer (0xAA)
+
+### Canonical Test Vectors
+
+Official test vectors are stored in `shared/docs/protocol/test_vectors/`:
+- `vector_001.json` - Minimum valid packet
+- `vector_002.json` - Typical relay command
+- `vector_003.json` - Maximum payload packet
+- `vector_004.json` - Complex/random payload
+- `vector_005.json` - CRC failure detection
+
+All implementations must pass all five vectors.
+
+### Verification Process
+
+Before any implementation is considered complete:
+
+1. **Firmware executes** vector inputs and records outputs
+2. **Test vectors frozen** with verified expected values
+3. **Daemon implementation tested** against frozen vectors
+4. **Integration test** validates round-trip communication
+5. **All other implementations** must match firmware output exactly
+
+### Why This Matters
+
+This requirement ensures:
+- **Protocol correctness** is verified at the system integration level
+- **Data integrity** is preserved across all implementations
+- **Debugging** is easier (identical bytes = identical behavior)
+- **Future compatibility** is guaranteed (all implementations agree)
+- **Regression detection** is automatic (byte mismatch = bug)
+
+---
+
 # DOCUMENT STATUS
 
-**Status:** DRAFT (Ready for implementation)  
-**Created:** July 19, 2026  
-**Authors:** Architecture Review  
+**Status:** DRAFT (Ready for implementation)
+**Created:** July 19, 2026
+**Authors:** Architecture Review
 **Review Cycle:** Ready for development and firmware implementation
 
 **This document is the single source of truth for:**
@@ -487,5 +545,6 @@ If future firmware versions change this protocol:
 - Timeouts and retries
 - State synchronization
 - Configuration transaction semantics
+- Interoperability requirements
 
 Any deviation from this spec is a bug.
