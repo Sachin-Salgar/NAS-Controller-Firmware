@@ -1,6 +1,6 @@
 # Project Rules
 
-**10 core rules that guide every implementation decision.**
+**14 core rules that guide every implementation decision.**
 
 These rules are non-negotiable. When in doubt, check here.
 
@@ -563,6 +563,110 @@ Why this choice?
 
 ---
 
+## Rule 14: Implementation Verification
+
+### The Rule
+
+Before any protocol implementation is declared complete, the following chain must be verified in order:
+
+```
+Architecture Decision (ADR)
+        ↓
+Protocol Specification (PROTOCOL_SPEC.md)
+        ↓
+Firmware Reference Implementation
+        ↓
+Daemon Implementation
+        ↓
+Test Vectors (verified against actual firmware)
+        ↓
+Integration Test
+```
+
+A task is not complete until all six elements are in place and verified to match exactly.
+
+### Why
+
+Mismatches between specification, firmware, and daemon can remain undetected until late development when they're most expensive to fix. This rule catches inconsistencies at Phase 1 when cost is minimal.
+
+### What This Means
+
+✅ **Do:**
+- Create/update ADR documenting the decision and rationale
+- Update PROTOCOL_SPEC.md with exact specification
+- Verify firmware implements the specification (audit the code)
+- Implement daemon against the specification
+- **Verify test vector against actual firmware** (not just spec)
+- Write integration tests that use the verified vector
+- Only then mark task complete
+
+❌ **Don't:**
+- Propose a test vector without verifying it against firmware
+- Assume specification matches implementation without auditing code
+- Mark task complete without verified test vectors
+- Proceed to next task until all six elements are locked in
+
+### Example: Adding a New Command
+
+```
+1. Create/Update ADR
+   - Document decision and rationale
+   - Link to related documents
+
+2. Edit PROTOCOL_SPEC.md
+   - Define command byte
+   - Define payload format
+   - Include algorithm/parameter details
+
+3. Verify firmware implementation
+   - Audit firmware source code
+   - Confirm it matches specification
+   - Note any differences (and update spec if needed)
+
+4. Implement in daemon
+   - Encoder: command → packet
+   - Decoder: packet → response
+
+5. Create and verify test vector
+   - Calculate test input from specification
+   - Run against actual firmware to get output
+   - Record verified output in PROTOCOL_SPEC.md
+   - Never use calculated/theoretical vectors
+
+6. Write integration test
+   - Use verified test vector
+   - Validate round-trip: spec → daemon → firmware → back
+
+7. Mark complete
+   - ADR created
+   - Spec accurate
+   - Firmware audited
+   - Daemon implemented
+   - Test vectors verified against firmware
+   - Integration tests pass
+```
+
+### Verification Checklist
+
+Before marking any protocol task complete:
+
+- [ ] ADR created documenting decision?
+- [ ] Change documented in PROTOCOL_SPEC.md?
+- [ ] Firmware implementation audited and matches spec?
+- [ ] Daemon implementation complete?
+- [ ] Test vectors verified against actual firmware (not theoretical)?
+- [ ] All integration tests pass?
+- [ ] Code review approved?
+- [ ] All six elements locked in?
+
+### Enforcement
+
+- **Code review:** "Where's the test vector?"
+- **Task completion:** Task not closed until verification complete
+- **Specification freeze:** Can't change protocol without updating docs
+
+---
+
 ## Summary
 
 | Rule | Essence | Enforced By |
@@ -580,18 +684,19 @@ Why this choice?
 | 11. Protocol First | Documentation is source of truth | Code review, spec review |
 | 12. Documentation Hierarchy | Clear authority order | Code review |
 | 13. Architecture Freeze | Changes require ADR | Stakeholder review |
+| 14. Implementation Verification | Spec/firmware/tests align | Code review, test vectors |
 
 ---
 
 ## Reading These Rules
 
 **First time?**
-- Read all 10 rules
+- Read all 14 rules
 - Notice which ones apply to your component
 - Re-read those
 
 **Before coding?**
-- Skim all 10 rules (30 seconds)
+- Skim all 14 rules (30-45 seconds)
 - Focus on the ones your feature touches
 
 **In code review?**
