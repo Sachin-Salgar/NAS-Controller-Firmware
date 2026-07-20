@@ -333,33 +333,45 @@ u16 crc16(u8 *data, u16 len) {
 
 ### Reference Implementation
 
-The CRC16-Modbus algorithm specified here is verified against the firmware reference implementation in `firmware/src/Protocol/PacketValidator.cpp` and `firmware/src/Utilities/CRC16.cpp`.
+The CRC16-Modbus algorithm specified here is verified against the firmware reference implementation in `firmware/src/Utilities/CRC16.cpp::CRC16::Calculate()`.
 
-The firmware implements the identical algorithm:
-- Polynomial 0xA001
-- Input/output reflection enabled
-- Initial value 0xFFFF
-- No final XOR
+For the standard format and verification process for all protocol test vectors, see `shared/docs/PROTOCOL_TEST_VECTORS.md`.
 
-### Verified Test Vector
+### Test Vector: Relay Set Command Header
 
-The following test vector has been verified against the firmware reference implementation:
+**Input Bytes (hex):**
+`55 AA 01 10 00 02`
 
-**Input (hex):** `55 AA 01 10 00 02`
-**Expected CRC16 (hex):** To be verified
-**Status:** ⚠️ PENDING VERIFICATION
+This represents a RELAY_SET command packet header without payload, used to verify CRC16 implementation correctness.
 
-This represents a RELAY_SET command packet header without payload. Before freezing this test vector into the specification, it must be verified by running the input data through the actual firmware CRC implementation.
+**Algorithm:**
+CRC16-Modbus (reflected variant)
+- Polynomial: 0xA001
+- Initial Value: 0xFFFF
+- Input Reflection: Yes
+- Output Reflection: Yes
+- Final XOR: 0x0000
 
-### Verification Process
+**Expected Output:**
+[PENDING VERIFICATION - see shared/docs/PROTOCOL_TEST_VECTORS.md for verification workflow]
 
-1. Run input bytes `[0x55, 0xAA, 0x01, 0x10, 0x00, 0x02]` through `CRC16::Calculate()` in firmware
-2. Record the output CRC value
-3. Update this section with the verified CRC value
-4. Only then is the test vector locked into the specification
+**Verified Against:**
+- Firmware Version: [TBD during verification session]
+- Protocol Version: 1.0.0
+- Implementation: firmware/src/Utilities/CRC16.cpp::CRC16::Calculate()
+
+**Verification Date:**
+[TBD during verification session]
+
+**Status:**
+⏳ PENDING VERIFICATION
 
 **Daemon Implementation Requirement:**
-When implementing CRC16 in the daemon, reimplement fresh against this specification (do not port firmware code). Validate your implementation against the verified protocol test vector before proceeding to protocol implementation tasks.
+When implementing CRC16 in the daemon:
+1. Reimplement fresh against this specification (do not port firmware code)
+2. Test against this verified protocol test vector
+3. Your daemon CRC output must exactly match the firmware output
+4. Do not proceed to Task 3 until daemon CRC is verified
 
 ---
 
