@@ -45,6 +45,10 @@ import {
   Err,
 } from "../protocol";
 
+// Note: ProtocolTiming is intentionally NOT imported from shared.
+// It is daemon implementation policy, not a protocol contract.
+// See daemon/config/ for timing configuration.
+
 describe("ProtocolConstants", () => {
   test("packet header is 0x55AA", () => {
     expect(ProtocolConstants.Header).toBe(0x55aa);
@@ -84,47 +88,71 @@ describe("ProtocolLimits", () => {
     expect(ProtocolLimits.MaxSequenceNumber).toBe(0xff);
   });
 
-  test("hardware limits are reasonable", () => {
+  test("includes deprecated hardware limits for backward compatibility", () => {
     expect(ProtocolLimits.MaxRelays).toBeGreaterThan(0);
     expect(ProtocolLimits.MaxFans).toBeGreaterThan(0);
     expect(ProtocolLimits.MaxTemperatureSensors).toBeGreaterThan(0);
   });
 });
 
-describe("ProtocolTiming", () => {
-  test("ACK timeout is 100ms", () => {
-    expect(ProtocolTiming.AckTimeout).toBe(100);
+describe("PacketLimits", () => {
+  test("packet limits match protocol constraints", () => {
+    expect(PacketLimits.MaxPacketSize).toBe(256);
+    expect(PacketLimits.MaxPayloadSize).toBe(256);
   });
 
-  test("command timeout is 1000ms", () => {
-    expect(ProtocolTiming.CommandTimeout).toBe(1000);
-  });
-
-  test("max retry attempts is 3", () => {
-    expect(ProtocolTiming.MaxRetryAttempts).toBe(3);
-  });
-
-  test("reconnect delays are progressive", () => {
-    expect(ProtocolTiming.ReconnectInitialDelay).toBe(1000);
-    expect(ProtocolTiming.ReconnectMaxDelay).toBeGreaterThan(
-      ProtocolTiming.ReconnectInitialDelay
-    );
+  test("does not include hardware limits", () => {
+    expect(PacketLimits).not.toHaveProperty("MaxRelays");
+    expect(PacketLimits).not.toHaveProperty("MaxFans");
   });
 });
 
-describe("ProtocolFeatureFlags", () => {
-  test("core features are defined", () => {
-    expect(ProtocolFeatures.CORE.length).toBeGreaterThan(0);
+describe("HardwareLimits", () => {
+  test("contains only hardware capability limits", () => {
+    expect(HardwareLimits.MaxRelays).toBeGreaterThan(0);
+    expect(HardwareLimits.MaxFans).toBeGreaterThan(0);
+    expect(HardwareLimits.MaxTemperatureSensors).toBeGreaterThan(0);
+    expect(HardwareLimits.MaxDrives).toBeGreaterThan(0);
   });
 
-  test("extended features are defined", () => {
-    expect(ProtocolFeatures.EXTENDED.length).toBeGreaterThan(0);
+  test("does not include packet structure limits", () => {
+    expect(HardwareLimits).not.toHaveProperty("MaxPacketSize");
+    expect(HardwareLimits).not.toHaveProperty("MaxSequenceNumber");
+  });
+});
+
+describe("FeatureFlag Bitmask Enum", () => {
+  test("PWM fan control feature is 0x0001", () => {
+    expect(FeatureFlag.PWM_FAN_CONTROL).toBe(0x0001);
   });
 
-  test("feature flags are defined", () => {
-    expect(ProtocolFeatureFlag.PWM_FAN_CONTROL).toBe("pwm_fan_control");
-    expect(ProtocolFeatureFlag.RGB_LED).toBe("rgb_led");
-    expect(ProtocolFeatureFlag.TEMPERATURE_SENSOR).toBe("temperature_sensor");
+  test("RGB LED feature is 0x0002", () => {
+    expect(FeatureFlag.RGB_LED).toBe(0x0002);
+  });
+
+  test("temperature sensor feature is 0x0004", () => {
+    expect(FeatureFlag.TEMPERATURE_SENSOR).toBe(0x0004);
+  });
+
+  test("event log feature is 0x0008", () => {
+    expect(FeatureFlag.EVENT_LOG).toBe(0x0008);
+  });
+
+  test("all features are powers of 2 for bitmask operations", () => {
+    const features = Object.values(FeatureFlag);
+    features.forEach((feature) => {
+      // Check if feature is a power of 2 (has exactly one bit set)
+      expect((feature & (feature - 1))).toBe(0);
+    });
+  });
+
+  test("features can be combined with bitwise OR", () => {
+    const combined = FeatureFlag.PWM_FAN_CONTROL | FeatureFlag.RGB_LED;
+    expect(combined).toBe(0x0003);
+    // Firmware would return this as capabilities bitmask
+    expect((combined & FeatureFlag.PWM_FAN_CONTROL) !== 0).toBe(true);
+    expect((combined & FeatureFlag.RGB_LED) !== 0).toBe(true);
+    expect((combined & FeatureFlag.TEMPERATURE_SENSOR) !== 0).toBe(false);
   });
 });
 

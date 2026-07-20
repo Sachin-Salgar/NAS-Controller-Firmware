@@ -17,6 +17,7 @@ Three components working together:
 
 ## Quick Links
 
+- **Project Status:** `docs/PROJECT_STATUS.md` ← **Start here (new sessions)**
 - **Getting Started:** `docs/GETTING_STARTED.md`
 - **System Architecture:** `docs/PROJECT_OVERVIEW.md`
 - **Documentation Index:** `DOCUMENTATION.md`

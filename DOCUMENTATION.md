@@ -16,7 +16,7 @@
 - 🔄 **Phase 1 MVP:** Protocol → Transport → Core → API → UI
 - ⏭️ **Next:** CRC16 implementation in daemon/src/core/protocol/
 
-**For new Builder AI sessions:** Read [README.md](./README.md) first, then all documents below in order.
+**For new Builder AI sessions:** Read [docs/PROJECT_STATUS.md](./docs/PROJECT_STATUS.md) first (current status and next steps), then [README.md](./README.md), then other documents below as needed.
 
 ---
 
@@ -24,6 +24,7 @@
 
 | Role | Document |
 |------|----------|
+| **New AI session** | [docs/PROJECT_STATUS.md](./docs/PROJECT_STATUS.md) |
 | **New to project** | [README.md](./README.md) |
 | **Want overview** | [docs/PROJECT_OVERVIEW.md](./docs/PROJECT_OVERVIEW.md) |
 | **Need setup help** | [docs/GETTING_STARTED.md](./docs/GETTING_STARTED.md) |
@@ -36,6 +37,7 @@
 ### Project-Level (docs/)
 | Document | Purpose |
 |----------|---------|
+| [PROJECT_STATUS.md](./docs/PROJECT_STATUS.md) | **Current project status, next steps, and session quick-start** |
 | [PROJECT_OVERVIEW.md](./docs/PROJECT_OVERVIEW.md) | System architecture & component overview |
 | [GETTING_STARTED.md](./docs/GETTING_STARTED.md) | Development environment setup |
 | [IMPLEMENTATION_CHECKLIST.md](./docs/IMPLEMENTATION_CHECKLIST.md) | Phase 1-3 implementation tasks |
