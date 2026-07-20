@@ -48,17 +48,17 @@
   },
   "crc_output": {
     "crc_value_correct": null,
-    "crc_value_transmitted": "0xFFFF",
-    "note": "Transmitted value is intentionally WRONG (0xFFFF is a placeholder, not the real CRC)",
-    "corruption": "The CRC bytes in the transmitted packet are corrupted on purpose"
+    "crc_value_transmitted": null,
+    "note": "Values will be populated by firmware execution",
+    "corruption": "For this error detection test, firmware will determine what CRC values to corrupt"
   },
   "transmitted_packet": {
     "description": "Complete packet as transmitted (with corrupted CRC)",
-    "bytes_hex": "55AA0510000200FFFFAA",
-    "bytes_array": ["0x55", "0xAA", "0x05", "0x10", "0x00", "0x02", "0x00", "0x01", "0xFF", "0xFF", "0xAA"],
+    "bytes_hex": null,
+    "bytes_array": null,
     "breakdown": {
       "valid_part": "0x55 0xAA 0x05 0x10 0x00 0x02 0x00 0x01 (packet before CRC)",
-      "invalid_crc": "0xFF 0xFF (intentionally wrong)",
+      "invalid_crc": "To be determined after firmware calculates correct CRC",
       "footer": "0xAA (valid frame terminator)"
     }
   },
