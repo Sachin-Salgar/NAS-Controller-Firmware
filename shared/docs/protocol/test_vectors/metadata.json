@@ -1,0 +1,169 @@
+{
+  "repository": "shared/docs/protocol/test_vectors/",
+  "purpose": "Templates and canonical test vectors for NAS Controller binary protocol verification",
+  "schema_version": 1,
+  "created": "2026-07-20",
+  "last_updated": "2026-07-20",
+  "protocol_version": "1.0.0",
+  "status": "Templates prepared, awaiting firmware verification",
+
+  "schema": {
+    "version": 1,
+    "fields": {
+      "schema_version": {
+        "type": "integer",
+        "description": "Version of this JSON schema (used to detect schema changes)"
+      },
+      "vector_version": {
+        "type": "integer",
+        "description": "Version of this specific test vector"
+      },
+      "id": {
+        "type": "string",
+        "description": "Unique vector identifier (001, 002, ...)"
+      },
+      "name": {
+        "type": "string",
+        "description": "Human-readable vector name"
+      },
+      "description": {
+        "type": "string",
+        "description": "Detailed description of what this vector tests"
+      },
+      "protocol_version": {
+        "type": "string (SemVer)",
+        "description": "Protocol version this vector applies to"
+      },
+      "firmware_version": {
+        "type": "string or null",
+        "description": "Firmware version that generated this vector (null until verified)"
+      },
+      "firmware_commit": {
+        "type": "string (git SHA) or null",
+        "description": "Firmware git commit that generated this vector (null until verified)"
+      },
+      "crc_algorithm": {
+        "type": "object",
+        "fields": {
+          "scheme": "Algorithm name (CRC-16-Modbus)",
+          "polynomial": "Polynomial in hex (0xA001)",
+          "initial_value": "Initial value in hex (0xFFFF)",
+          "input_reflection": "Boolean",
+          "output_reflection": "Boolean",
+          "final_xor": "Final XOR value in hex (0x0000)"
+        }
+      },
+      "packet_before_crc": {
+        "type": "object",
+        "description": "Input bytes to CRC algorithm (the data that gets checksummed)"
+      },
+      "crc_output": {
+        "type": "object",
+        "fields": {
+          "crc_value": "The computed u16 value (null until verified)",
+          "transmitted_crc_bytes": "Array of CRC bytes as transmitted [MSB, LSB] (null until verified)"
+        }
+      },
+      "expected_complete_packet": {
+        "type": "object",
+        "description": "Complete packet including CRC and footer (null until verified)"
+      },
+      "verification": {
+        "type": "object",
+        "fields": {
+          "status": "One of: pending_firmware_execution, verified, deprecated",
+          "method": "How to verify this vector",
+          "date": "When verified (null until verified)",
+          "verified_by": "Who verified this (null until verified)"
+        }
+      }
+    }
+  },
+
+  "verification_workflow": {
+    "step_1": "Create vector TEMPLATE with input bytes but null CRC values",
+    "step_2": "Execute firmware reference implementation on packet_before_crc bytes",
+    "step_3": "Capture actual CRC output from firmware execution",
+    "step_4": "Transmit complete packet and capture transmitted bytes",
+    "step_5": "Record actual values in crc_output and expected_complete_packet",
+    "step_6": "Mark verification.status as 'verified' and record date/who",
+    "step_7": "Canonical vector is now FROZEN and usable by all implementations"
+  },
+
+  "vector_statuses": {
+    "pending_firmware_execution": "TEMPLATE: Input bytes specified, CRC values are NULL. Awaiting firmware to generate values.",
+    "verified": "CANONICAL: Firmware has executed and generated values. CRC and packet bytes are FROZEN. Ready for use.",
+    "deprecated": "OBSOLETE: This vector has been superseded. Implementations may still use for backward compatibility, but new implementations should prefer replacement vector."
+  },
+
+  "critical_rules": {
+    "rule_1": "NEVER use fabricated CRC values. Only firmware-generated values are valid.",
+    "rule_2": "NEVER use calculated CRC values. Only executed firmware output is valid.",
+    "rule_3": "NEVER guess packet bytes. Only captured transmitted bytes are valid.",
+    "rule_4": "Use JSON null for unknown values, never strings like '[PENDING]'.",
+    "rule_5": "Each vector must specify exact firmware version and commit that generated it.",
+    "rule_6": "Canonical vectors are immutable once verified (create new vector for changes).",
+    "rule_7": "All implementations must produce identical bytes (not just identical CRC values)."
+  },
+
+  "current_vectors": [
+    {
+      "id": "001",
+      "name": "Minimum Valid Packet",
+      "status": "pending_firmware_execution",
+      "purpose": "Boundary condition: minimal input"
+    },
+    {
+      "id": "002",
+      "name": "Typical Relay Set Command",
+      "status": "pending_firmware_execution",
+      "purpose": "Typical operation with small payload"
+    },
+    {
+      "id": "003",
+      "name": "Maximum Payload Packet",
+      "status": "pending_firmware_execution",
+      "purpose": "Boundary condition: maximum input"
+    },
+    {
+      "id": "004",
+      "name": "Random/Complex Payload",
+      "status": "pending_firmware_execution",
+      "purpose": "General correctness with diverse bytes"
+    },
+    {
+      "id": "005",
+      "name": "Invalid Packet - CRC Failure",
+      "status": "pending_firmware_execution",
+      "purpose": "Error detection verification"
+    }
+  ],
+
+  "interoperability": {
+    "requirement": "Every implementation must produce identical packet bytes for all canonical (verified) vectors.",
+    "scope": [
+      "Firmware reference implementation",
+      "Daemon (TypeScript/Node.js)",
+      "Python tools",
+      "Test utilities",
+      "Mobile applications (iOS/Android)",
+      "WebAssembly implementations",
+      "Any future implementation"
+    ],
+    "enforcement": "Automated test harness compares outputs byte-for-byte during CI/CD"
+  },
+
+  "next_session": {
+    "objective": "Firmware Verification & Vector Canonicalization",
+    "steps": [
+      "Execute firmware test harness against each template",
+      "Record actual CRC outputs from firmware",
+      "Capture transmitted packet bytes",
+      "Update vector JSON files with verified values",
+      "Mark verification.status as 'verified'",
+      "Proceed to daemon implementation"
+    ]
+  },
+
+  "notes": "This metadata describes TEMPLATES (pending verification), not canonical vectors yet. Templates become canonical only after firmware execution confirms values. See docs/PROJECT_RULES.md Rule 14 for canonical vector definition."
+}
