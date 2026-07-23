@@ -10,7 +10,10 @@
 
 #include "../Protocol/PacketParser.h"
 #include "../Protocol/PacketBuilder.h"
+#include "../Protocol/CommandDispatcher.h"
+#include "../Protocol/ResponseBuilder.h"
 #include "../Protocol/Commands.h"
+#include "../Config/ProtocolConfig.h"
 
 #include "USBService.h"
 #include "StatisticsService.h"
@@ -89,10 +92,58 @@ Result ProtocolService::ProcessPacket(
         return result;
     }
 
-    return ExecuteCommand(
+    std::uint8_t responsePayload[NAS::Config::Protocol::MaximumPayloadSize]{};
+    std::uint16_t responsePayloadLength = 0U;
+
+    result = NAS::Protocol::CommandDispatcher::Dispatch(
         parser.GetCommand(),
         parser.GetPayload(),
-        parser.GetPayloadLength());
+        parser.GetPayloadLength(),
+        responsePayload,
+        sizeof(responsePayload),
+        responsePayloadLength);
+
+    std::uint8_t responsePacket[NAS::Config::Protocol::MaximumPacketSize]{};
+    std::size_t responsePacketLength = 0U;
+
+    auto buildResult = result.IsSuccess()
+        ? NAS::Protocol::ResponseBuilder::BuildSuccess(
+            parser.GetSequence(),
+            parser.GetCommand(),
+            responsePayload,
+            responsePayloadLength,
+            responsePacket,
+            sizeof(responsePacket),
+            responsePacketLength)
+        : NAS::Protocol::ResponseBuilder::BuildError(
+            parser.GetSequence(),
+            parser.GetCommand(),
+            result.Code(),
+            responsePacket,
+            sizeof(responsePacket),
+            responsePacketLength);
+
+    if (!buildResult.IsSuccess())
+    {
+        StatisticsService::IncrementProtocolErrors();
+        return buildResult;
+    }
+
+    auto sendResult = USBService::Send(
+        responsePacket,
+        responsePacketLength);
+
+    if (!sendResult.IsSuccess())
+    {
+        return sendResult;
+    }
+
+    if (!result.IsSuccess())
+    {
+        StatisticsService::IncrementProtocolErrors();
+    }
+
+    return result;
 }
 
 Result ProtocolService::ExecuteCommand(

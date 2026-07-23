@@ -11,6 +11,7 @@
 #include <cstring>
 
 #include "PacketValidator.h"
+#include "../Config/ProtocolConfig.h"
 
 using namespace NAS::Core;
 
@@ -26,7 +27,7 @@ Result PacketBuilder::Build(
     std::size_t bufferSize,
     std::size_t& packetLength) noexcept
 {
-    if (packet == nullptr)
+    if ((packet == nullptr) || ((payloadLength > 0U) && (payload == nullptr)))
     {
         return Result(ResultCode::NullPointer);
     }
@@ -35,6 +36,16 @@ Result PacketBuilder::Build(
         HeaderSize +
         payloadLength +
         CrcSize;
+
+    if (payloadLength > NAS::Config::Protocol::MaximumPayloadSize)
+    {
+        return Result(ResultCode::InvalidLength);
+    }
+
+    if (packetLength > NAS::Config::Protocol::MaximumPacketSize)
+    {
+        return Result(ResultCode::InvalidLength);
+    }
 
     if (bufferSize < packetLength)
     {

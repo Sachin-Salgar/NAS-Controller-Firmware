@@ -72,6 +72,12 @@ public:
     [[nodiscard]]
     static bool HasPendingEvents() noexcept;
 
+    [[nodiscard]]
+    static NAS::Core::Result Clear() noexcept;
+
+    [[nodiscard]]
+    static std::size_t GetPendingCount() noexcept;
+
 private:
 
     static Event queue_[QueueSize];
