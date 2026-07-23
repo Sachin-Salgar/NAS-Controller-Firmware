@@ -10,6 +10,9 @@
 
 #include <cstring>
 
+#include "../Config/ProtocolConfig.h"
+#include "../Utilities/CRC16.h"
+
 using namespace NAS::Core;
 
 namespace NAS::Protocol
@@ -24,7 +27,8 @@ Result PacketValidator::Validate(
         return Result(ResultCode::NullPointer);
     }
 
-    if (length < MinimumPacketSize)
+    if ((length < MinimumPacketSize) ||
+        (length > NAS::Config::Protocol::MaximumPacketSize))
     {
         return Result(ResultCode::InvalidLength);
     }
@@ -47,6 +51,11 @@ Result PacketValidator::Validate(
         &payloadLength,
         packet + 6U,
         sizeof(payloadLength));
+
+    if (payloadLength > NAS::Config::Protocol::MaximumPayloadSize)
+    {
+        return Result(ResultCode::InvalidLength);
+    }
 
     const std::size_t expectedLength =
         MinimumPacketSize + payloadLength;
@@ -80,29 +89,7 @@ std::uint16_t PacketValidator::CalculateCrc16(
     const std::uint8_t* data,
     std::size_t length) noexcept
 {
-    constexpr std::uint16_t Polynomial = 0xA001U;
-
-    std::uint16_t crc = 0xFFFFU;
-
-    for (std::size_t i = 0U; i < length; ++i)
-    {
-        crc ^= data[i];
-
-        for (std::uint8_t bit = 0U; bit < 8U; ++bit)
-        {
-            if ((crc & 0x0001U) != 0U)
-            {
-                crc >>= 1U;
-                crc ^= Polynomial;
-            }
-            else
-            {
-                crc >>= 1U;
-            }
-        }
-    }
-
-    return crc;
+    return NAS::Utilities::CRC16::Calculate(data, length);
 }
 
 } // namespace NAS::Protocol

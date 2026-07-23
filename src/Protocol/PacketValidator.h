@@ -25,7 +25,7 @@ public:
 
     static constexpr std::uint16_t Header = 0x55AA;
 
-    static constexpr std::size_t MinimumPacketSize = 12U;
+    static constexpr std::size_t MinimumPacketSize = 10U;
 
     [[nodiscard]]
     static NAS::Core::Result Validate(

@@ -60,6 +60,9 @@ public:
     NAS::Core::Result ResetToDefaults() noexcept;
 
     [[nodiscard]]
+    NAS::Core::Result Validate() const noexcept;
+
+    [[nodiscard]]
     RelayConfiguration& Relay() noexcept;
 
     [[nodiscard]]

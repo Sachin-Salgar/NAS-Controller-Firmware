@@ -88,4 +88,23 @@ bool EventService::HasPendingEvents() noexcept
     return count_ != 0U;
 }
 
+Result EventService::Clear() noexcept
+{
+    if (!initialized_)
+    {
+        return Result(ResultCode::NotInitialized);
+    }
+
+    head_ = 0U;
+    tail_ = 0U;
+    count_ = 0U;
+
+    return Result::Ok();
+}
+
+std::size_t EventService::GetPendingCount() noexcept
+{
+    return count_;
+}
+
 } // namespace NAS::Services
