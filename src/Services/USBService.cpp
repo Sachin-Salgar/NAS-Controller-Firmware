@@ -45,10 +45,8 @@ Result USBService::Process() noexcept
         return Result(ResultCode::NotInitialized);
     }
 
-    SystemService::SetUsbConnected(
+    return SystemService::SetUsbConnected(
         NAS::Platform::USB::IsConnected());
-
-    return Result::Ok();
 }
 
 Result USBService::Send(const std::uint8_t* data,

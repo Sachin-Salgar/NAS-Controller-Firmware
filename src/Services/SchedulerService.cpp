@@ -39,21 +39,41 @@ Result SchedulerService::Initialize() noexcept
         return result;
     }
 
-    Scheduler::AddTask(
+    result = Scheduler::AddTask(
         USBService::Process,
         NAS::Config::Tasks::UsbTaskIntervalMs);
 
-    Scheduler::AddTask(
+    if (!result.IsSuccess())
+    {
+        return result;
+    }
+
+    result = Scheduler::AddTask(
         ProtocolService::Process,
         NAS::Config::Tasks::ProtocolTaskIntervalMs);
 
-    Scheduler::AddTask(
+    if (!result.IsSuccess())
+    {
+        return result;
+    }
+
+    result = Scheduler::AddTask(
         TemperatureService::UpdateAll,
         NAS::Config::Tasks::TemperatureTaskIntervalMs);
 
-    Scheduler::AddTask(
+    if (!result.IsSuccess())
+    {
+        return result;
+    }
+
+    result = Scheduler::AddTask(
         HealthService::Update,
         NAS::Config::Tasks::HealthTaskIntervalMs);
+
+    if (!result.IsSuccess())
+    {
+        return result;
+    }
 
     initialized_ = true;
 

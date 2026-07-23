@@ -24,8 +24,19 @@ Result RelayService::Initialize() noexcept
         return Result(ResultCode::AlreadyInitialized);
     }
 
-    relays_[0].Initialize(1U, 26U);
-    relays_[1].Initialize(2U, 27U);
+    auto result = relays_[0].Initialize(1U, 26U);
+
+    if (!result.IsSuccess())
+    {
+        return result;
+    }
+
+    result = relays_[1].Initialize(2U, 27U);
+
+    if (!result.IsSuccess())
+    {
+        return result;
+    }
 
     initialized_ = true;
 

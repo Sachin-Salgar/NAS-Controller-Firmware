@@ -91,15 +91,25 @@ Result ServiceManager::Start() noexcept
 
     StatisticsService::IncrementBootCount();
 
-    SystemService::SetState(
+    auto result = SystemService::SetState(
         NAS::Objects::SystemState::Ready);
 
-    EventService::Publish(
+    if (!result.IsSuccess())
+    {
+        return result;
+    }
+
+    result = EventService::Publish(
         {
             EventType::SystemStarted,
             0U,
             0U
         });
+
+    if (!result.IsSuccess())
+    {
+        return result;
+    }
 
     return SchedulerService::Start();
 }
@@ -111,15 +121,25 @@ Result ServiceManager::Stop() noexcept
         return Result(ResultCode::NotInitialized);
     }
 
-    EventService::Publish(
+    auto result = EventService::Publish(
         {
             EventType::SystemShutdown,
             0U,
             0U
         });
 
-    SystemService::SetState(
+    if (!result.IsSuccess())
+    {
+        return result;
+    }
+
+    result = SystemService::SetState(
         NAS::Objects::SystemState::Shutdown);
+
+    if (!result.IsSuccess())
+    {
+        return result;
+    }
 
     return SchedulerService::Stop();
 }
