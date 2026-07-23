@@ -1,43 +1,96 @@
 # Project Status
 
-Firmware is the authoritative implementation for daemon and web-interface work.
-
-## Current firmware contract
-
-- Firmware version: 1.0.0.
-- Protocol version: 0x0100.
-- Command IDs registered: 28.
-- Transport path: USB service receives bytes and protocol service treats each non-empty receive as one complete binary packet.
-- Packet format: 0x55AA header, sequence, command, payload length, payload, CRC16.
-- CRC: polynomial 0xA001, initial 0xFFFF.
-
-## Implemented services
-
-Configuration, Statistics, System, Relay, Fan, Temperature, LED, Drive, USB, Protocol, Health, Event, and Scheduler services initialize through ServiceManager.
-
-## Unsupported or partial protocol features
-
-- `LedGet` and `LedSetColor` are registered but permanently return `NotSupported` for firmware version 1.0.0.
-- No ASCII protocol is implemented.
-- No protocol negotiation, authentication, firmware update, file transfer, packet fragmentation, or asynchronous USB event packet mechanism is implemented.
-- `ProtocolService::ExecuteCommand()` is a limited helper supporting only Ping and is not the normal packet command path.
-
-## Freeze Status
-
-**OFFICIAL FIRMWARE FREEZE**
-
-This firmware (v1.0.0) is now the authoritative implementation. The binary protocol, packet format, CRC algorithm, command IDs, configuration format, and public firmware behavior are frozen. Future daemon and web interface development must consume this firmware exactly as implemented.
-
-## Project Status
+## Firmware Status
 
 | Item | Status |
-| --- | --- |
-| Firmware Phase | COMPLETE |
-| Firmware Status | FROZEN |
-| Protocol Status | FROZEN |
-| Architecture Status | FROZEN |
-| Documentation Status | FROZEN |
-| Verification | PASSED |
-| PlatformIO Build | PASSED |
-| Compiler Warnings | NONE |
-| Ready for Daemon Development | YES |
+|------|--------|
+| **Firmware Version** | 1.0.0 |
+| **Protocol Version** | 0x0100 |
+| **Build Status** | ✅ PASSED (zero warnings, zero errors) |
+| **Freeze Status** | ✅ FROZEN |
+| **Ready for Daemon Development** | ✅ YES |
+
+## Firmware Specifications
+
+**Microcontroller**: ESP32 (ESP32-WROOM-32)  
+**Language**: C++17  
+**Build System**: PlatformIO  
+
+**Protocol**:
+- Binary USB packet protocol at 115200 baud
+- Packet format: `0x55AA` header, sequence, command, payload length, payload, CRC16
+- CRC: Polynomial 0xA001, initial 0xFFFF
+- Limits: Max packet 512 bytes, max payload 500 bytes
+
+**Registered Commands**: 28 total  
+- 26 with implemented success paths
+- 2 registered as unsupported (`LedGet`, `LedSetColor`)
+
+## Implemented Services
+
+- Configuration
+- Statistics  
+- System
+- Relay (2 channels)
+- Fan (5 channels)
+- Temperature (0–4 OneWire sensors)
+- LED (mode, brightness, off; color unsupported)
+- Drive
+- USB
+- Protocol
+- Health
+- Event (read/clear only)
+- Scheduler
+
+## Unsupported Features
+
+- ASCII protocol (binary only)
+- LED color control (`LedGet` and `LedSetColor` return `NotSupported`)
+- Asynchronous event push (command-based event read/clear only)
+- Protocol negotiation or authentication
+- Firmware update mechanism
+- File transfer protocol
+- Packet fragmentation
+- Endian-independent encoding (uses native target byte order)
+
+## Immutable Items for v1.0.x
+
+The following cannot change without a protocol version increment:
+
+- Packet format (header, sequence, command, payload length, CRC)
+- Command IDs (0x0001–0x1702)
+- CRC algorithm (CRC-16/Modbus, polynomial 0xA001, initial 0xFFFF)
+- Configuration persistence format
+- Statistics format
+- Event format
+- Response format and error codes
+- Protocol timing (5ms USB/protocol polling, 1000ms temperature/health polling)
+- Service interfaces and initialization order
+
+See **[docs/CHANGE_POLICY.md](docs/CHANGE_POLICY.md)** for detailed change rules.
+
+## Documentation
+
+All authoritative documentation is in the `docs/` directory:
+
+- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** – Layered architecture, service initialization order
+- **[docs/PROTOCOL_SPEC.md](docs/PROTOCOL_SPEC.md)** – Binary protocol format and limits
+- **[docs/PROTOCOL_REGISTRY.md](docs/PROTOCOL_REGISTRY.md)** – Command IDs, payloads, responses
+- **[docs/CHANGE_POLICY.md](docs/CHANGE_POLICY.md)** – Immutable items and change rules
+- **[docs/DECISIONS.md](docs/DECISIONS.md)** – Architecture Decision Records (ADRs)
+- **[docs/TERMINOLOGY.md](docs/TERMINOLOGY.md)** – Glossary
+- **[docs/EXTENSION_POINTS.md](docs/EXTENSION_POINTS.md)** – Future extensibility guidance
+- **[docs/NOT_PLANNED.md](docs/NOT_PLANNED.md)** – Explicitly unsupported features
+- **[docs/Hardware.md](docs/Hardware.md)** – Hardware specifications
+- **[docs/LED_Subsystem.md](docs/LED_Subsystem.md)** – LED hardware and firmware capabilities
+- **[docs/CodingStandard.md](docs/CodingStandard.md)** – Code style and conventions
+- **[docs/Repository-Structure.md](docs/Repository-Structure.md)** – Source code layout
+
+## Next Steps
+
+Future development occurs in:
+
+1. **Daemon Repository** – Consumes this firmware via the binary protocol
+2. **Web Interface Repository** – Uses daemon as intermediary to the firmware
+
+Both must follow the frozen protocol specification exactly as implemented in this firmware.
