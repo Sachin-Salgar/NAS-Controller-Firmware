@@ -20,7 +20,12 @@ Result Statistics::Initialize() noexcept
         return Result(ResultCode::AlreadyInitialized);
     }
 
-    (void)Reset();
+    auto result = Reset();
+
+    if (!result.IsSuccess())
+    {
+        return result;
+    }
 
     initialized_ = true;
 

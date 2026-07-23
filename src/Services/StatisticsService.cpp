@@ -8,6 +8,10 @@
 
 #include "StatisticsService.h"
 
+#include "FanService.h"
+#include "SystemService.h"
+#include "../Config/TaskConfig.h"
+
 using namespace NAS::Core;
 
 namespace NAS::Services
@@ -70,6 +74,40 @@ void StatisticsService::AddFanRuntime(std::uint32_t seconds) noexcept
 void StatisticsService::AddSystemUptime(std::uint32_t seconds) noexcept
 {
     statistics_.AddSystemUptime(seconds);
+}
+
+Result StatisticsService::Update() noexcept
+{
+    if (!initialized_)
+    {
+        return Result(ResultCode::NotInitialized);
+    }
+
+    constexpr std::uint32_t IntervalSeconds =
+        NAS::Config::Tasks::StatisticsTaskIntervalMs / 1000U;
+
+    statistics_.AddSystemUptime(IntervalSeconds);
+
+    auto statusResult = SystemService::SetUptime(
+        static_cast<std::uint64_t>(statistics_.GetSystemUptime()) * 1000ULL);
+
+    if (!statusResult.IsSuccess())
+    {
+        return statusResult;
+    }
+
+    for (std::uint8_t fanId = 1U;
+         fanId <= FanService::FanCount;
+         ++fanId)
+    {
+        if (FanService::GetFan(fanId).GetSpeed() > 0U)
+        {
+            statistics_.AddFanRuntime(IntervalSeconds);
+            break;
+        }
+    }
+
+    return Result::Ok();
 }
 
 NAS::Objects::Statistics&

@@ -17,11 +17,9 @@ inline constexpr std::uint32_t UsbTaskIntervalMs = 5U;
 
 inline constexpr std::uint32_t ProtocolTaskIntervalMs = 5U;
 
-inline constexpr std::uint32_t FanTaskIntervalMs = 100U;
 
 inline constexpr std::uint32_t TemperatureTaskIntervalMs = 1000U;
 
-inline constexpr std::uint32_t LedTaskIntervalMs = 100U;
 
 inline constexpr std::uint32_t HealthTaskIntervalMs = 1000U;
 

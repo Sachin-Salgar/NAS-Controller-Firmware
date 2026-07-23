@@ -78,7 +78,13 @@ Result Configuration::Load() noexcept
             sizeof(record),
             crc))
     {
-        (void)ResetToDefaults();
+        auto resetResult = ResetToDefaults();
+
+        if (!resetResult.IsSuccess())
+        {
+            return resetResult;
+        }
+
         return Result(ResultCode::InvalidConfiguration);
     }
 
@@ -91,7 +97,12 @@ Result Configuration::Load() noexcept
 
     if (!result.IsSuccess())
     {
-        (void)ResetToDefaults();
+        auto resetResult = ResetToDefaults();
+
+        if (!resetResult.IsSuccess())
+        {
+            return resetResult;
+        }
     }
 
     return result;

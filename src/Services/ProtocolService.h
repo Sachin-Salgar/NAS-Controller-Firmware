@@ -33,12 +33,6 @@ public:
 
 private:
 
-    [[nodiscard]]
-    static NAS::Core::Result ExecuteCommand(
-        std::uint16_t command,
-        const std::uint8_t* payload,
-        std::size_t payloadLength) noexcept;
-
     static bool initialized_;
 };
 
