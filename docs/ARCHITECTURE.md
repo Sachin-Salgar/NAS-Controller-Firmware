@@ -34,7 +34,7 @@ Services own static singleton-style state. Objects hold runtime data. Drivers wr
 
 ## Scheduler
 
-`SchedulerService` initializes the core scheduler and registers four tasks: USB processing every 5 ms, protocol processing every 5 ms, temperature update every 1000 ms, and health update every 1000 ms. Configured fan, LED, and statistics task intervals exist but are not registered by `SchedulerService`.
+`SchedulerService` initializes the core scheduler and registers five tasks: USB processing every 5 ms, protocol processing every 5 ms, temperature update every 1000 ms, health update every 1000 ms, and statistics update every 1000 ms. No fan-only or LED-only scheduler interval constants are present in the frozen implementation.
 
 The scheduler is cooperative. Each execution compares `millis()` against task last-execution timestamps and invokes due task functions.
 

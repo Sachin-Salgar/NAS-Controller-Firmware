@@ -146,28 +146,4 @@ Result ProtocolService::ProcessPacket(
     return result;
 }
 
-Result ProtocolService::ExecuteCommand(
-    std::uint16_t command,
-    const std::uint8_t* payload,
-    std::size_t payloadLength) noexcept
-{
-    (void)payload;
-    (void)payloadLength;
-
-    switch (command)
-    {
-        case NAS::Protocol::Commands::Ping:
-        {
-            return Result::Ok();
-        }
-
-        default:
-        {
-            StatisticsService::IncrementProtocolErrors();
-
-            return Result(ResultCode::NotSupported);
-        }
-    }
-}
-
 } // namespace NAS::Services

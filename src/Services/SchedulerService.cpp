@@ -15,6 +15,7 @@
 #include "TemperatureService.h"
 #include "USBService.h"
 #include "HealthService.h"
+#include "StatisticsService.h"
 
 using namespace NAS::Core;
 
@@ -69,6 +70,15 @@ Result SchedulerService::Initialize() noexcept
     result = Scheduler::AddTask(
         HealthService::Update,
         NAS::Config::Tasks::HealthTaskIntervalMs);
+
+    if (!result.IsSuccess())
+    {
+        return result;
+    }
+
+    result = Scheduler::AddTask(
+        StatisticsService::Update,
+        NAS::Config::Tasks::StatisticsTaskIntervalMs);
 
     if (!result.IsSuccess())
     {

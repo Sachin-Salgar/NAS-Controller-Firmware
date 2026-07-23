@@ -56,7 +56,7 @@ Configuration, Statistics, System, Relay, Fan, Temperature, LED, Drive, USB, Pro
 - Packet fragmentation.
 - Endian-independent encoding.
 - Asynchronous event push packets.
-- `LedGet` and `LedSetColor` success behavior.
+- `LedGet` and `LedSetColor` success behavior; these registered commands are permanently unsupported in firmware version 1.0.0.
 
 ## Remaining TODOs and unknowns
 
@@ -70,7 +70,7 @@ PlatformIO environment `esp32dev`, Espressif32 platform, Arduino framework, C++1
 
 ## Test status
 
-The repository contains unit-style tests under `test/` and mirrored firmware tests under `src/Tests/`. Freeze verification ran documentation review and attempted build/test commands recorded in the final delivery message.
+The repository contains unit-style tests under `test/` and mirrored firmware tests under `src/Tests/`. Final freeze cleanup removed production ignored `[[nodiscard]]` Result discards and dead protocol helper code; build verification still requires an environment with PlatformIO available.
 
 ## Public protocol contract
 

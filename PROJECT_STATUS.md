@@ -17,11 +17,11 @@ Configuration, Statistics, System, Relay, Fan, Temperature, LED, Drive, USB, Pro
 
 ## Unsupported or partial protocol features
 
-- `LedGet` and `LedSetColor` are registered but return `NotSupported`.
+- `LedGet` and `LedSetColor` are registered but permanently return `NotSupported` for firmware version 1.0.0.
 - No ASCII protocol is implemented.
 - No protocol negotiation, authentication, firmware update, file transfer, packet fragmentation, or asynchronous USB event packet mechanism is implemented.
 - `ProtocolService::ExecuteCommand()` is a limited helper supporting only Ping and is not the normal packet command path.
 
 ## Recommendation
 
-READY FOR DAEMON DEVELOPMENT, provided the daemon follows the binary protocol and implementation-defined native field encoding documented in `docs/FIRMWARE_FREEZE.md`.
+NOT READY for final tag in this environment until `pio run` is executed successfully with PlatformIO. Protocol-facing behavior remains frozen for daemon planning.

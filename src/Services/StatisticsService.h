@@ -38,6 +38,9 @@ public:
     static void AddSystemUptime(std::uint32_t seconds) noexcept;
 
     [[nodiscard]]
+    static NAS::Core::Result Update() noexcept;
+
+    [[nodiscard]]
     static NAS::Objects::Statistics&
     GetStatistics() noexcept;
 
