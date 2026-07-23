@@ -26,17 +26,27 @@ Result FanService::Initialize() noexcept
         return Result(ResultCode::AlreadyInitialized);
     }
 
-    fans_[0].Initialize(
+    auto result = fans_[0].Initialize(
         0U,
         25U,
         NAS::Config::Hardware::FanPwmFrequency,
         NAS::Config::Hardware::FanPwmResolution);
 
-    fans_[1].Initialize(
+    if (!result.IsSuccess())
+    {
+        return result;
+    }
+
+    result = fans_[1].Initialize(
         1U,
         33U,
         NAS::Config::Hardware::FanPwmFrequency,
         NAS::Config::Hardware::FanPwmResolution);
+
+    if (!result.IsSuccess())
+    {
+        return result;
+    }
 
     initialized_ = true;
 

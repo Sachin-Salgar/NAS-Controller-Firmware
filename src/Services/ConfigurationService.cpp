@@ -36,7 +36,12 @@ Result ConfigurationService::Initialize() noexcept
 
     if (!result.IsSuccess())
     {
-        configuration_.ResetToDefaults();
+        result = configuration_.ResetToDefaults();
+
+        if (!result.IsSuccess())
+        {
+            return result;
+        }
     }
 
     initialized_ = true;

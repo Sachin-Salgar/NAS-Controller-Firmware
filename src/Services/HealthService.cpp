@@ -63,20 +63,17 @@ Result HealthService::Update() noexcept
         }
     }
 
-    if (healthy_)
+    auto result = SystemService::SetState(
+        healthy_
+            ? NAS::Objects::SystemState::Ready
+            : NAS::Objects::SystemState::Warning);
+
+    if (!result.IsSuccess())
     {
-        SystemService::SetState(
-            NAS::Objects::SystemState::Ready);
-    }
-    else
-    {
-        SystemService::SetState(
-            NAS::Objects::SystemState::Warning);
+        return result;
     }
 
-    NAS::Drivers::WatchdogDriver::Feed();
-
-    return Result::Ok();
+    return NAS::Drivers::WatchdogDriver::Feed();
 }
 
 bool HealthService::IsHealthy() noexcept
