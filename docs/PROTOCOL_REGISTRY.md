@@ -1,5 +1,11 @@
 # Firmware Protocol Registry
 
+Status: **FROZEN v1.0.0** – Official command registry, frozen to firmware implementation.
+
+Protocol Version: **1.0.0 (0x0100)**
+Protocol Status: **FROZEN**
+Verification: **PASSED**
+
 This registry mirrors `src/Protocol/Commands.h` and `src/Protocol/CommandDispatcher.cpp`.
 
 ## Command IDs

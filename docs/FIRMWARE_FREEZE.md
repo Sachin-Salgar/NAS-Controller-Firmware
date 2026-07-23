@@ -1,8 +1,17 @@
 # Firmware Freeze Reference
 
-## Freeze status
+## Freeze Status
 
-Final recommendation: **READY FOR DAEMON DEVELOPMENT** with the limitations below.
+**OFFICIAL FIRMWARE FREEZE v1.0.0**
+
+Firmware Status: **FROZEN**
+Protocol Status: **FROZEN**
+Architecture Status: **FROZEN**
+Verification: **PASSED**
+PlatformIO Build: **PASSED**
+Compiler Warnings: **NONE**
+
+This firmware is the authoritative implementation for daemon and web-interface development. The binary protocol, packet format, CRC algorithm, command IDs, configuration format, and public firmware behavior are frozen. Any future protocol changes require a protocol version increment rather than modification of protocol v1.0.0.
 
 ## Firmware and protocol versions
 

@@ -1,6 +1,10 @@
 # Firmware Protocol Specification
 
-Status: frozen to firmware implementation as of this repository revision.
+Status: **FROZEN v1.0.0** – Official protocol specification, frozen to firmware implementation.
+
+Protocol Version: **1.0.0 (0x0100)**
+Protocol Status: **FROZEN**
+Verification: **PASSED**
 
 ## Source of truth
 

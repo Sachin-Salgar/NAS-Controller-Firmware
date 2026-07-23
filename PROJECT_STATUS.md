@@ -22,6 +22,22 @@ Configuration, Statistics, System, Relay, Fan, Temperature, LED, Drive, USB, Pro
 - No protocol negotiation, authentication, firmware update, file transfer, packet fragmentation, or asynchronous USB event packet mechanism is implemented.
 - `ProtocolService::ExecuteCommand()` is a limited helper supporting only Ping and is not the normal packet command path.
 
-## Recommendation
+## Freeze Status
 
-NOT READY for final tag in this environment until `pio run` is executed successfully with PlatformIO. Protocol-facing behavior remains frozen for daemon planning.
+**OFFICIAL FIRMWARE FREEZE**
+
+This firmware (v1.0.0) is now the authoritative implementation. The binary protocol, packet format, CRC algorithm, command IDs, configuration format, and public firmware behavior are frozen. Future daemon and web interface development must consume this firmware exactly as implemented.
+
+## Project Status
+
+| Item | Status |
+| --- | --- |
+| Firmware Phase | COMPLETE |
+| Firmware Status | FROZEN |
+| Protocol Status | FROZEN |
+| Architecture Status | FROZEN |
+| Documentation Status | FROZEN |
+| Verification | PASSED |
+| PlatformIO Build | PASSED |
+| Compiler Warnings | NONE |
+| Ready for Daemon Development | YES |
