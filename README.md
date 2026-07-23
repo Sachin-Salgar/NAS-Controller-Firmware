@@ -16,6 +16,17 @@ The NAS Controller Firmware is an embedded control plane that manages:
 - **Statistics** – Runtime metrics and health tracking
 - **Watchdog** – System health recovery mechanism
 
+
+## Firmware Freeze
+
+The firmware implementation is the source of truth for daemon and web-interface development. The frozen public contract is documented in:
+
+- `docs/FIRMWARE_FREEZE.md`
+- `docs/PROTOCOL_SPEC.md`
+- `docs/PROTOCOL_REGISTRY.md`
+
+The public protocol is binary USB packets with CRC16 validation. Older ASCII protocol drafts are obsolete and must not be used for new host software.
+
 ## Technology Stack
 
 | Component | Details |
@@ -24,7 +35,7 @@ The NAS Controller Firmware is an embedded control plane that manages:
 | **Framework** | Arduino |
 | **Build System** | PlatformIO |
 | **Language** | C++17 |
-| **Dependencies** | paulstoffregen/OneWire |
+| **Dependencies** | paulstoffregen/OneWire, adafruit/Adafruit NeoPixel |
 
 ## Architecture
 
