@@ -2,6 +2,18 @@
 
 A modular, embedded firmware system for controlling external NAS hardware via ESP32. This project provides deterministic hardware control, real-time monitoring, and a structured binary protocol for host communication.
 
+**Status: FROZEN v1.0.0** — The firmware is the authoritative implementation for daemon and web-interface development.
+
+## Quick Reference
+
+| Item | Value |
+|------|-------|
+| **Firmware Version** | 1.0.0 |
+| **Protocol Version** | 0x0100 |
+| **Microcontroller** | ESP32 (ESP32-WROOM-32) |
+| **Status** | FROZEN |
+| **Build** | ✅ PASSED (zero warnings) |
+
 ## Overview
 
 The NAS Controller Firmware is an embedded control plane that manages:
@@ -16,30 +28,29 @@ The NAS Controller Firmware is an embedded control plane that manages:
 - **Statistics** – Runtime metrics and health tracking
 - **Watchdog** – System health recovery mechanism
 
-
-## Firmware Freeze
+## Frozen Protocol & Implementation
 
 The firmware implementation is the source of truth for daemon and web-interface development. The frozen public contract is documented in:
 
-- `docs/FIRMWARE_FREEZE.md`
-- `docs/PROTOCOL_SPEC.md`
-- `docs/PROTOCOL_REGISTRY.md`
+- **[PROTOCOL_SPEC.md](docs/PROTOCOL_SPEC.md)** – Binary packet format, CRC algorithm, limits
+- **[PROTOCOL_REGISTRY.md](docs/PROTOCOL_REGISTRY.md)** – Command IDs, payloads, response formats
+- **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** – Layered architecture, service initialization order
+- **[CHANGE_POLICY.md](docs/CHANGE_POLICY.md)** – Immutable items in v1.0.0, protocol evolution rules
 
-The public protocol is binary USB packets with CRC16 validation. Older ASCII protocol drafts are obsolete and must not be used for new host software.
+**Note**: Older ASCII protocol drafts are obsolete. The firmware only implements the binary protocol.
 
 ## Technology Stack
 
 | Component | Details |
 |-----------|---------|
-| **Microcontroller** | ESP32 (ESP32-WROOM-32) |
 | **Framework** | Arduino |
 | **Build System** | PlatformIO |
 | **Language** | C++17 |
 | **Dependencies** | paulstoffregen/OneWire, adafruit/Adafruit NeoPixel |
 
-## Architecture
+## Architecture Overview
 
-The firmware follows a **strict layered architecture** with dependencies always pointing downward:
+The firmware follows a **strict layered architecture** with dependencies always pointing downward (frozen for v1.x):
 
 ```
 Application
@@ -72,21 +83,40 @@ Shared: Config & Utilities
 - **System** – Firmware lifecycle and application entry points
 - **Config & Utilities** – Compile-time configuration and shared helpers
 
+## Documentation Index
+
+**Authoritative & Frozen:**
+- **[PROTOCOL_SPEC.md](docs/PROTOCOL_SPEC.md)** – Packet format, CRC, limits
+- **[PROTOCOL_REGISTRY.md](docs/PROTOCOL_REGISTRY.md)** – All 28 command IDs with payloads
+- **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** – Layered design, initialization order
+- **[CHANGE_POLICY.md](docs/CHANGE_POLICY.md)** – Frozen items, change rules
+- **[EXTENSION_POINTS.md](docs/EXTENSION_POINTS.md)** – Future extensibility guidance
+- **[NOT_PLANNED.md](docs/NOT_PLANNED.md)** – Explicitly unsupported features
+
+**Reference & Context:**
+- **[Hardware.md](docs/Hardware.md)** – Hardware specifications & constraints
+- **[LED_Subsystem.md](docs/LED_Subsystem.md)** – LED hardware and firmware capabilities
+- **[TERMINOLOGY.md](docs/TERMINOLOGY.md)** – Glossary & terminology
+- **[CodingStandard.md](docs/CodingStandard.md)** – Code style & conventions
+- **[Repository-Structure.md](docs/Repository-Structure.md)** – Source code layout
+- **[Decisions/](docs/Decisions/)** – Architecture Decision Records (ADRs)
+
+**Historical Archive:**
+- **[archive/firmware-freeze/](archive/firmware-freeze/)** – Freeze reports, audit reports, superseded specs
+
 ## Project Structure
 
 ```
-├── docs/                          # Comprehensive documentation
-│   ├── Architecture.md            # Layered architecture design
+├── docs/                          # Authoritative documentation
+│   ├── PROTOCOL_SPEC.md           # Frozen binary protocol spec
+│   ├── PROTOCOL_REGISTRY.md       # Frozen command registry
+│   ├── ARCHITECTURE.md            # Frozen architecture design
+│   ├── CHANGE_POLICY.md           # Frozen change policy
 │   ├── Hardware.md                # Hardware specifications
-│   ├── Protocol.md                # Binary protocol format
-│   ├── CommandSet.md              # Available commands
-│   ├── USB-Host-Protocol.md       # Host communication spec
-│   ├── CodingStandard.md          # Code conventions
-│   ├── Roadmap.md                 # Development roadmap
 │   ├── Decisions/                 # Architecture decision records
-│   └── ...                        # Additional documentation
+│   └── ...                        # Reference documentation
 │
-├── src/                           # Firmware source code
+├── src/                           # Firmware source code (FROZEN)
 │   ├── main.cpp                   # Arduino entry point
 │   ├── Core/                      # Foundation types & utilities
 │   ├── Platform/                  # Hardware abstraction layer
@@ -98,6 +128,7 @@ Shared: Config & Utilities
 │   ├── Config/                    # Build configuration
 │   └── Utilities/                 # Shared helper functions
 │
+├── archive/firmware-freeze/       # Historical freeze reports
 ├── platformio.ini                 # PlatformIO build configuration
 ├── LICENSE                        # License
 └── README.md                      # This file
@@ -165,74 +196,50 @@ The firmware follows a strict coding standard documented in `docs/CodingStandard
 - Include appropriate error handling via `Result` type
 - Use the Event Bus for inter-layer communication where appropriate
 
-## Communication
+## Binary Protocol
 
-### Host Protocol
+The firmware communicates via USB CDC serial at **115200 baud** using a binary packet protocol.
 
-The firmware communicates with the host computer via USB CDC serial at **115200 baud**.
+**Packet Format:**
+- Header: `0x55AA` (fixed)
+- Sequence: 1 byte (echoed in response)
+- Command: 1 byte (command ID)
+- Payload Length: 2 bytes
+- Payload: 0–500 bytes
+- CRC16: 2 bytes (polynomial 0xA001, initial 0xFFFF)
 
-Packets use a binary format:
-- Header: `0x55AA` (2 bytes)
-- Sequence: (1 byte)
-- Command: (1 byte)
-- Payload Length: (2 bytes)
-- Payload: (variable)
-- CRC16: (2 bytes)
+**Command Categories:** System, Relay, Fan, Temperature, LED, Drive, Configuration, Statistics, Event
 
-For detailed protocol documentation, see `docs/Protocol.md` and `docs/USB-Host-Protocol.md`.
+See **[PROTOCOL_SPEC.md](docs/PROTOCOL_SPEC.md)** for complete format details and **[PROTOCOL_REGISTRY.md](docs/PROTOCOL_REGISTRY.md)** for all 28 command IDs and payloads.
 
-### Supported Commands
+## Firmware Freeze Status
 
-Commands are grouped by category:
-- **System** – Ping, GetVersion, GetStatus, Reset
-- **Relay** – Get, Set, Enable, Disable
-- **Fan** – Get, SetSpeed, SetMode
-- **Temperature** – Get, Calibrate, SetThreshold
-- **LED** – Get, SetColor, SetMode, SetBrightness
-- **Drive** – Get, Scan, GetHealth
-- **Configuration** – Get, Set, Save, Load
-- **Statistics** – Get, Reset
-- **Event** – Read, Clear
+✅ **OFFICIALLY FROZEN** – v1.0.0
 
-See `docs/CommandSet.md` for complete command specifications.
+The firmware is feature-complete and the authoritative implementation for daemon and web-interface development.
 
-## Status & Roadmap
+| Item | Status |
+|------|--------|
+| Firmware Status | FROZEN |
+| Protocol Status | FROZEN |
+| Architecture Status | FROZEN |
+| Build Verification | ✅ PASSED |
+| Compiler Warnings | 0 |
+| Compiler Errors | 0 |
+| Ready for Daemon Dev | ✅ YES |
 
-### Current Phase
+**Future Protocol Changes:** Any breaking changes require a protocol version increment (e.g., 0x0101 for v1.1.0, 0x0200 for v2.0.0). See **[CHANGE_POLICY.md](docs/CHANGE_POLICY.md)** for change rules.
 
-✅ **FIRMWARE FROZEN** – Official v1.0.0 release
-- ✅ Documented architecture (frozen for 1.x)
-- ✅ All layers implemented
-- ✅ Service infrastructure in place
-- ✅ Protocol scaffolding complete
-- ✅ Firmware compilation verified (PlatformIO passed)
-- ✅ Zero compiler warnings
-- ✅ Zero build errors
-- ✅ All documented behavior verified from source
+## For Daemon & Web Interface Developers
 
-### Firmware Freeze
+The firmware behavior, protocol, and architecture are the **source of truth**. You must consume this firmware exactly as implemented. Key references:
 
-This firmware is the authoritative implementation for daemon and web-interface development. Any future protocol changes require a protocol version increment rather than modification of protocol v1.0.0.
+1. **[PROTOCOL_SPEC.md](docs/PROTOCOL_SPEC.md)** – Wire protocol, packet format, CRC
+2. **[PROTOCOL_REGISTRY.md](docs/PROTOCOL_REGISTRY.md)** – Command IDs, payloads, responses
+3. **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** – Service interfaces, initialization order
+4. **[CHANGE_POLICY.md](docs/CHANGE_POLICY.md)** – What is immutable, how to request changes
 
-See `docs/FIRMWARE_FREEZE.md`, `docs/PROTOCOL_SPEC.md`, and `docs/PROTOCOL_REGISTRY.md` for frozen specifications.
-
-## Documentation
-
-This project is documentation-driven. All major components, decisions, and specifications are documented:
-
-- `docs/Architecture.md` – Complete software architecture
-- `docs/Hardware.md` – Hardware platform specifications
-- `docs/Protocol.md` – Binary protocol format
-- `docs/CommandSet.md` – Available commands and payloads
-- `docs/CodingStandard.md` – Code conventions and style
-- `docs/Decisions/` – Architecture decision records (ADRs)
-- `docs/Repository-Structure.md` – Detailed file organization
-
-## Architecture Freeze
-
-The firmware architecture is **frozen for Version 1.x**. Architectural changes require documentation and ADR updates. This ensures stability and maintainability for the current release cycle.
-
-See `docs/Decisions/` for architectural decisions and constraints.
+The firmware is **fully documented and will not change** for v1.0.x. Bug fixes never change the public protocol.
 
 ## License
 
