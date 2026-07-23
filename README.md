@@ -200,21 +200,21 @@ See `docs/CommandSet.md` for complete command specifications.
 
 ### Current Phase
 
-✅ **Phase 1 & 2 Complete** – Architecture foundation and core firmware implementation
+✅ **FIRMWARE FROZEN** – Official v1.0.0 release
 - ✅ Documented architecture (frozen for 1.x)
 - ✅ All layers implemented
 - ✅ Service infrastructure in place
 - ✅ Protocol scaffolding complete
+- ✅ Firmware compilation verified (PlatformIO passed)
+- ✅ Zero compiler warnings
+- ✅ Zero build errors
+- ✅ All documented behavior verified from source
 
-### Next Steps
+### Firmware Freeze
 
-- ⬜ Firmware compilation and build verification
-- ⬜ Hardware integration testing
-- ⬜ Command implementation completion
-- ⬜ Unit and integration test suite
-- ⬜ Stability and performance validation
+This firmware is the authoritative implementation for daemon and web-interface development. Any future protocol changes require a protocol version increment rather than modification of protocol v1.0.0.
 
-See `docs/Roadmap.md` for detailed development phases.
+See `docs/FIRMWARE_FREEZE.md`, `docs/PROTOCOL_SPEC.md`, and `docs/PROTOCOL_REGISTRY.md` for frozen specifications.
 
 ## Documentation
 

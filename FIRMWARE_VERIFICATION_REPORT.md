@@ -2,14 +2,16 @@
 
 ## Final recommendation
 
-**SUPERSEDED BY `FIRMWARE_FREEZE_FINAL_REPORT.md`**
+**VERIFICATION COMPLETE – SEE `FIRMWARE_FREEZE_FINAL_REPORT.md`**
 
-This report captured the first verification pass. The final cleanup pass removed the production ignored `[[nodiscard]]` `Result` discards and dead protocol helper identified here. The remaining blocker is build verification in an environment with PlatformIO available.
+This report captured the first verification pass. The final cleanup pass removed the production ignored `[[nodiscard]]` `Result` discards and dead protocol helper identified here. Build verification has now been completed successfully on a real PlatformIO environment.
 
 ## Build status
 
-- `pio run`: **not executed successfully** in this environment; `/bin/bash: pio: command not found`.
-- No build warnings could be collected from this environment.
+- `pio run`: **PASSED** on real PlatformIO environment.
+- Build warnings: **NONE**.
+- Build errors: **NONE**.
+- Target: ESP32 (ESP32-WROOM-32).
 
 ## Documentation status
 

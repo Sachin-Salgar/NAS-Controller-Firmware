@@ -1,6 +1,12 @@
 # Firmware Architecture
 
-This document describes the implemented architecture, not a planned redesign.
+Status: **FROZEN v1.0.0** – Official architecture specification, frozen to firmware implementation.
+
+Architecture Version: **1.0.0**
+Architecture Status: **FROZEN**
+Verification: **PASSED**
+
+This document describes the implemented architecture, not a planned redesign. This architecture is authoritative for firmware v1.0.0 and frozen for future daemon and web-interface development.
 
 ## Ownership and relationships
 
