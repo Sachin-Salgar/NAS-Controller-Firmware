@@ -1,114 +1,96 @@
-# Project Status — Firmware Frozen v1.0.0
+# Project Status
 
-The firmware is the **authoritative implementation** for daemon and web-interface development.
+## Firmware Status
 
-## Firmware Contract (Frozen)
-
-| Item | Value |
-|------|-------|
+| Item | Status |
+|------|--------|
 | **Firmware Version** | 1.0.0 |
 | **Protocol Version** | 0x0100 |
-| **Microcontroller** | ESP32 (ESP32-WROOM-32) |
-| **Registered Commands** | 28 |
-| **Implemented Success Paths** | 26 |
-| **Registered Unsupported** | 2 (`LedGet`, `LedSetColor`) |
+| **Build Status** | ✅ PASSED (zero warnings, zero errors) |
+| **Freeze Status** | ✅ FROZEN |
+| **Ready for Daemon Development** | ✅ YES |
 
-## Frozen Protocol Specification
+## Firmware Specifications
 
-- **Packet Format**: `0x55AA` header, 1-byte sequence, 1-byte command, 2-byte payload length, 0–500 byte payload, 2-byte CRC16
-- **CRC Algorithm**: Polynomial 0xA001, initial value 0xFFFF
-- **Transport**: USB CDC serial @ 115200 baud
-- **Command Categories**: System, Relay, Fan, Temperature, LED, Drive, Configuration, Statistics, Event
-- **Configuration Storage**: Binary record at flash address 0 with magic 0x31474643, version 1, relay/fan/temperature/LED config
-- **Error Responses**: Original sequence and command echo with 2-byte ResultCode payload
-- **Limits**: Max packet 512 bytes, max payload 500 bytes
+**Microcontroller**: ESP32 (ESP32-WROOM-32)  
+**Language**: C++17  
+**Build System**: PlatformIO  
 
-See **[PROTOCOL_SPEC.md](docs/PROTOCOL_SPEC.md)** and **[PROTOCOL_REGISTRY.md](docs/PROTOCOL_REGISTRY.md)** for complete specifications.
+**Protocol**:
+- Binary USB packet protocol at 115200 baud
+- Packet format: `0x55AA` header, sequence, command, payload length, payload, CRC16
+- CRC: Polynomial 0xA001, initial 0xFFFF
+- Limits: Max packet 512 bytes, max payload 500 bytes
 
-## Architecture (Frozen)
-
-- **Layered Design**: Core → Platform → Drivers → Objects → Services → Protocol → System
-- **Service Initialization Order**: Config → Statistics → System → Relay → Fan → Temperature → LED → Drive → USB → Protocol → Health → Event → Scheduler
-- **Polling Intervals**: USB/Protocol 5ms, Temperature/Health 1000ms
-- **State Machine**: Application runs `ServiceManager::Execute()` loop continuously
-- **Singleton Pattern**: Services own static state; Objects hold runtime data
-
-See **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** for full design documentation.
+**Registered Commands**: 28 total  
+- 26 with implemented success paths
+- 2 registered as unsupported (`LedGet`, `LedSetColor`)
 
 ## Implemented Services
 
-- **Configuration** – Persistent storage management
-- **Statistics** – Boot count, USB counters, relay cycles, fan runtime, uptime
-- **System** – Firmware lifecycle and startup/shutdown
-- **Relay** – Power relay control (2 relays)
-- **Fan** – PWM fan control (5 fans)
-- **Temperature** – OneWire temperature sensor readout (0–4 sensors)
-- **LED** – WS2812B addressable LED control (mode, brightness, off only; color unsupported)
-- **Drive** – Drive presence and health reporting
-- **USB** – Character and binary I/O on serial port
-- **Protocol** – Binary packet validation, parsing, command dispatch
-- **Health** – System monitoring and watchdog recovery
-- **Event** – Event queue management (read/clear only; no async push)
-- **Scheduler** – Periodic task execution
+- Configuration
+- Statistics  
+- System
+- Relay (2 channels)
+- Fan (5 channels)
+- Temperature (0–4 OneWire sensors)
+- LED (mode, brightness, off; color unsupported)
+- Drive
+- USB
+- Protocol
+- Health
+- Event (read/clear only)
+- Scheduler
 
-## Unsupported or Partial Features
+## Unsupported Features
 
-- **LED Control**: `LedGet` and `LedSetColor` return `NotSupported` permanently for v1.0.0
-- **ASCII Protocol**: Not implemented; only binary protocol is supported
-- **No Async Events**: Firmware has no asynchronous event push mechanism; only command-based event read/clear
-- **No Protocol Negotiation**: No version negotiation, authentication, or encryption
-- **No Firmware Update**: No over-the-wire firmware upload mechanism
-- **No File Transfer**: No file transfer protocol
-- **No Packet Fragmentation**: All commands fit in single packets
-- **No Endian Encoding**: Uses native target byte order (no cross-architecture support)
+- ASCII protocol (binary only)
+- LED color control (`LedGet` and `LedSetColor` return `NotSupported`)
+- Asynchronous event push (command-based event read/clear only)
+- Protocol negotiation or authentication
+- Firmware update mechanism
+- File transfer protocol
+- Packet fragmentation
+- Endian-independent encoding (uses native target byte order)
 
-## Verification Status
+## Immutable Items for v1.0.x
 
-| Item | Status | Evidence |
-|------|--------|----------|
-| **PlatformIO Build** | ✅ PASSED | Real PlatformIO environment, zero warnings |
-| **Compiler Warnings** | ✅ NONE | Verified in build output |
-| **Compiler Errors** | ✅ NONE | Verified in build output |
-| **Protocol Audit** | ✅ PASSED | All 28 command IDs verified against source |
-| **Architecture Compliance** | ✅ PASSED | All layers verified, dependencies correct |
-| **Documentation Consistency** | ✅ PASSED | Firmware behavior matches frozen specs |
+The following cannot change without a protocol version increment:
 
-## Freeze Status
+- Packet format (header, sequence, command, payload length, CRC)
+- Command IDs (0x0001–0x1702)
+- CRC algorithm (CRC-16/Modbus, polynomial 0xA001, initial 0xFFFF)
+- Configuration persistence format
+- Statistics format
+- Event format
+- Response format and error codes
+- Protocol timing (5ms USB/protocol polling, 1000ms temperature/health polling)
+- Service interfaces and initialization order
 
-| Phase | Status |
-|-------|--------|
-| **Firmware Implementation** | ✅ COMPLETE |
-| **Firmware Freeze** | ✅ OFFICIAL |
-| **Protocol Freeze** | ✅ OFFICIAL |
-| **Architecture Freeze** | ✅ OFFICIAL (v1.x) |
-| **Documentation Freeze** | ✅ COMPLETE |
-| **Ready for Daemon Development** | ✅ YES |
-
-## Change Policy
-
-The firmware is **immutable for v1.0.x**. See **[CHANGE_POLICY.md](docs/CHANGE_POLICY.md)** for rules on:
-
-- What cannot change in v1.0.x (packet format, command IDs, CRC, configuration format, etc.)
-- How to request protocol changes (require version increment)
-- Bug fix policy (no public protocol changes)
-- Future protocol evolution rules
+See **[docs/CHANGE_POLICY.md](docs/CHANGE_POLICY.md)** for detailed change rules.
 
 ## Documentation
 
 All authoritative documentation is in the `docs/` directory:
 
-- **Frozen Specs**: PROTOCOL_SPEC.md, PROTOCOL_REGISTRY.md, ARCHITECTURE.md, CHANGE_POLICY.md
-- **Reference**: Hardware.md, LED_Subsystem.md, TERMINOLOGY.md, CodingStandard.md, Repository-Structure.md
-- **Decisions**: Decisions/*.md (Architecture Decision Records)
-- **Archive**: archive/firmware-freeze/ (historical freeze/audit reports)
+- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** – Layered architecture, service initialization order
+- **[docs/PROTOCOL_SPEC.md](docs/PROTOCOL_SPEC.md)** – Binary protocol format and limits
+- **[docs/PROTOCOL_REGISTRY.md](docs/PROTOCOL_REGISTRY.md)** – Command IDs, payloads, responses
+- **[docs/CHANGE_POLICY.md](docs/CHANGE_POLICY.md)** – Immutable items and change rules
+- **[docs/DECISIONS.md](docs/DECISIONS.md)** – Architecture Decision Records (ADRs)
+- **[docs/TERMINOLOGY.md](docs/TERMINOLOGY.md)** – Glossary
+- **[docs/EXTENSION_POINTS.md](docs/EXTENSION_POINTS.md)** – Future extensibility guidance
+- **[docs/NOT_PLANNED.md](docs/NOT_PLANNED.md)** – Explicitly unsupported features
+- **[docs/Hardware.md](docs/Hardware.md)** – Hardware specifications
+- **[docs/LED_Subsystem.md](docs/LED_Subsystem.md)** – LED hardware and firmware capabilities
+- **[docs/CodingStandard.md](docs/CodingStandard.md)** – Code style and conventions
+- **[docs/Repository-Structure.md](docs/Repository-Structure.md)** – Source code layout
 
-## Project Phase
+## Next Steps
 
-The NAS Controller Firmware has completed its initial development and is now in **long-term maintenance mode**. Future work focuses on:
+Future development occurs in:
 
-1. **Daemon Development** – Consume this firmware via the binary protocol
-2. **Web Interface** – Use daemon as intermediary to the firmware
-3. **Bug Fixes** – Only non-protocol-breaking fixes allowed in v1.0.x
-4. **Future Versions** – Any breaking changes require a new protocol version
+1. **Daemon Repository** – Consumes this firmware via the binary protocol
+2. **Web Interface Repository** – Uses daemon as intermediary to the firmware
 
-The firmware will **not change** until a new version tag is created.
+Both must follow the frozen protocol specification exactly as implemented in this firmware.
